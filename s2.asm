@@ -18,7 +18,7 @@
 ; ASSEMBLY OPTIONS:
 ;
     ifndef gameRevision
-gameRevision = 1
+gameRevision = 2
     endif
 ;	| If 0, a REV00 ROM is built
 ;	| If 1, a REV01 ROM is built, which contains some fixes
@@ -20091,7 +20091,7 @@ Obj11_Init:
 Obj11_MakeBdgSegment:
 	jsrto	(SingleObjLoad2).l, JmpTo_SingleObjLoad2
 	bne.s	+	; rts
-	move.l	(a0),(a1) ; load obj11
+	move.l	#Obj11,(a1) ; load obj11
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	move.l	mappings(a0),mappings(a1)
@@ -23855,7 +23855,7 @@ ChkPlayer_1up:
 super_shoes:
 	addq.w	#1,(a2)
 	bset	#status_sec_hasSpeedShoes,status_secondary(a1)	; give super sneakers status
-	move.w	#$4B0,speedshoes_time(a1)
+	move.b	#$96,speedshoes_time(a1)
 	cmpa.w	#MainCharacter,a1	; did the main character break the monitor?
 	bne.s	super_shoes_Tails	; if not, branch
 	cmpi.w	#2,(Player_mode).w	; is player using Tails?
@@ -23903,7 +23903,7 @@ invincible_monitor:
 	tst.b	(Super_Sonic_flag).w	; is Sonic super?
 	bne.s	+++	; rts		; if yes, branch
 	bset	#status_sec_isInvincible,status_secondary(a1)	; give invincibility status
-	move.w	#20*60,invincibility_time(a1) ; 20 seconds
+	move.b	#$96,invincibility_time(a1) ; 20 seconds
 	tst.b	(Current_Boss_ID).w	; don't change music during boss battles
 	bne.s	+
 	cmpi.b	#$C,air_left(a1)	; or when drowning
@@ -27087,7 +27087,7 @@ Obj36_UpsidedownEnd:
 Touch_ChkHurt2:
 	btst	#status_sec_isInvincible,status_secondary(a1)	; is character invincible?
 	bne.s	+	; rts		; if yes, branch
-	tst.w	invulnerable_time(a1)	; is character invulnerable?
+	tst.b	invulnerable_time(a1)	; is character invulnerable?
 	bne.s	+	; rts		; if yes, branch
 	cmpi.b	#4,routine(a1)		; is the character hurt, dieing, etc. ?
 	bhs.s	+	; rts		; if yes, branch
@@ -27546,7 +27546,7 @@ ObjPtr_Button:		dc.l Obj47	; Button
 ObjPtr_LauncherBall:	dc.l Obj48	; Round ball thing from OOZ that fires you off in a different direction
 ObjPtr_EHZWaterfall:	dc.l Obj49	; Waterfall from EHZ
 ObjPtr_Octus:		dc.l Obj4A	; Octus (octopus badnik) from OOZ
-ObjPtr_Buzzer:		dc.l Obj_Fireworm	; Buzzer (Buzz bomber) from EHZ
+ObjPtr_Buzzer:		dc.l Obj4B ;Obj_Fireworm	; Buzzer (Buzz bomber) from EHZ
 			dc.l ObjNull	; Obj4C
 			dc.l ObjNull	; Obj4D
 			dc.l ObjNull	; Obj4E
@@ -29361,7 +29361,7 @@ Touch_Rings:
 +
 	cmpa.l	a1,a2	; are there no rings in this area?
 	beq.w	Touch_Rings_Done	; if so, return
-	cmpi.w	#$5A,invulnerable_time(a0)
+	cmpi.b	#$5A,invulnerable_time(a0)
 	bhs.w	Touch_Rings_Done
 	move.w	x_pos(a0),d2
 	move.w	y_pos(a0),d3
@@ -30504,7 +30504,7 @@ return_17D34:
 	rts
 ; ===========================================================================
 
-ObjectsManager_2P_Run:
+ObjectsManager_2P_Run:    
 	lea	(Obj_respawn_index).w,a2
 	moveq	#0,d2
 	cmp.w	d0,d6				; is the X range the same as last time?
@@ -30830,10 +30830,10 @@ ChkLoadObj:
 	andi.w	#3,d1	; get render flags
 	move.b	d1,render_flags(a1)
 	move.b	d1,status(a1)
-    move.b  (a0)+,d1
-    add.w    d1,d1
+        move.b  (a0)+,d1
+        add.w    d1,d1
 	add.w    d1,d1
-    move.l  (a4,d1.w),(a1)
+        move.l  (a4,d1.w),(a1)
 	;move.l  (a0)+,(a1) ; load obj
 	move.b	(a0)+,subtype(a1)
 	moveq	#0,d0	; let the objects manager know that it can keep going
@@ -30876,7 +30876,7 @@ ChkLoadObj_2P_LoadData:
 	rol.w	#3,d1	; adjust bits
 	andi.b	#3,d1	; get render flags
 	move.b	d1,render_flags(a1)
-	move.b	d1,status(a1)
+        move.b	d1,status(a1)
 	move.l	(a0)+,(a1) ; load obj
 	move.b	(a0)+,subtype(a1)
 	moveq	#0,d0
@@ -33301,9 +33301,9 @@ Obj01_Modes:	offsetTable
 
 ; loc_1A0C6:
 Sonic_Display:
-	move.w	invulnerable_time(a0),d0
+	move.b	invulnerable_time(a0),d0
 	beq.s	Obj01_Display
-	subq.w	#1,invulnerable_time(a0)
+	subq.b	#1,invulnerable_time(a0)
 	lsr.w	#3,d0
 	bcc.s	Obj01_ChkInvin
 ; loc_1A0D4:
@@ -33313,9 +33313,12 @@ Obj01_Display:
 Obj01_ChkInvin:		; Checks if invincibility has expired and disables it if it has.
 	btst	#status_sec_isInvincible,status_secondary(a0)
 	beq.s	Obj01_ChkShoes
-	tst.w	invincibility_time(a0)
-	beq.s	Obj01_ChkShoes	; If there wasn't any time left, that means we're in Super Sonic mode.
-	subq.w	#1,invincibility_time(a0)
+	tst.b	invincibility_timer(a0)
+	beq.s	Obj01_ChkShoes	; If there wasn't any time left, that means we're in Super/Hyper mode
+	move.b	(Timer_frames+1).w,d0
+	andi.b	#7,d0
+	bne.s	Obj01_ChkShoes
+	subq.b	#1,invincibility_time(a0)
 	bne.s	Obj01_ChkShoes
 	tst.b	(Current_Boss_ID).w	; Don't change music if in a boss fight
 	bne.s	Obj01_RmvInvin
@@ -33328,11 +33331,14 @@ Obj01_RmvInvin:
 	bclr	#status_sec_isInvincible,status_secondary(a0)
 ; loc_1A10C:
 Obj01_ChkShoes:		; Checks if Speed Shoes have expired and disables them if they have.
-	btst	#status_sec_hasSpeedShoes,status_secondary(a0)
+	btst	#status_sec_hasSpeedShoes,status_secondary(a0)	; does Sonic have speed shoes?
+	beq.s	Obj01_ExitChk				; if so, branch
+	tst.b	speed_shoes_timer(a0)
 	beq.s	Obj01_ExitChk
-	tst.w	speedshoes_time(a0)
-	beq.s	Obj01_ExitChk
-	subq.w	#1,speedshoes_time(a0)
+	move.b	(Timer_frames+1).w,d0
+	andi.b	#7,d0
+	bne.s	Obj01_ExitChk
+	subq.b	#1,speedshoes_time(a0)
 	bne.s	Obj01_ExitChk
 	move.w	#$600,(Sonic_top_speed).w
 	move.w	#$C,(Sonic_acceleration).w
@@ -34444,7 +34450,7 @@ Sonic_CheckGoSuper:
 	move.w	#$A00,(Sonic_top_speed).w
 	move.w	#$30,(Sonic_acceleration).w
 	move.w	#$100,(Sonic_deceleration).w
-	move.w	#0,invincibility_time(a0)
+	move.b	#0,invincibility_time(a0)
 	bset	#status_sec_isInvincible,status_secondary(a0)	; make Sonic invincible
 	move.w	#SndID_SuperTransform,d0
 	jsr	(PlaySound).l	; Play transformation sound effect.
@@ -34492,7 +34498,7 @@ Sonic_RevertToNormal:
 	move.w	#$28,(Palette_frame).w
 	move.b	#0,(Super_Sonic_flag).w
 	move.b	#AniIDSonAni_Run,prev_anim(a0)	; Force Sonic's animation to restart
-	move.w	#1,invincibility_time(a0)	; Remove invincibility
+	move.b	#1,invincibility_time(a0)	; Remove invincibility
 	move.w	#$600,(Sonic_top_speed).w
 	move.w	#$C,(Sonic_acceleration).w
 	move.w	#$80,(Sonic_deceleration).w
@@ -35120,7 +35126,7 @@ Sonic_HurtStop:
 	move.b	d0,obj_control(a0)
 	move.b	#AniIDSonAni_Walk,anim(a0)
 	subq.b	#2,routine(a0)	; => Obj01_Control
-	move.w	#$78,invulnerable_time(a0)
+	move.b	#$78,invulnerable_time(a0)
 	move.b	#0,spindash_flag(a0)
 
 return_1B1C8:
@@ -35916,9 +35922,9 @@ Obj02_Modes:	offsetTable
 
 ; loc_1BA56:
 Tails_Display:
-	move.w	invulnerable_time(a0),d0
+	move.b	invulnerable_time(a0),d0
 	beq.s	Obj02_Display
-	subq.w	#1,invulnerable_time(a0)
+	subq.b	#1,invulnerable_time(a0)
 	lsr.w	#3,d0
 	bcc.s	Obj02_ChkInvinc
 ; loc_1BA64:
@@ -35928,9 +35934,12 @@ Obj02_Display:
 Obj02_ChkInvinc:	; Checks if invincibility has expired and disables it if it has.
 	btst	#status_sec_isInvincible,status_secondary(a0)
 	beq.s	Obj02_ChkShoes
-	tst.w	invincibility_time(a0)
-	beq.s	Obj02_ChkShoes
-	subq.w	#1,invincibility_time(a0)
+	tst.b	invincibility_timer(a0)
+	beq.s	Obj02_ChkShoes	; If there wasn't any time left, that means we're in Super/Hyper mode
+	move.b	(Timer_frames+1).w,d0
+	andi.b	#7,d0
+	bne.s	Obj02_ChkShoes
+	subq.b	#1,invincibility_time(a0)
 	bne.s	Obj02_ChkShoes
 	tst.b	(Current_Boss_ID).w	; Don't change music if in a boss fight
 	bne.s	Obj02_RmvInvin
@@ -35943,11 +35952,14 @@ Obj02_RmvInvin:
 	bclr	#status_sec_isInvincible,status_secondary(a0)
 ; loc_1BA9C:
 Obj02_ChkShoes:		; Checks if Speed Shoes have expired and disables them if they have.
-	btst	#status_sec_hasSpeedShoes,status_secondary(a0)
+	btst	#status_sec_hasSpeedShoes,status_secondary(a0)	; does Sonic have speed shoes?
+	beq.s	Obj02_ExitChk				; if so, branch
+	tst.b	speed_shoes_timer(a0)
 	beq.s	Obj02_ExitChk
-	tst.w	speedshoes_time(a0)
-	beq.s	Obj02_ExitChk
-	subq.w	#1,speedshoes_time(a0)
+	move.b	(Timer_frames+1).w,d0
+	andi.b	#7,d0
+	bne.s	Obj02_ExitChk
+	subq.b	#1,speedshoes_time(a0)
 	bne.s	Obj02_ExitChk
 	move.w	#$600,(Tails_top_speed).w
 	move.w	#$C,(Tails_acceleration).w
@@ -37899,7 +37911,7 @@ Tails_HurtStop:
 	move.b	d0,obj_control(a0)
 	move.b	#AniIDTailsAni_Walk,anim(a0)
 	move.b	#2,routine(a0)	; => Obj02_Control
-	move.w	#$78,invulnerable_time(a0)
+	move.b	#$78,invulnerable_time(a0)
 	move.b	#0,spindash_flag(a0)
 
 return_1CC4E:
@@ -81798,10 +81810,10 @@ Touch_ChkValue:
 	andi.b	#$3F,d0
 	cmpi.b	#6,d0			; is touch response $46 ?
 	beq.s	Touch_Monitor		; if yes, branch
-	move.w	(MainCharacter+invulnerable_time).w,d0
+	move.b	(MainCharacter+invulnerable_time).w,d0
 	tst.w	(Two_player_mode).w
 	beq.s	+
-	move.w	invulnerable_time(a0),d0
+	move.b	invulnerable_time(a0),d0
 +
 	cmpi.w	#90,d0
 	bhs.w	+
@@ -81943,7 +81955,7 @@ Touch_NoHurt:
 ; loc_3F86E:
 Touch_Hurt:
 	nop
-	tst.w	invulnerable_time(a0)
+	tst.b	invulnerable_time(a0)
 	bne.s	Touch_NoHurt
 	movea.l	a1,a2
 
@@ -82004,7 +82016,7 @@ Hurt_Reverse:
 Hurt_ChkSpikes:
 	move.w	#0,inertia(a0)
 	move.b	#AniIDSonAni_Hurt2,anim(a0)
-	move.w	#$78,invulnerable_time(a0)
+	move.b	#$78,invulnerable_time(a0)
 	move.w	#SndID_Hurt,d0	; load normal damage sound
 	cmpi.l	#Obj36,(a2)	; was damage caused by spikes?
 	bne.s	Hurt_Sound	; if not, branch
@@ -82263,7 +82275,7 @@ BossCollision_MCZ:
 	bsr.w	Boss_DoCollision
 	move.w	(sp)+,d7
 	move.b	collision_flags(a1),d0
-	cmpi.w	#$78,invulnerable_time(a0)
+	cmpi.b	#$78,invulnerable_time(a0)
 	bne.s	+	; rts
 	st	boss_hurt_sonic(a1)	; sonic has just been hurt flag
 +
@@ -82288,7 +82300,7 @@ BossCollision_MCZ2:
 	beq.s	-			; jump back once for second check
 	move.w	(sp)+,d7
 	move.b	collision_flags(a1),d0
-	cmpi.w	#$78,invulnerable_time(a0)
+	cmpi.b	#$78,invulnerable_time(a0)
 	bne.s	+	; rts
 	st	boss_hurt_sonic(a1)	; sonic has just been hurt flag
 +
