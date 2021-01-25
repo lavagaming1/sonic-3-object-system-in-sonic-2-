@@ -198,11 +198,11 @@ objoff_A =		2+x_pos;$12 ; note: x_pos can be 4 bytes, but sometimes the last 2 b
 objoff_B =		$13 ;3+x_pos ; unused
 objoff_E =		$14     ;2+y_pos	; unused
 objoff_F =		$15    ;3+y_pos ; unused
-objoff_10 =		$18
-objoff_12 =             $1A ;added
-objoff_14 =		$1C
-objoff_15 =		$1D
-objoff_1F =		$1E
+objoff_10 =		$14
+objoff_12 =             $16 ;added
+objoff_14 =		$18
+objoff_15 =		$19
+objoff_1F =		$23
 objoff_27 =		$2B
 objoff_28 =		$2C ; overlaps subtype, but a few objects use it for other things anyway
  enum               objoff_29=$2D,objoff_2A=$2E,objoff_2B=$2F,objoff_2C=$30,objoff_2D=$31,objoff_2E=$32,objoff_2F=$33
