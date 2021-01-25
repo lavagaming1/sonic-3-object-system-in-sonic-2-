@@ -38,8 +38,8 @@ art_tile =		 $A ; word ; PCCVH AAAAAAAAAAA ; P = priority, CC = palette line, V 
 mappings =		 $C ; long
 x_pos =			$10 ; word, or long when extra precision is required
 y_pos =			$14 ; word, or long when extra precision is required
-x_sub =			  $12 ; and $13
-y_sub =			  $16 ; and $17
+x_sub =			  $12 ; and
+y_sub =			  $16 ; and $F
 mapping_frame =		$22 ; byte
 ; ---------------------------------------------------------------------------
 ; conventions followed by most objects:
@@ -148,10 +148,17 @@ Status_Underwater   = 6
 
 ; ---------------------------------------------------------------------------
 ; when childsprites are activated (i.e. bit #6 of render_flags set)
-mainspr_mapframe	= x_sub+1
-mainspr_width		= width_pixels
-mainspr_height		= height_pixels
-mainspr_childsprites 	= y_sub+1	; amount of child sprites
+; BUGS
+;mainspr_mapframe	= x_sub+1
+;mainspr_width		= width_pixels
+;mainspr_height		= height_pixels
+;mainspr_childsprites 	= y_sub+1	; amount of child sprites
+;-----------------------------------------------------------------------------
+mainspr_mapframe	= $11
+mainspr_width		= $14
+mainspr_height		= $15
+mainspr_childsprites 	= $16	; amount of child sprites
+;------------------------------------------------------------------------------
 sub2_x_pos		= $18	;x_vel
 sub2_y_pos		= $1A	;y_vel
 sub2_mapframe		= $1D
