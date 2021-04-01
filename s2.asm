@@ -282,7 +282,7 @@ zStartupCodeEndLoc:
     else ; due to an address range limitation I could work around but don't think is worth doing so:
 	message "Warning: using pre-assembled Z80 startup code."
 	dc.w $AF01,$D91F,$1127,$0021,$2600,$F977,$EDB0,$DDE1,$FDE1,$ED47,$ED4F,$D1E1,$F108,$D9C1,$D1E1,$F1F9,$F3ED,$5636,$E9E9
-    endif
+    endif                     
 Z80StartupCodeEnd:
 
 	dc.w	$8104	; value for VDP display mode
@@ -14062,6 +14062,7 @@ LevelSizeLoad:
 	move.w	#$1010,(Horiz_block_crossed_flag).w
 	move.w	#(224/2)-16,(Camera_Y_pos_bias).w
 	move.w	#(224/2)-16,(Camera_Y_pos_bias_P2).w
+	move.w	#-1,(Screen_Y_wrap_value).w
 	bra.w	+
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -20019,7 +20020,7 @@ Obj11_child1		= objoff_30	; pointer to first set of bridge segments
 Obj11_child2		= objoff_34	; pointer to second set of bridge segments, if applicable
 
 ; Sprite_F66C:
-Obj11:
+Obj11:  
 	btst	#6,render_flags(a0)	; is this a child sprite object?
 	bne.w	+			; if yes, branch
 	moveq	#0,d0
@@ -27390,23 +27391,19 @@ Obj3C_MapUnc_15ECC:	BINCLUDE "mappings/sprite/obj3C.bin"
 
 ; sub_15F9C: ObjectsLoad:
 RunObjects:
-	tst.b	(Teleport_flag).w
-	bne.s	RunObjects_End	; rts
-	lea	(Object_RAM).w,a0 ; a0=object
+                tst.b	(Teleport_flag).w
+		bne.s	RunObjects_End
+		lea	(Object_RAM).w,a0
+		tst.w	(Two_player_mode).w
+		bne.s	loc_1AAFA
+		cmpi.b	#$C,(MainCharacter+routine).w
+		beq.s	loc_1AAFA
+		cmpi.b	#6,(MainCharacter+routine).w
+		bhs.s	RunObjectsWhenPlayerIsDead
 
-	moveq	#(Dynamic_Object_RAM_End-Object_RAM)/object_size-1,d7 ; run the first $80 objects out of levels
-	moveq	#0,d0
-	cmpi.b	#GameModeID_Demo,(Game_Mode).w	; demo mode?
-	beq.s	+	; if in a level in a demo, branch
-	cmpi.b	#GameModeID_Level,(Game_Mode).w	; regular level mode?
-	bne.s	RunObject ; if not in a level, branch to RunObject
-+
-	move.w	#(Object_RAM_End-Object_RAM)/object_size-1,d7	; run the first $90 objects in levels
-	tst.w	(Two_player_mode).w
-	bne.s	RunObject ; if in 2 player competition mode, branch to RunObject
+loc_1AAFA:
+		move.w	#(Object_RAM_End-Object_RAM)/object_size-1,d7
 
-	cmpi.b	#6,(MainCharacter+routine).w
-	bhs.s	RunObjectsWhenPlayerIsDead ; if dead, branch
 	; continue straight to RunObject
 ; ---------------------------------------------------------------------------
 
@@ -27417,11 +27414,12 @@ RunObjects:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_15FCC:
+
 RunObject:
 	move.l  (a0),d0  	; get the object's ID
 	beq.s	RunNextObject ; if it's obj00, skip it
 	movea.l	d0,a1
-	jsr	(a1)                                  
+	jsr	(a1)
 
  ;loc_15FDC:
 RunNextObject:
@@ -27430,31 +27428,33 @@ RunNextObject:
 RunObjects_End:
        rts
 
+
 ; ---------------------------------------------------------------------------
 ; this skips certain objects to make enemies and things pause when Sonic dies
 ; loc_15FE6:
 RunObjectsWhenPlayerIsDead:
-	moveq	#(Reserved_Object_RAM_End-Reserved_Object_RAM)/object_size-1,d7
-	bsr.s	RunObject	; run the first $10 objects normally
-	moveq	#(Dynamic_Object_RAM_End-Dynamic_Object_RAM)/object_size-1,d7
-	bsr.s	RunObjectDisplayOnly ; all objects in this range are paused
-	moveq	#(LevelOnly_Object_RAM_End-LevelOnly_Object_RAM)/object_size-1,d7
-	bra.s	RunObject	; run the last $10 objects normally
+		moveq	#((Dynamic_Object_RAM+object_size)-Object_RAM)/object_size-1,d7
+		bsr.s	RunObject
+		moveq	#((LevelOnly_Object_RAM+object_size)-(Dynamic_Object_RAM+object_size))/object_size-1,d7
+		bsr.s	RunObjectDisplayOnly
+		moveq	#(Object_RAM_End-(LevelOnly_Object_RAM+object_size))/object_size-1,d7
+		bra.s	RunObject
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_15FF2:
 RunObjectDisplayOnly:
+      	        move.l	(a0),d0
+		beq.s	loc_1AB28
+		tst.b	render_flags(a0)
+		bpl.s	loc_1AB28
+		jsr     DisplaySprite
 
-	move.l	(a0),d0; get the object's ID
-	beq.s	+	; if it's obj00, skip it
-	tst.b	render_flags(a0)	; should we render it?
-	bpl.s	+			; if not, skip it
-	jsr	DisplaySprite
-+
-	lea	next_object(a0),a0 ; load 0bj address
-	dbf	d7,RunObjectDisplayOnly
-	rts
+loc_1AB28:
+		lea	next_object(a0),a0
+		dbf	d7,RunObjectDisplayOnly
+		rts
+
 ; End of function RunObjectDisplayOnly
 
 ; ===========================================================================
@@ -28118,73 +28118,52 @@ BuildSprites_LevelLoop:
 ; loc_16630:
 BuildSprites_ObjLoop:
 	movea.w	(a4,d6.w),a0 ; a0=object
-
-    if gameRevision=0
-	; the additional check prevents a crash triggered by placing an object in debug mode while dead
-	; unfortunately, the code it branches *to* causes a crash of its own
-	tst.l	(a0)			; is this object slot occupied?
-	beq.w	BuildSprites_Unknown	; if not, branch
-	tst.l	mappings(a0)		; does this object have any mappings?
-	beq.w	BuildSprites_Unknown	; if not, branch
-    else
-	; REV01 uses a better branch, but removed the useful check
-	tst.l	(a0)			; is this object slot occupied?
-	beq.w	BuildSprites_NextObj	; if not, check next one
-    endif
-
+;	tst.l	(a0)			; is this object slot occupied?
+;	beq.w	BuildSprites_NextObj	; if not, branch
+;	tst.l	mappings(a0)		; does this object have any mappings?
+;	beq.w	BuildSprites_NextObj	; if not, branch
 	andi.b	#$7F,render_flags(a0)	; clear on-screen flag
 	move.b	render_flags(a0),d0
+	move.w	x_pos(a0),d3
+	move.w	y_pos(a0),d2
 	move.b	d0,d4
 	btst	#6,d0	; is the multi-draw flag set?
 	bne.w	BuildSprites_MultiDraw	; if it is, branch
 	andi.w	#$C,d0	; is this to be positioned by screen coordinates?
-	beq.s	BuildSprites_ScreenSpaceObj	; if it is, branch
+	beq.s	BuildSprites_DrawSprite	; if it is, branch
 	lea	(Camera_X_pos_copy).w,a1
 	moveq	#0,d0
 	move.b	width_pixels(a0),d0
-	move.w	x_pos(a0),d3
+	;move.w	x_pos(a0),d3
 	sub.w	(a1),d3
 	move.w	d3,d1
 	add.w	d0,d1	; is the object right edge to the left of the screen?
 	bmi.w	BuildSprites_NextObj	; if it is, branch
 	move.w	d3,d1
 	sub.w	d0,d1
-	cmpi.w	#320,d1	; is the object left edge to the right of the screen?
-	bge.w	BuildSprites_NextObj	; if it is, branch
+	cmpi.w	#320,d1		; is the object left edge to the right of the screen?
+	bge.s	BuildSprites_NextObj	; if it is, branch
 	addi.w	#128,d3
-	btst	#4,d4		; is the accurate Y check flag set?
-	beq.s	BuildSprites_ApproxYCheck	; if not, branch
-	moveq	#0,d0
-	move.b	y_radius(a0),d0
-	move.w	y_pos(a0),d2
+	;moveq	#0,d0
+	;move.b	y_radius(a0),d0
+	;move.w	y_pos(a0),d2
 	sub.w	4(a1),d2
+	move.b	height_pixels(a0),d0
+	add.w	d0,d1
+	and.w	(Screen_Y_wrap_value).w,d2
 	move.w	d2,d1
 	add.w	d0,d1
 	bmi.s	BuildSprites_NextObj	; if the object is above the screen
 	move.w	d2,d1
 	sub.w	d0,d1
-	cmpi.w	#224,d1
+        cmpi.w	#224,d1
 	bge.s	BuildSprites_NextObj	; if the object is below the screen
 	addi.w	#128,d2
-	bra.s	BuildSprites_DrawSprite
+	sub.w	d2,d1
+	;bra.s	BuildSprites_DrawSprite
+	;rts
 ; ===========================================================================
-; loc_166A6:
-BuildSprites_ScreenSpaceObj:
-	move.w	y_pixel(a0),d2
-	move.w	x_pixel(a0),d3
-	bra.s	BuildSprites_DrawSprite
-; ===========================================================================
-; loc_166B0:
-BuildSprites_ApproxYCheck:
-	move.w	y_pos(a0),d2
-	sub.w	4(a1),d2
-	addi.w	#128,d2
-	andi.w	#$7FF,d2
-	cmpi.w	#-32+128,d2	; assume Y radius to be 32 pixels
-	blo.s	BuildSprites_NextObj
-	cmpi.w	#32+128+224,d2
-	bhs.s	BuildSprites_NextObj
-; loc_166CC:
+
 BuildSprites_DrawSprite:
 	movea.l	mappings(a0),a1
 	moveq	#0,d1
@@ -28207,6 +28186,10 @@ BuildSprites_NextObj:
 	bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
 ; loc_166FA:
 BuildSprites_NextLevel:
+  ;     	cmpa.l	#Sprite_Table_Input,a
+;	bne.s	+
+;	rts
+;+
 	lea	$80(a4),a4	; load next priority level
 	dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
@@ -28218,64 +28201,52 @@ BuildSprites_NextLevel:
 	move.b	#0,-5(a2)	; set link field to 0
 	rts
 ; ===========================================================================
-    if gameRevision=0
-BuildSprites_Unknown:
-	; In the Simon Wai beta, this was a simple BranchTo, but later builds have this mystery line.
-	; This may have possibly been a debugging function, for helping the devs detect when an object
-	; tried to display with a blank ID or mappings pointer.
-	; The latter was actually an issue that plagued Sonic 1, but is (almost) completely absent in this game.
-	move.w	(1).w,d0	; causes a crash on hardware because of the word operation at an odd address
-	bra.s	BuildSprites_NextObj
-    endif
+
 ; loc_1671C:
 BuildSprites_MultiDraw:
 	move.l	a4,-(sp)
 	lea	(Camera_X_pos).w,a4
-	movea.w	art_tile(a0),a3
-	movea.l	mappings(a0),a5
-	moveq	#0,d0
-
-	; check if object is within X bounds
-	move.b	mainspr_width(a0),d0	; load pixel width
-	move.w	x_pos(a0),d3
-	sub.w	(a4),d3
-	move.w	d3,d1
-	add.w	d0,d1
-	bmi.w	BuildSprites_MultiDraw_NextObj
-	move.w	d3,d1
-	sub.w	d0,d1
-	cmpi.w	#320,d1
-	bge.w	BuildSprites_MultiDraw_NextObj
-	addi.w	#128,d3
-
-	; check if object is within Y bounds
+	;movea.w	art_tile(a0),a3
+	;movea.l	mappings(a0),a5
 	btst	#4,d4
 	beq.s	+
 	moveq	#0,d0
-	move.b	mainspr_height(a0),d0	; load pixel height
-	move.w	y_pos(a0),d2
-	sub.w	4(a4),d2
+
+	; check if object is within X bounds
+	move.b	width_pixels(a0),d0	; load pixel width
+	subi.w	#128,d3
+	move.w	d3,d1
+	add.w	d0,d1
+	bmi.w	BuildSprites_NextObj
+	move.w	d3,d1
+	sub.w	d0,d1
+	cmpi.w	#320,d1
+	bge.w	BuildSprites_NextObj
+	addi.w	#128,d3
+
+	; check if object is within Y bounds
+
+	move.b	height_pixels(a0),d0	; load pixel height
+	subi.w	#128,d2
 	move.w	d2,d1
 	add.w	d0,d1
-	bmi.w	BuildSprites_MultiDraw_NextObj
+	bmi.w	BuildSprites_NextObj
 	move.w	d2,d1
 	sub.w	d0,d1
 	cmpi.w	#224,d1
-	bge.w	BuildSprites_MultiDraw_NextObj
+	bge.w	BuildSprites_NextObj
 	addi.w	#128,d2
 	bra.s	++
+
 +
-	move.w	y_pos(a0),d2
-	sub.w	4(a4),d2
-	addi.w	#128,d2
-	andi.w	#$7FF,d2
-	cmpi.w	#-32+128,d2
-	blo.s	BuildSprites_MultiDraw_NextObj
-	cmpi.w	#32+128+224,d2
-	bhs.s	BuildSprites_MultiDraw_NextObj
-+
+
+       	ori.b	#$80,render_flags(a0)
+	tst.w	d5
+	bmi.w	BuildSprites_NextObj
+	move.w	art_tile(a0),a3
+	movea.l	mappings(a0),a5
 	moveq	#0,d1
-	move.b	mainspr_mapframe(a0),d1	; get current frame
+	move.b	mapping_frame(a0),d1	; get current frame
 	beq.s	+
 	add.w	d1,d1
 	movea.l	a5,a1
@@ -28286,22 +28257,25 @@ BuildSprites_MultiDraw:
 	move.w	d4,-(sp)
 	bsr.w	ChkDrawSprite	; draw the sprite
 	move.w	(sp)+,d4
+	tst.w	d5
+	bmi.w	BuildSprites_NextObj
 +
-	ori.b	#$80,render_flags(a0)	; set onscreen flag
+       	ori.b	#$80,render_flags(a0)	; set onscreen flag
 	lea	sub2_x_pos(a0),a6
 	moveq	#0,d0
 	move.b	mainspr_childsprites(a0),d0	; get child sprite count
 	subq.w	#1,d0		; if there are 0, go to next object
-	bcs.s	BuildSprites_MultiDraw_NextObj
+	bcs.w	BuildSprites_MultiDraw_NextObj
 
--	swap	d0
+-      	swap	d0
 	move.w	(a6)+,d3	; get X pos
 	sub.w	(a4),d3
 	addi.w	#128,d3
 	move.w	(a6)+,d2	; get Y pos
 	sub.w	4(a4),d2
 	addi.w	#128,d2
-	andi.w	#$7FF,d2
+	and.w	(Screen_Y_wrap_value).w,d2
+;------------------------------------------------
 	addq.w	#1,a6
 	moveq	#0,d1
 	move.b	(a6)+,d1	; get mapping frame
@@ -30429,303 +30403,17 @@ ObjectsManager_SameXRange:
 ; ---------------------------------------------------------------------------
 ; loc_17C50
 ObjectsManager_2P_Init:
-	moveq	#-1,d0
-	move.l	d0,(unk_F780).w
-	move.l	d0,(unk_F780+4).w
-	move.l	d0,(unk_F780+8).w
-	move.l	d0,(Camera_X_pos_last_P2).w	; both words that this sets to -1 are overwritten directly underneath, so this line is rather pointless...
-	move.w	#0,(Camera_X_pos_last).w
-	move.w	#0,(Camera_X_pos_last_P2).w
-	lea	(Obj_respawn_index).w,a2
-	move.w	(a2),(Obj_respawn_index_P2).w	; mirrior first two bytes (respawn indices) for player 2(?)
-	moveq	#0,d2
-	; run initialization for player 1
-	lea	(Obj_respawn_index).w,a5
-	lea	(Obj_load_addr_right).w,a4
-	lea	(unk_F786).w,a1	; = -1, -1, -1
-	lea	(unk_F789).w,a6	; = -1, -1, -1
-	moveq	#-2,d6
-	bsr.w	ObjMan2P_GoingForward
-	lea	(unk_F786).w,a1
-	moveq	#-1,d6
-	bsr.w	ObjMan2P_GoingForward
-	lea	(unk_F786).w,a1
-	moveq	#0,d6
-	bsr.w	ObjMan2P_GoingForward
-	; run initialization for player 2
-	lea	(Obj_respawn_index_P2).w,a5
-	lea	(Obj_load_addr_2).w,a4
-	lea	(unk_F789).w,a1
-	lea	(unk_F786).w,a6
-	moveq	#-2,d6
-	bsr.w	ObjMan2P_GoingForward
-	lea	(unk_F789).w,a1
-	moveq	#-1,d6
-	bsr.w	ObjMan2P_GoingForward
-	lea	(unk_F789).w,a1
-	moveq	#0,d6
-	bsr.w	ObjMan2P_GoingForward
 
 ; loc_17CCC
 ObjectsManager_2P_Main:
-	move.w	(Camera_X_pos).w,d1
-	andi.w	#$FF00,d1
-	move.w	d1,(Camera_X_pos_coarse).w
-
-	move.w	(Camera_X_pos_P2).w,d1
-	andi.w	#$FF00,d1
-	move.w	d1,(Camera_X_pos_coarse_P2).w
-
-	move.b	(Camera_X_pos).w,d6	; get upper byte of camera positon
-	andi.w	#$FF,d6
-	move.w	(Camera_X_pos_last).w,d0
-	cmp.w	(Camera_X_pos_last).w,d6	; is the X range the same as last time?
-	beq.s	+				; if yes, branch
-	move.w	d6,(Camera_X_pos_last).w	; remember current position for next time
-	lea	(Obj_respawn_index).w,a5
-	lea	(Obj_load_addr_right).w,a4
-	lea	(unk_F786).w,a1
-	lea	(unk_F789).w,a6
-	bsr.s	ObjectsManager_2P_Run
-+
-	move.b	(Camera_X_pos_P2).w,d6	; get upper byte of camera positon
-	andi.w	#$FF,d6
-	move.w	(Camera_X_pos_last_P2).w,d0
-	cmp.w	(Camera_X_pos_last_P2).w,d6	; is the X range the same as last time?
-	beq.s	return_17D34			; if yes, branch (rts)
-	move.w	d6,(Camera_X_pos_last_P2).w
-	lea	(Obj_respawn_index_P2).w,a5
-	lea	(Obj_load_addr_2).w,a4
-	lea	(unk_F789).w,a1
-	lea	(unk_F786).w,a6
-	bsr.s	ObjectsManager_2P_Run
 
 return_17D34:
 	rts
 ; ===========================================================================
 
-ObjectsManager_2P_Run:    
-	lea	(Obj_respawn_index).w,a2
-	moveq	#0,d2
-	cmp.w	d0,d6				; is the X range the same as last time?
-	beq.w	ObjectsManager_SameXRange	; if yes, branch (rts)
-	bge.w	ObjMan2P_GoingForward	; if new pos is greater than old pos, branch
-	; if the player is moving back
-	move.b	2(a1),d2
-	move.b	1(a1),2(a1)
-	move.b	(a1),1(a1)
-	move.b	d6,(a1)
-	cmp.b	(a6),d2
-	beq.s	+
-	cmp.b	1(a6),d2
-	beq.s	+
-	cmp.b	2(a6),d2
-	beq.s	+
-	bsr.w	ObjectsManager_2P_UnkSub3
-	bra.s	loc_17D70
-; ---------------------------------------------------------------------------
+ObjectsManager_2P_Run:
 
-+
-	bsr.w	ObjMan_2P_UnkSub2
 
-loc_17D70:
-	bsr.w	ObjMan_2P_UnkSub1
-	bne.s	loc_17D94	; if whatever checks were just performed were all not equal, branch
-	movea.l	4(a4),a0
-
--
-	cmp.b	-6(a0),d6
-	bne.s	loc_17D8E
-	tst.b	-4(a0)
-	bpl.s	+
-	subq.b	#1,1(a5)
-+
-	subq.w	#6,a0
-	bra.s	-
-; ---------------------------------------------------------------------------
-
-loc_17D8E:
-	move.l	a0,4(a4)
-	bra.s	loc_17DCA
-; ---------------------------------------------------------------------------
-
-loc_17D94:
-	movea.l	4(a4),a0
-	move.b	d6,(a1)
-
--
-	cmp.b	-6(a0),d6
-	bne.s	loc_17DC6
-	subq.w	#6,a0
-	tst.b	2(a0)
-	bpl.s	+
-	subq.b	#1,1(a5)
-	move.b	1(a5),d2
-+
-	bsr.w	ChkLoadObj_2P
-	bne.s	loc_17DBA
-	subq.w	#6,a0
-	bra.s	-
-; ---------------------------------------------------------------------------
-
-loc_17DBA:
-	tst.b	2(a0)
-	bpl.s	+
-	addq.b	#1,1(a5)
-+
-	addq.w	#6,a0
-
-loc_17DC6:
-	move.l	a0,4(a4)
-
-loc_17DCA:
-	movea.l	(a4),a0
-	addq.w	#3,d6
-
--
-	cmp.b	-6(a0),d6
-	bne.s	loc_17DE0
-	tst.b	-4(a0)
-	bpl.s	+
-	subq.b	#1,(a5)
-+
-	subq.w	#6,a0
-	bra.s	-
-; ---------------------------------------------------------------------------
-
-loc_17DE0:
-	move.l	a0,(a4)
-	rts
-; ===========================================================================
-;loc_17DE4:
-ObjMan2P_GoingForward:
-	addq.w	#2,d6		; look forward two chunks
-
-	move.b	(a1),d2		; shift positions in array left once
-	move.b	1(a1),(a1)	; nearest chunk to the right
-	move.b	2(a1),1(a1)	; middle chunk to the right
-	move.b	d6,2(a1)	; farthest chunk to the right
-
-	cmp.b	(a6),d2		; compare farthset distance
-	beq.s	+
-	cmp.b	1(a6),d2
-	beq.s	+
-	cmp.b	2(a6),d2
-	beq.s	+
-
-	bsr.w	ObjectsManager_2P_UnkSub3	; if not, run this sub-routine
-	bra.s	loc_17E10
-; ---------------------------------------------------------------------------
-
-+
-	bsr.w	ObjMan_2P_UnkSub2
-
-loc_17E10:
-	bsr.w	ObjMan_2P_UnkSub1
-	bne.s	loc_17E2C	; if whatever checks were just performed were all not equal, branch
-	movea.l	(a4),a0
-
--
-	cmp.b	(a0),d6
-	bne.s	loc_17E28
-	tst.b	2(a0)	; does the object get a respawn table entry?
-	bpl.s	+	; if not, branch
-	addq.b	#1,(a5)
-+
-	addq.w	#6,a0
-	bra.s	-
-; ===========================================================================
-
-loc_17E28:
-	move.l	a0,(a4)
-	bra.s	loc_17E46
-; ===========================================================================
-
-loc_17E2C:
-	movea.l	(a4),a0
-	move.b	d6,(a1)
-
--
-	cmp.b	(a0),d6
-	bne.s	loc_17E44
-	tst.b	2(a0)	; does the object get a respawn table entry?
-	bpl.s	+	; if not, branch
-	move.b	(a5),d2
-	addq.b	#1,(a5)
-+
-	bsr.w	ChkLoadObj_2P
-	beq.s	-
-
-loc_17E44:
-	move.l	a0,(a4)
-
-loc_17E46:
-	movea.l	4(a4),a0
-	subq.w	#3,d6
-	bcs.s	loc_17E60
-
-loc_17E4E:
-	cmp.b	(a0),d6
-	bne.s	loc_17E60
-	tst.b	2(a0)
-	bpl.s	loc_17E5C
-	addq.b	#1,1(a5)
-
-loc_17E5C:
-	addq.w	#6,a0
-	bra.s	loc_17E4E
-; ===========================================================================
-
-loc_17E60:
-	move.l	a0,4(a4)
-	rts
-; ===========================================================================
-;loc_17E66:
-ObjMan_2P_UnkSub1:
-	move.l	a1,-(sp)
-	lea	(unk_F780).w,a1
-	cmp.b	(a1)+,d6
-	beq.s	+
-	cmp.b	(a1)+,d6
-	beq.s	+
-	cmp.b	(a1)+,d6
-	beq.s	+
-	cmp.b	(a1)+,d6
-	beq.s	+
-	cmp.b	(a1)+,d6
-	beq.s	+
-	cmp.b	(a1)+,d6
-	beq.s	+
-	moveq	#1,d0
-+
-	movea.l	(sp)+,a1
-	rts
-; ===========================================================================
-;loc_17E8A:
-ObjMan_2P_UnkSub2:
-	lea	(unk_F780).w,a1
-	lea	(Dynamic_Object_RAM_2P_End).w,a3
-	tst.b	(a1)+
-	bmi.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$C*object_size).w,a3
-	tst.b	(a1)+
-	bmi.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$18*object_size).w,a3
-	tst.b	(a1)+
-	bmi.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$24*object_size).w,a3
-	tst.b	(a1)+
-	bmi.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$30*object_size).w,a3
-	tst.b	(a1)+
-	bmi.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$3C*object_size).w,a3
-	tst.b	(a1)+
-	bmi.s	+
-	nop
-	nop
-+
-	subq.w	#1,a1
 	rts
 ; ===========================================================================
 ; this sub-routine appears to determine which 12 byte block of object RAM
@@ -30734,61 +30422,11 @@ ObjMan_2P_UnkSub2:
 ; of markObjGone, as that routine isn't called in two player mode.
 ;loc_17EC6:
 ObjectsManager_2P_UnkSub3:
-	lea	(unk_F780).w,a1
-	lea	(Dynamic_Object_RAM_2P_End).w,a3
-	cmp.b	(a1)+,d2
-	beq.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$C*object_size).w,a3
-	cmp.b	(a1)+,d2
-	beq.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$18*object_size).w,a3
-	cmp.b	(a1)+,d2
-	beq.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$24*object_size).w,a3
-	cmp.b	(a1)+,d2
-	beq.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$30*object_size).w,a3
-	cmp.b	(a1)+,d2
-	beq.s	+
-	lea	(Dynamic_Object_RAM_2P_End+$3C*object_size).w,a3
-	cmp.b	(a1)+,d2
-	beq.s	+
-	nop
-	nop
-+
-	move.b	#-1,-(a1)
-	movem.l	a1/a3,-(sp)
-	moveq	#0,d1		; used later to delete objects
-	moveq	#$C-1,d2
 
-;loc_17F0A:
-ObjMan2P_UnkSub3_DeleteBlockLoop:
-	tst.b	(a3)
-	beq.s	ObjMan2P_UnkSub3_DeleteBlock_SkipObj	; branch if slot is empty
-	movea.l	a3,a1
-	moveq	#0,d0
-	move.b	respawn_index(a1),d0	; does object remember its state?
-	beq.s	+			; if not, branch
-	bclr	#7,2(a2,d0.w)	; else, clear entry in respawn table
-
-	; inlined DeleteObject2:
-+
-	moveq	#bytesToLcnt(next_object),d0 ; we want to clear up to the next object
-	; note: d1 is already 0
-
-	; delete the object by setting all of its bytes to 0
--	move.l	d1,(a1)+
-	dbf	d0,-
-    if object_size&3
-	move.w	d1,(a1)+
-    endif
 
 ;loc_17F26:
 ObjMan2P_UnkSub3_DeleteBlock_SkipObj:
-	lea	next_object(a3),a3 ; a3=object
-	dbf	d2,ObjMan2P_UnkSub3_DeleteBlockLoop
-	moveq	#0,d2
-	movem.l	(sp)+,a1/a3
+
 	rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
@@ -30843,43 +30481,7 @@ return_17F7E:
 ; ===========================================================================
 ;loc_17F80:
 ChkLoadObj_2P:
-	tst.b	2(a0)		; does the object get a respawn table entry?
-	bpl.s	+		; if not, branch
-	bset	#7,2(a2,d2.w)	; mark object as loaded
-	beq.s	+		; branch if it wasn't already loaded
-	addq.w	#6,a0	; next object
-	moveq	#0,d0	; let the objects manager know that it can keep going
-	rts
-; ---------------------------------------------------------------------------
 
-+
-	btst	#4,2(a0)	; the bit that's being tested for here should always be zero,
-	beq.s	+		; but assuming it weren't and this branch isn't taken,
-	bsr.w	SingleObjLoad	; then this object would not be loaded into one of the 12
-	bne.s	return_17FD8	; byte blocks after Dynamic_Object_RAM_2P_End and would most
-	bra.s	ChkLoadObj_2P_LoadData	; likely end up somwhere before this in Dynamic_Object_RAM
-; ---------------------------------------------------------------------------
-
-+
-	bsr.w	SingleObjLoad3	; find empty slot in current 12 object block
-	bne.s	return_17FD8	; branch, if there is no room left in this block
-;loc_17FAA:
-ChkLoadObj_2P_LoadData:
-	move.w	(a0)+,x_pos(a1)
-	move.w	(a0)+,d0	; there are three things stored in this word
-	bpl.s	+		; branch, if the object doesn't get a respawn table entry
-	move.b	d2,respawn_index(a1)
-+
-	move.w	d0,d1		; copy for later
-	andi.w	#$FFF,d0	; get y-position
-	move.w	d0,y_pos(a1)
-	rol.w	#3,d1	; adjust bits
-	andi.b	#3,d1	; get render flags
-	move.b	d1,render_flags(a1)
-        move.b	d1,status(a1)
-	move.l	(a0)+,(a1) ; load obj
-	move.b	(a0)+,subtype(a1)
-	moveq	#0,d0
 
 return_17FD8:
 	rts
@@ -30893,90 +30495,40 @@ return_17FD8:
 
 ; loc_17FDA: ; allocObject:
 SingleObjLoad:
-	lea	(Dynamic_Object_RAM).w,a1 ; a1=object
-	move.w	#(Dynamic_Object_RAM_End-Dynamic_Object_RAM)/object_size-1,d0 ; search to end of table
-	tst.w	(Two_player_mode).w
-	beq.s	+
-	move.w	#(Dynamic_Object_RAM_2P_End-Dynamic_Object_RAM)/object_size-1,d0 ; search to $BF00 exclusive
-
-/
-	tst.l	(a1)	; is object RAM slot empty?
-	beq.s	return_17FF8	; if yes, branch
-	lea	next_object(a1),a1 ; load obj address ; goto next object RAM slot
-	dbf	d0,-	; repeat until end
-
-return_17FF8:
-	rts
-; ===========================================================================
+Create_New_Sprite:
+		lea	(Dynamic_Object_RAM).w,a1
+		moveq	#((Dynamic_Object_RAM_End-Dynamic_Object_RAM)/object_size)-1,d0
+		bra.s	loc_1BB0A
 ; ---------------------------------------------------------------------------
-; Single object loading subroutine
-; Find an empty object array AFTER the current one in the table
-; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; loc_17FFA: ; allocObjectAfterCurrent:
 SingleObjLoad2:
-	movea.l	a0,a1
-	move.w	#Dynamic_Object_RAM_End,d0	; $D000
-	sub.w	a0,d0	; subtract current object location
-    if object_size=$40
-	lsr.w	#6,d0	; divide by $40
-	subq.w	#1,d0	; keep from going over the object zone
-	bcs.s	return_18014
-    else
-	lsr.w	#6,d0			; divide by $40
-	move.b	+(pc,d0.w),d0		; load the right number of objects from table
-	bmi.s	return_18014		; if negative, we have failed!
-    endif
+Create_New_Sprite3:
+		movea.l	a0,a1
+		move.w	#Dynamic_Object_RAM_End,d0
+		sub.w	a0,d0
+		lsr.w	#6,d0			; Divide by $40... even though SSTs are $4A bytes long in this game
+		move.b	byte_1BB16(pc,d0.w),d0	; Use a look-up table to get the right loop counter
+		bmi.s	locret_1BB14
 
--
-	tst.l	(a1)	; is object RAM slot empty?
-	beq.s	return_18014	; if yes, branch
-	lea	next_object(a1),a1 ; load obj address ; goto next object RAM slot
-	dbf	d0,-	; repeat until end
+loc_1BB0A:
+		lea	next_object(a1),a1
+		tst.l	(a1)
+		dbeq	d0,loc_1BB0A
 
-return_18014:
-	rts
+locret_1BB14:
+		rts
+; End of function Create_New_Sprite
 
-    if object_size<>$40
-+	dc.b -1
-.a :=	1		; .a is the object slot we are currently processing
-.b :=	1		; .b is used to calculate when there will be a conversion error due to object_size being > $40
-
-	rept (LevelOnly_Object_RAM-Reserved_Object_RAM_End)/object_size-1
-		if (object_size * (.a-1)) / $40 > .b+1	; this line checks, if there would be a conversion error
-			dc.b .a-1, .a-1			; and if is, it generates 2 entries to correct for the error
-		else
-			dc.b .a-1
-		endif
-
-.b :=		(object_size * (.a-1)) / $40		; this line adjusts .b based on the iteration count to check
-.a :=		.a+1					; run interation counter
-	endm
-	even
-    endif
-; ===========================================================================
 ; ---------------------------------------------------------------------------
-; Single object loading subroutine
-; Find an empty object at or within < 12 slots after a3
+byte_1BB16:
+.a		set	Dynamic_Object_RAM
+.b		set	Dynamic_Object_RAM_End
+.c		set	.b			; begin from bottom of array and decrease backwards
+		rept	(.b-.a)/$40		; repeat for all slots, minus exception
+.c		set	.c-$40			; address for previous $40 (also skip last part)
+		dc.b	(.b-.c-1)/object_size-1	; write possible slots according to object_size division + hack + dbf hack
+		endm
+		even
 ; ---------------------------------------------------------------------------
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; loc_18016:
-SingleObjLoad3:
-	movea.l	a3,a1
-	move.w	#$B,d0
-
--
-	tst.l	(a1)	; is object RAM slot empty?
-	beq.s	return_18028	; if yes, branch
-	lea	next_object(a1),a1 ; load obj address ; goto next object RAM slot
-	dbf	d0,-	; repeat until end
-
-return_18028:
-	rts
 ; ===========================================================================
 
 ;---------------------------------------------------------------------------------------
@@ -33203,7 +32755,7 @@ Obj01_Init:
 	move.b	#9,x_radius(a0)
 	move.l	#Mapunc_Sonic,mappings(a0)
 	move.b	#2,priority(a0)
-	move.b	#$18,width_pixels(a0)
+	move.b	#$18,width_pixels(a0) 
 	move.b	#4,render_flags(a0)
 	move.b	#0,character_id(a0)
 	move.w	#$600,(Sonic_top_speed).w	; set Sonic's top speed
