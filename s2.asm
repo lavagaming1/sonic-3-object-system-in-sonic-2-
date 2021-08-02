@@ -58376,21 +58376,22 @@ JmpTo59_Adjust2PArtPointer ; JmpTo
 ; ----------------------------------------------------------------------------
 ; OST Variables:
 Obj5D_timer2		= objoff_2A
-Obj5D_pipe_segments	= objoff_2C
-Obj5D_status		= objoff_2D
-Obj5D_status2		= objoff_2E
-Obj5D_x_vel		= objoff_2E	; and $2F
-Obj5D_x_pos_next	= objoff_30
-Obj5D_timer		= objoff_30
-Obj5D_y_offset		= objoff_31
-Obj5D_timer3		= objoff_32
-Obj5D_parent		= objoff_34
-Obj5D_y_pos_next	= objoff_38
-Obj5D_defeat_timer	= objoff_3C
-Obj5D_flag		= objoff_3C
-Obj5D_timer4		= objoff_3C
-Obj5D_invulnerable_time	= objoff_3E
-Obj5D_hover_counter	= objoff_3F
+Obj5D_pipe_segments	= $12 ;objoff_2C   ; 2 bytes
+Obj5D_status		= $45 ;objoff_2D
+Obj5D_status2		= $46 ;objoff_2E
+Obj5D_x_vel		= $46     ;objoff_2E	; and $2F
+Obj5D_x_pos_next	= $40 ;objoff_30
+Obj5D_timer		= $40 ;objoff_30
+SecondaryRoutineCpzBoss = $30 ; 1 byte 
+Obj5D_y_offset		= $31 ;objoff_31
+Obj5D_timer3		= $32 ;;objoff_32
+Obj5D_parent		= $34 ;objoff_34
+Obj5D_y_pos_next	= $38 ;objoff_38
+Obj5D_defeat_timer	= $3C ;objoff_3C
+Obj5D_flag		= $3C ;objoff_3C
+Obj5D_timer4		= $3C ;objoff_3C
+Obj5D_invulnerable_time	= $3E ;objoff_3E
+Obj5D_hover_counter	= $3F ;objoff_3F
 
 ; Sprite_2D734:
 Obj5D:
@@ -58526,7 +58527,7 @@ return_2D94C:
 Obj5D_Main:
 	bsr.w	Obj5D_LookAtChar
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	SecondaryRoutineCpzBoss(a0),d0
 	move.w	Obj5D_Main_Index(pc,d0.w),d1
 	jsr	Obj5D_Main_Index(pc,d1.w)
 	lea	(Ani_obj5D_b).l,a1
@@ -58549,7 +58550,7 @@ Obj5D_Main_Index:	offsetTable
 ; Makes the boss look in Sonic's direction under certain circumstances.
 
 Obj5D_LookAtChar:
-	cmpi.b	#8,routine_secondary(a0)
+	cmpi.b	#8,SecondaryRoutineCpzBoss(a0)
 	bge.s	+
 	move.w	(MainCharacter+x_pos).w,d0
 	sub.w	x_pos(a0),d0
@@ -58569,7 +58570,7 @@ Obj5D_Main_8:
 	bset	#0,status(a0)
 	bclr	#7,status(a0)
 	clr.w	x_vel(a0)
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Main_A
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Main_A
 	move.w	#-$26,Obj5D_defeat_timer(a0)
 	rts
 ; ===========================================================================
@@ -58591,7 +58592,7 @@ Obj5D_Main_A:
 	beq.s	++
 	cmpi.w	#$38,Obj5D_defeat_timer(a0)
 	blo.s	Obj5D_Main_A_End
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Main_C
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Main_C
 	bra.s	Obj5D_Main_A_End
 ; ---------------------------------------------------------------------------
 +
@@ -58644,7 +58645,7 @@ Obj5D_Main_0:
 	cmpi.w	#$4C0,Obj5D_y_pos_next(a0)
 	bne.s	Obj5D_Main_Pos_and_Collision
 	move.w	#0,y_vel(a0)
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Main_2
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Main_2
 
 Obj5D_Main_Pos_and_Collision:
 	; do hovering motion using sine wave
@@ -58656,7 +58657,7 @@ Obj5D_Main_Pos_and_Collision:
 	move.w	Obj5D_x_pos_next(a0),x_pos(a0)
 	addq.b	#2,Obj5D_hover_counter(a0)
 
-	cmpi.b	#8,routine_secondary(a0)	; exploding or retreating?
+	cmpi.b	#8,SecondaryRoutineCpzBoss(a0)	; exploding or retreating?
 	bhs.s	return_2DAE8			; if yes, branch
 	tst.b	status(a0)
 	bmi.s	Obj5D_Defeated		; branch, if boss is defeated
@@ -58690,7 +58691,7 @@ return_2DAE8:
 Obj5D_Defeated:
 	moveq	#100,d0
 	jsrto	(AddPoints).l, JmpTo2_AddPoints
-	move.b	#8,routine_secondary(a0)	; => Obj5D_Main_8
+	move.b	#8,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Main_8
 	move.w	#$B3,Obj5D_defeat_timer(a0)
 	movea.l	Obj5D_parent(a0),a1 ; a1=object
 	move.b	#4,anim(a1)
@@ -58789,7 +58790,7 @@ Obj5D_Main_2_Stop:
 	bne.w	Obj5D_Main_Pos_and_Collision
 	move.w	#0,x_vel(a0)
 	move.w	#0,y_vel(a0)
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Main_4
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Main_4
 	bchg	#3,Obj5D_status(a0)	; indicate boss is now at the other side
 	bset	#0,Obj5D_status2(a0)	; action 0
 	bra.w	Obj5D_Main_Pos_and_Collision
@@ -58802,7 +58803,7 @@ Obj5D_Main_4:
 	bra.w	Obj5D_Main_Pos_and_Collision
 ; ---------------------------------------------------------------------------
 +
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Main_6
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Main_6
 	bra.w	Obj5D_Main_Pos_and_Collision
 ; ===========================================================================
 
@@ -58916,7 +58917,7 @@ Obj5D_Pump:
 
 Obj5D_Pipe:
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	SecondaryRoutineCpzBoss(a0),d0
 	move.w	Obj5D_Pipe_Index(pc,d0.w),d1
 	jmp	Obj5D_Pipe_Index(pc,d1.w)
 ; ===========================================================================
@@ -58938,7 +58939,7 @@ Obj5D_Pipe_0:
 	move.w	y_pos(a1),y_pos(a0)
 	addi.w	#$18,y_pos(a0)
 	move.w	#$C,Obj5D_pipe_segments(a0)
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Pipe_2_Load
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Pipe_2_Load
 	movea.l	a0,a1
 	bra.s	Obj5D_Pipe_2_Load_Part2		; skip initial loading setup
 ; ===========================================================================
@@ -58975,7 +58976,7 @@ Obj5D_Pipe_2_Load_Part2:
 	move.w	d0,Obj5D_y_pos_next(a1)
 	add.w	d0,y_pos(a1)
 	move.b	#1,anim(a1)
-	cmpi.b	#2,routine_secondary(a1)
+	cmpi.b	#2,SecondaryRoutineCpzBoss(a1)
 	beq.w	Obj5D_PipeSegment	; only true for the first object
 	move.b	#$E,routine(a1)	; => Obj5D_PipeSegment
 	bra.w	Obj5D_PipeSegment
@@ -58983,7 +58984,7 @@ Obj5D_Pipe_2_Load_Part2:
 ; once all pipe segments have been loaded, switch to pumping routine
 
 Obj5D_Pipe_2_Load_End:
-	move.b	#0,routine_secondary(a0)
+	move.b	#0,SecondaryRoutineCpzBoss(a0)
 	move.b	#6,routine(a0)	; => Obj5D_Pipe_Pump_0
 	bra.w	Obj5D_PipeSegment
 ; ===========================================================================
@@ -58991,7 +58992,7 @@ Obj5D_Pipe_2_Load_End:
 
 Obj5D_Pipe_Pump:
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	SecondaryRoutineCpzBoss(a0),d0
 	move.w	Obj5D_Pipe_Pump_Index(pc,d0.w),d1
 	jmp	Obj5D_Pipe_Pump_Index(pc,d1.w)
 ; ===========================================================================
@@ -59007,7 +59008,7 @@ Obj5D_Pipe_Pump_0:
 	bne.w	Obj5D_PipeSegment
 	move.b	#$E,routine(a0)	; => Obj5D_PipeSegment	; temporarily turn control object into a pipe segment
 	move.b	#6,routine(a1)
-	move.b	#2,routine_secondary(a1)	; => Obj5D_Pipe_Pump_2
+	move.b	#2,SecondaryRoutineCpzBoss(a1)	; => Obj5D_Pipe_Pump_2
 	move.l	#Obj5D,(a1) ; load obj5D
 	move.l	#Obj5D_MapUnc_2EADC,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_CPZBoss,1,0),art_tile(a1)
@@ -59059,7 +59060,7 @@ Obj5D_Pipe_Pump_2:
 ; ---------------------------------------------------------------------------
 +	; when pumping sequence is over
 	move.b	#6,Obj5D_timer(a0)
-	move.b	#4,routine_secondary(a0)	; => Obj5D_Pipe_Pump_4
+	move.b	#4,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Pipe_Pump_4
 	rts
 ; ---------------------------------------------------------------------------
 
@@ -59083,7 +59084,7 @@ Obj5D_Pipe_Pump_4:
 	beq.s	+
 	move.b	#2,anim(a0)
 	move.b	#$12,Obj5D_timer(a0)
-	move.b	#2,routine_secondary(a0)	; => Obj5D_Pipe_Pump_2
+	move.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Pipe_Pump_2
 	move.b	#$B*8,Obj5D_y_offset(a0)
 +
 	; set control object's routine
@@ -59118,9 +59119,8 @@ loc_2DFD8:
 ; ===========================================================================
 
 Obj5D_Pipe_Retract_ChkID:
-	moveq	#0,d7
-	move.l	#Obj5D,d7
-	cmp.L	(a1),d7	; is object a subtype of the CPZ Boss?
+	;moveq	#0,d7
+	cmp.l	#Obj5D,(a1)	; is object a subtype of the CPZ Boss?
 	beq.s	loc_2DFF0	; if yes, branch
 	dbf	d1,Obj5D_Pipe_Retract_Loop
 	bra.s	Obj5D_PipeSegment
@@ -59142,7 +59142,7 @@ Obj5D_PipeSegment:
 
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
-	cmpi.b	#4,routine_secondary(a0)
+	cmpi.b	#4,SecondaryRoutineCpzBoss(a0)
 	bne.s	+
 	addi.w	#$18,y_pos(a0)
 +
@@ -59177,7 +59177,7 @@ Obj5D_Dripper:
 	btst	#7,status(a0)
 	bne.w	JmpTo51_DeleteObject
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	SecondaryRoutineCpzBoss(a0),d0
 	move.w	Obj5D_Dripper_States(pc,d0.w),d1
 	jmp	Obj5D_Dripper_States(pc,d1.w)
 ; ===========================================================================
@@ -59188,7 +59188,7 @@ Obj5D_Dripper_States:	offsetTable
 ; ===========================================================================
 
 Obj5D_Dripper_0:
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Dripper_2
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Dripper_2
 	move.l	#Obj5D,(a1) ; load 0bj5D
 	move.l	#Obj5D_MapUnc_2EADC,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_CPZBoss,3,0),art_tile(a0)
@@ -59206,7 +59206,7 @@ Obj5D_Dripper_2:
 	bne.s	+
 	move.b	#5,anim(a0)
 	move.b	#4,Obj5D_timer(a0)
-	addq.b	#2,routine_secondary(a0)
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)
 	subi.w	#$24,y_pos(a0)
 	subi.w	#2,x_pos(a0)
 	rts
@@ -59225,7 +59225,7 @@ Obj5D_Dripper_2:
 Obj5D_Dripper_4:
 	subq.b	#1,Obj5D_timer(a0)
 	bne.s	+
-	move.b	#0,routine_secondary(a0)
+	move.b	#0,SecondaryRoutineCpzBoss(a0)
 	movea.l	Obj5D_parent(a0),a1 ; a1=object
 	bset	#1,Obj5D_status2(a1)
 	addq.b	#1,Obj5D_timer4(a0)
@@ -59250,7 +59250,7 @@ Obj5D_Dripper_4:
 
 Obj5D_Container:
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	SecondaryRoutineCpzBoss(a0),d0
 	move.w	Obj5D_Container_States(pc,d0.w),d1
 	jmp	Obj5D_Container_States(pc,d1.w)
 ; ===========================================================================
@@ -59280,7 +59280,7 @@ Obj5D_Container_Init:
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.b	#$10,routine(a1)
-	move.b	#4,routine_secondary(a1)	; => Obj5D_Container_Floor
+	move.b	#4,SecondaryRoutineCpzBoss(a1)	; => Obj5D_Container_Floor
 	move.b	#9,anim(a1)
 +
 	jsr	(SingleObjLoad2).l
@@ -59295,9 +59295,9 @@ Obj5D_Container_Init:
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	addi.b	#$10,routine(a1)
-	move.b	#6,routine_secondary(a1)	; => Obj5D_Container_Extend
+	move.b	#6,SecondaryRoutineCpzBoss(a1)	; => Obj5D_Container_Extend
 +
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Container_Main
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Container_Main
 
 Obj5D_Container_Main:
 	movea.l	Obj5D_parent(a0),a1 ; a1=object
@@ -59337,7 +59337,7 @@ loc_2E2AC:
 ; ===========================================================================
 
 loc_2E2E0:
-	move.b	#$A,routine_secondary(a0)
+	move.b	#$A,SecondaryRoutineCpzBoss(a0)
 	bra.s	loc_2E2AC
 ; ===========================================================================
 
@@ -59472,7 +59472,7 @@ loc_2E464:
 	move.l	#Obj5D,(a1) ; load obj5D
 	move.l	a0,Obj5D_parent(a1)
 	move.b	#$10,routine(a1)
-	move.b	#8,routine_secondary(a1)
+	move.b	#8,SecondaryRoutineCpzBoss(a1)
 	move.l	#Obj5D_MapUnc_2EADC,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_CPZBoss,1,0),art_tile(a1)
 	move.b	#4,render_flags(a1)
@@ -59498,7 +59498,7 @@ loc_2E4CE:
 	bclr	#4,Obj5D_status2(a1)
 	beq.s	loc_2E552
 	bclr	#2,Obj5D_status2(a1)
-	clr.b	routine_secondary(a0)
+	clr.b	SecondaryRoutineCpzBoss(a0)
 	movea.l	a1,a2
 	jsr	(SingleObjLoad2).l
 	bne.s	return_2E550
@@ -59512,7 +59512,7 @@ loc_2E4CE:
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.b	#4,routine(a1)
-	move.b	#0,routine_secondary(a0)
+	move.b	#0,SecondaryRoutineCpzBoss(a0)
 	bra.s	return_2E550
 ; ===========================================================================
 	move.b	#$A,routine(a1)
@@ -59570,7 +59570,7 @@ Obj5D_Container_Extend:
 	bclr	#3,Obj5D_status2(a1)
 	beq.s	+
 	move.b	#$C,routine(a0)
-	move.b	#0,routine_secondary(a0)
+	move.b	#0,SecondaryRoutineCpzBoss(a0)
 	move.b	#$87,collision_flags(a0)
 	bra.s	Obj5D_Container_Floor_End
 ; ----------------------------------------------------------------------------
@@ -59626,7 +59626,7 @@ Obj5D_Container_Floor2:
 
 Obj5D_Gunk:
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	SecondaryRoutineCpzBoss(a0),d0
 	move.w	Obj5D_Gunk_States(pc,d0.w),d1
 	jmp	Obj5D_Gunk_States(pc,d1.w)
 ; ===========================================================================
@@ -59639,7 +59639,7 @@ Obj5D_Gunk_States:	offsetTable
 ; ===========================================================================
 
 Obj5D_Gunk_Init:
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Gunk_Main
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Gunk_Main
 	move.b	#$20,y_radius(a0)
 	move.b	#$19,anim(a0)
 	move.w	#0,y_vel(a0)
@@ -59648,7 +59648,7 @@ Obj5D_Gunk_Init:
 	btst	#2,Obj5D_status(a1)
 	beq.s	Obj5D_Gunk_Main
 	bclr	#2,Obj5D_status(a1)
-	move.b	#6,routine_secondary(a0)	; => Obj5D_Gunk_6
+	move.b	#6,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Gunk_6
 	move.w	#9,Obj5D_timer2(a0)
 
 Obj5D_Gunk_Main:
@@ -59668,8 +59668,8 @@ Obj5D_Gunk_Main:
 	movea.l	Obj5D_parent(a1),a1
 	bset	#2,Obj5D_status2(a1)
 	bset	#4,Obj5D_status2(a1)
-	move.b	#2,routine_secondary(a1)
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Gunk_Droplets
+	move.b	#2,SecondaryRoutineCpzBoss(a1)
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Gunk_Droplets
 	move.b	#0,subtype(a0)
 	move.w	#SndID_MegaMackDrop,d0
 	jsrto	(PlaySound).l, JmpTo5_PlaySound
@@ -59681,7 +59681,7 @@ Obj5D_Gunk_OffScreen:
 	movea.l	Obj5D_parent(a1),a1
 	bset	#2,Obj5D_status2(a1)
 	bset	#4,Obj5D_status2(a1)
-	move.b	#2,routine_secondary(a1)
+	move.b	#2,SecondaryRoutineCpzBoss(a1)
 	bra.w	JmpTo51_DeleteObject
 ; ===========================================================================
 
@@ -59694,7 +59694,7 @@ Obj5D_Gunk_6:
 	movea.l	Obj5D_parent(a1),a1 ; a1=object
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
-	addq.b	#2,routine_secondary(a0)	; => Obj5D_Gunk_8
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)	; => Obj5D_Gunk_8
 	move.b	#8,anim_frame_duration(a0)
 	bra.s	Obj5D_Gunk_8
 ; ===========================================================================
@@ -59766,7 +59766,7 @@ Obj5D_Gunk_Droplets_Loop:
 	move.b	#4,x_radius(a1)
 	move.b	#9,mapping_frame(a1)
 	move.b	#$C,routine(a1)
-	move.b	#4,routine_secondary(a1)
+	move.b	#4,SecondaryRoutineCpzBoss(a1)
 	move.b	#1,subtype(a1)
 	move.w	y_vel(a0),y_vel(a1)
 	move.b	collision_flags(a0),collision_flags(a1)
@@ -59871,7 +59871,7 @@ loc_2E9A8:
 	rts
 ; ===========================================================================
 +
-	addq.b	#2,routine_secondary(a0)
+	addq.b	#2,SecondaryRoutineCpzBoss(a0)
 	move.l	#Obj5D_MapUnc_2EEA0,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_EggpodJets_1,0,0),art_tile(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo60_Adjust2PArtPointer
@@ -73753,7 +73753,7 @@ ObjA5_ObjA6_Obj98_MapUnc_38CCA:	BINCLUDE "mappings/sprite/objA6.bin"
 ; Object A7 - Grabber (spider badnik) from CPZ
 ; ----------------------------------------------------------------------------
 ; Sprite_38DBA:
-ObjA7:
+ObjA7: rts
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	ObjA7_Index(pc,d0.w),d1
@@ -80913,7 +80913,7 @@ AnotherWordedFlag = $42
 ; Object 3E - Egg prison
 ; ----------------------------------------------------------------------------
 ; Sprite_3F1E4:
-Obj3E:     rts
+Obj3E:            rts
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj3E_Index(pc,d0.w),d1
