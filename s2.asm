@@ -25703,7 +25703,7 @@ loc_141E6:
 	lea	next_object(a0),a1 ; a1=object
 
 loc_14214:
-	tst.l	l(a1)
+	tst.l	(a1)
 	beq.s	loc_14220
 	lea	next_object(a1),a1 ; a1=object
 	bra.s	loc_14214
@@ -28118,52 +28118,62 @@ BuildSprites_LevelLoop:
 ; loc_16630:
 BuildSprites_ObjLoop:
 	movea.w	(a4,d6.w),a0 ; a0=object
-;	tst.l	(a0)			; is this object slot occupied?
-;	beq.w	BuildSprites_NextObj	; if not, branch
-;	tst.l	mappings(a0)		; does this object have any mappings?
-;	beq.w	BuildSprites_NextObj	; if not, branch
+	tst.l	id(a0)			; is this object slot occupied?
+	beq.w	BuildSprites_NextObj	; if not, check next one
+
 	andi.b	#$7F,render_flags(a0)	; clear on-screen flag
 	move.b	render_flags(a0),d0
-	move.w	x_pos(a0),d3
-	move.w	y_pos(a0),d2
 	move.b	d0,d4
 	btst	#6,d0	; is the multi-draw flag set?
 	bne.w	BuildSprites_MultiDraw	; if it is, branch
 	andi.w	#$C,d0	; is this to be positioned by screen coordinates?
-	beq.s	BuildSprites_DrawSprite	; if it is, branch
+	beq.s	BuildSprites_ScreenSpaceObj	; if it is, branch
 	lea	(Camera_X_pos_copy).w,a1
 	moveq	#0,d0
 	move.b	width_pixels(a0),d0
-	;move.w	x_pos(a0),d3
+	move.w	x_pos(a0),d3
 	sub.w	(a1),d3
 	move.w	d3,d1
 	add.w	d0,d1	; is the object right edge to the left of the screen?
 	bmi.w	BuildSprites_NextObj	; if it is, branch
 	move.w	d3,d1
 	sub.w	d0,d1
-	cmpi.w	#320,d1		; is the object left edge to the right of the screen?
-	bge.s	BuildSprites_NextObj	; if it is, branch
+	cmpi.w	#320,d1	; is the object left edge to the right of the screen?
+	bge.w	BuildSprites_NextObj	; if it is, branch
 	addi.w	#128,d3
-	;moveq	#0,d0
-	;move.b	y_radius(a0),d0
-	;move.w	y_pos(a0),d2
+	btst	#4,d4		; is the accurate Y check flag set?
+	beq.s	BuildSprites_ApproxYCheck	; if not, branch
+	moveq	#0,d0
+	move.b	y_radius(a0),d0
+	move.w	y_pos(a0),d2
 	sub.w	4(a1),d2
-	move.b	height_pixels(a0),d0
-	add.w	d0,d1
-	and.w	(Screen_Y_wrap_value).w,d2
 	move.w	d2,d1
 	add.w	d0,d1
 	bmi.s	BuildSprites_NextObj	; if the object is above the screen
 	move.w	d2,d1
 	sub.w	d0,d1
-        cmpi.w	#224,d1
+	cmpi.w	#224,d1
 	bge.s	BuildSprites_NextObj	; if the object is below the screen
 	addi.w	#128,d2
-	sub.w	d2,d1
-	;bra.s	BuildSprites_DrawSprite
-	;rts
+	bra.s	BuildSprites_DrawSprite
 ; ===========================================================================
-
+; loc_166A6:
+BuildSprites_ScreenSpaceObj:
+	move.w	y_pixel(a0),d2
+	move.w	x_pixel(a0),d3
+	bra.s	BuildSprites_DrawSprite
+; ===========================================================================
+; loc_166B0:
+BuildSprites_ApproxYCheck:
+	move.w	y_pos(a0),d2
+	sub.w	4(a1),d2
+	addi.w	#128,d2
+	andi.w	#$7FF,d2
+	cmpi.w	#-32+128,d2	; assume Y radius to be 32 pixels
+	blo.s	BuildSprites_NextObj
+	cmpi.w	#32+128+224,d2
+	bhs.s	BuildSprites_NextObj
+; loc_166CC:
 BuildSprites_DrawSprite:
 	movea.l	mappings(a0),a1
 	moveq	#0,d1
@@ -28186,10 +28196,6 @@ BuildSprites_NextObj:
 	bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
 ; loc_166FA:
 BuildSprites_NextLevel:
-  ;     	cmpa.l	#Sprite_Table_Input,a
-;	bne.s	+
-;	rts
-;+
 	lea	$80(a4),a4	; load next priority level
 	dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
@@ -28201,52 +28207,55 @@ BuildSprites_NextLevel:
 	move.b	#0,-5(a2)	; set link field to 0
 	rts
 ; ===========================================================================
-
 ; loc_1671C:
 BuildSprites_MultiDraw:
 	move.l	a4,-(sp)
 	lea	(Camera_X_pos).w,a4
-	;movea.w	art_tile(a0),a3
-	;movea.l	mappings(a0),a5
-	btst	#4,d4
-	beq.s	+
+	movea.w	art_tile(a0),a3
+	movea.l	mappings(a0),a5
 	moveq	#0,d0
 
 	; check if object is within X bounds
-	move.b	width_pixels(a0),d0	; load pixel width
-	subi.w	#128,d3
+	move.b	mainspr_width(a0),d0	; load pixel width
+	move.w	x_pos(a0),d3
+	sub.w	(a4),d3
 	move.w	d3,d1
 	add.w	d0,d1
-	bmi.w	BuildSprites_NextObj
+	bmi.w	BuildSprites_MultiDraw_NextObj
 	move.w	d3,d1
 	sub.w	d0,d1
 	cmpi.w	#320,d1
-	bge.w	BuildSprites_NextObj
+	bge.w	BuildSprites_MultiDraw_NextObj
 	addi.w	#128,d3
 
 	; check if object is within Y bounds
-
-	move.b	height_pixels(a0),d0	; load pixel height
-	subi.w	#128,d2
+	btst	#4,d4
+	beq.s	+
+	moveq	#0,d0
+	move.b	mainspr_height(a0),d0	; load pixel height
+	move.w	y_pos(a0),d2
+	sub.w	4(a4),d2
 	move.w	d2,d1
 	add.w	d0,d1
-	bmi.w	BuildSprites_NextObj
+	bmi.w	BuildSprites_MultiDraw_NextObj
 	move.w	d2,d1
 	sub.w	d0,d1
 	cmpi.w	#224,d1
-	bge.w	BuildSprites_NextObj
+	bge.w	BuildSprites_MultiDraw_NextObj
 	addi.w	#128,d2
 	bra.s	++
-
 +
-
-       	ori.b	#$80,render_flags(a0)
-	tst.w	d5
-	bmi.w	BuildSprites_NextObj
-	move.w	art_tile(a0),a3
-	movea.l	mappings(a0),a5
+	move.w	y_pos(a0),d2
+	sub.w	4(a4),d2
+	addi.w	#128,d2
+	andi.w	#$7FF,d2
+	cmpi.w	#-32+128,d2
+	blo.s	BuildSprites_MultiDraw_NextObj
+	cmpi.w	#32+128+224,d2
+	bhs.s	BuildSprites_MultiDraw_NextObj
++
 	moveq	#0,d1
-	move.b	mapping_frame(a0),d1	; get current frame
+	move.b	mainspr_mapframe(a0),d1	; get current frame
 	beq.s	+
 	add.w	d1,d1
 	movea.l	a5,a1
@@ -28257,25 +28266,22 @@ BuildSprites_MultiDraw:
 	move.w	d4,-(sp)
 	bsr.w	ChkDrawSprite	; draw the sprite
 	move.w	(sp)+,d4
-	tst.w	d5
-	bmi.w	BuildSprites_NextObj
 +
-       	ori.b	#$80,render_flags(a0)	; set onscreen flag
+	ori.b	#$80,render_flags(a0)	; set onscreen flag
 	lea	sub2_x_pos(a0),a6
 	moveq	#0,d0
 	move.b	mainspr_childsprites(a0),d0	; get child sprite count
 	subq.w	#1,d0		; if there are 0, go to next object
-	bcs.w	BuildSprites_MultiDraw_NextObj
+	bcs.s	BuildSprites_MultiDraw_NextObj
 
--      	swap	d0
+-	swap	d0
 	move.w	(a6)+,d3	; get X pos
 	sub.w	(a4),d3
 	addi.w	#128,d3
 	move.w	(a6)+,d2	; get Y pos
 	sub.w	4(a4),d2
 	addi.w	#128,d2
-	and.w	(Screen_Y_wrap_value).w,d2
-;------------------------------------------------
+	andi.w	#$7FF,d2
 	addq.w	#1,a6
 	moveq	#0,d1
 	move.b	(a6)+,d1	; get mapping frame
@@ -61050,7 +61056,12 @@ locret_8506E:
 		rts
 ; End of function Perform_DPLC
 
-
+S2BossRoutine = $12 ; 1 byte
+Wheels_Ypos = $46  ; 2 bytes
+EHzBossCountDown = $44     ; 2 bytes
+EhzBossStatus = $13                ; 1 bytes
+EhzBossTimer = $40              ; 2 bytes
+EhzBossParent = $34              ; 4 bytes
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 56 - EHZ boss
@@ -61101,15 +61112,15 @@ Obj56_Init:
 	move.b	#$F,collision_flags(a0)
 	move.b	#8,collision_property(a0)	; hitcount
 	addq.b	#2,routine(a0)
-	move.w	x_pos(a0),objoff_30(a0)
-	move.w	y_pos(a0),objoff_38(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo61_Adjust2PArtPointer
+	move.w	x_pos(a0),objoff_30-$4(a0)
+	move.w	y_pos(a0),objoff_38-$4(a0)
+
 	jsr	(SingleObjLoad2).l	; vehicle with ability to fly, top part
 	bne.w	+
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; link top and bottom to each other
-	move.l	a1,objoff_34(a0)	; i.e. addresses for cross references
+	move.l	a0,EhzBossParent(a1)	; link top and bottom to each other
+	move.l	a1,EhzBossParent(a0)	; i.e. addresses for cross references
 	move.l	#Obj56_MapUnc_2FAF8,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,0,0),art_tile(a1)
 	move.b	#4,render_flags(a1)
@@ -61125,10 +61136,10 @@ Obj56_Init:
 	bne.s	+
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	a0,EhzBossParent(a1)	; linked to main object
 	move.l	#Obj56_MapUnc_2FA58,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,0,0),art_tile(a1)
-	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
+
 	move.b	#4,render_flags(a1)
 	move.b	#$30,width_pixels(a1)
 	move.b	#$10,y_radius(a1)
@@ -61138,23 +61149,22 @@ Obj56_Init:
 	move.b	#6,routine(a1)
 +
 	bsr.w	loc_2F098
-	subi.w	#8,objoff_38(a0)
+	subi.w	#8,objoff_38-$4(a0)
 	move.w	#$2AF0,x_pos(a0)
 	move.w	#$2F8,y_pos(a0)
 	jsr	(SingleObjLoad2).l	; propeller normal
 	bne.s	+	; rts
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	a0,EhzBossParent(a1)	; linked to main object
 	move.l	#Obj56_MapUnc_2F970,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_EggChoppers,1,0),art_tile(a1)
-	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
 	move.b	#4,render_flags(a1)
 	move.b	#$40,width_pixels(a1)
 	move.b	#3,priority(a1)
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
-	move.w	#$1E,objoff_2A(a1)
+	move.w	#$1E,EHzBossCountDown(a1)
 	move.b	#4,routine(a1)
 +
 	rts
@@ -61165,10 +61175,10 @@ loc_2F098:
 	bne.s	+
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	a0,EhzBossParent(a1)	; linked to main object
 	move.l	#Obj56_MapUnc_2FA58,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),art_tile(a1)
-	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
+
 	move.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
 	move.b	#2,priority(a1)
@@ -61181,17 +61191,17 @@ loc_2F098:
 	move.b	#8,routine(a1)
 	move.b	#4,mapping_frame(a1)
 	move.b	#1,anim(a1)
-	move.w	#$A,objoff_2A(a1)
+	move.w	#$A,EHzBossCountDown(a1)
 	move.b	#0,subtype(a1)
 +
 	jsr	(SingleObjLoad2).l	; second foreground wheel
 	bne.s	+
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	a0,EhzBossParent(a1)	; linked to main object
 	move.l	#Obj56_MapUnc_2FA58,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),art_tile(a1)
-	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
+
 	move.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
 	move.b	#2,priority(a1)
@@ -61204,17 +61214,17 @@ loc_2F098:
 	move.b	#8,routine(a1)
 	move.b	#4,mapping_frame(a1)
 	move.b	#1,anim(a1)
-	move.w	#$A,objoff_2A(a1)
+	move.w	#$A,EHzBossCountDown(a1)
 	move.b	#1,subtype(a1)
 +
 	jsr	(SingleObjLoad2).l	; background wheel
 	bne.s	+
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	a0,EhzBossParent(a1)	; linked to main object
 	move.l	#Obj56_MapUnc_2FA58,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),art_tile(a1)
-	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
+
 	move.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
 	move.b	#3,priority(a1)
@@ -61227,17 +61237,17 @@ loc_2F098:
 	move.b	#8,routine(a1)
 	move.b	#6,mapping_frame(a1)
 	move.b	#2,anim(a1)
-	move.w	#$A,objoff_2A(a1)
+	move.w	#$A,EHzBossCountDown(a1)
 	move.b	#2,subtype(a1)
 +
 	jsr	(SingleObjLoad2).l	; Spike
 	bne.s	+
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	a0,EhzBossParent(a1)	; linked to main object
 	move.l	#Obj56_MapUnc_2FA58,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_EHZBoss,1,0),art_tile(a1)
-	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
+
 	move.b	#4,render_flags(a1)
 	move.b	#$20,width_pixels(a1)
 	move.b	#2,priority(a1)
@@ -61284,7 +61294,7 @@ loc_2F29A:
 
 loc_2F2A8:	; Obj56_VehicleMain_Sub2:
 	moveq	#0,d0
-	move.b	objoff_2C(a0),d0	; tertiary routine
+	move.b	S2BossRoutine(a0),d0	; tertiary routine
 	move.w	off_2F2B6(pc,d0.w),d1
 	jmp	off_2F2B6(pc,d1.w)
 ; ---------------------------------------------------------------------------
@@ -61301,30 +61311,30 @@ loc_2F2BA:	; Obj56_VehicleMain_Sub2_0:
 ; ---------------------------------------------------------------------------
 
 loc_2F2CC:
-	addq.b	#2,objoff_2C(a0)	; tertiary routine
-	bset	#0,objoff_2D(a0)	; robotnik on ground (relevant for propeller)
-	move.w	#$3C,objoff_2A(a0)	; timer for standing still
+	addq.b	#2,S2BossRoutine(a0)	; tertiary routine
+	bset	#0,EhzBossStatus(a0)	; robotnik on ground (relevant for propeller)
+	move.w	#$3C,EHzBossCountDown(a0)	; timer for standing still
 	bra.w	JmpTo35_DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_2F2E0:	; Obj56_VehicleMain_Sub2_2:
-	subi.w	#1,objoff_2A(a0)	; timer
+	subi.w	#1,EHzBossCountDown(a0)	; timer
 	bpl.w	JmpTo35_DisplaySprite
 	move.w	#-$200,x_vel(a0)
 	addq.b	#2,routine_secondary(a0)
 	move.b	#$F,collision_flags(a0)
-	bset	#1,objoff_2D(a0)	; boss now active and moving
+	bset	#1,EhzBossStatus(a0)	; boss now active and moving
 	bra.w	JmpTo35_DisplaySprite
 ; ===========================================================================
 
 loc_2F304:	; Obj56_VehicleMain_Sub4:
 	bsr.w	loc_2F4A6	; routine to handle hits
 	bsr.w	loc_2F484	; position check, sets direction
-	move.w	objoff_2E(a0),d0	; y_position of wheels
+	move.w	Wheels_Ypos(a0),d0	; y_position of wheels
 	lsr.w	#1,d0
 	subi.w	#$14,d0
 	move.w	d0,y_pos(a0)	; set y_pos depending on wheels
-	move.w	#0,objoff_2E(a0)
+	move.w	#0,Wheels_Ypos(a0)
 	move.l	x_pos(a0),d2
 	move.w	x_vel(a0),d0
 	ext.l	d0
@@ -61335,7 +61345,7 @@ loc_2F304:	; Obj56_VehicleMain_Sub4:
 ; ===========================================================================
 
 loc_2F336:	; Obj56_VehicleMain_Sub6:
-	subq.w	#1,objoff_3C(a0)	; timer set after defeat
+	subq.w	#1,EhzBossTimer(a0)	; timer set after defeat
 	bmi.s	loc_2F35C	; if countdown finished
 	bsr.w	Boss_LoadExplosion
 	jsrto	(ObjectMoveAndFall).l, JmpTo4_ObjectMoveAndFall
@@ -61350,22 +61360,22 @@ loc_2F336:	; Obj56_VehicleMain_Sub6:
 loc_2F35C:
 	clr.w	x_vel(a0)
 	addq.b	#2,routine_secondary(a0)
-	move.w	#-$26,objoff_3C(a0)
-	move.w	#$C,objoff_2A(a0)
+	move.w	#-$26,EhzBossTimer(a0)
+	move.w	#$C,EHzBossCountDown(a0)
 	bra.w	JmpTo35_DisplaySprite
 ; ===========================================================================
 
 loc_2F374:	; Obj56_VehicleMain_Sub8:
-	subq.w	#1,objoff_2A(a0)	; timer
+	subq.w	#1,EHzBossCountDown(a0)	; timer
 	bpl.w	JmpTo35_DisplaySprite
 	addq.b	#2,routine_secondary(a0)
-	move.b	#0,objoff_2C(a0)	; tertiary routine
+	move.b	#0,S2BossRoutine(a0)	; tertiary routine
 	bra.w	JmpTo35_DisplaySprite
 ; ===========================================================================
 
 loc_2F38A:	; Obj56_VehicleMain_SubA:
 	moveq	#0,d0
-	move.b	objoff_2C(a0),d0	; tertiary routine
+	move.b	S2BossRoutine(a0),d0	; tertiary routine
 	move.w	off_2F39C(pc,d0.w),d1
 	jsr	off_2F39C(pc,d1.w)
 	bra.w	JmpTo35_DisplaySprite
@@ -61377,12 +61387,12 @@ off_2F39C:	offsetTable
 ; ===========================================================================
 
 loc_2F3A2:	; Obj56_VehicleMain_SubA_0:
-	bclr	#0,objoff_2D(a0)	; robotnik off ground
+	bclr	#0,EhzBossStatus(a0)	; robotnik off ground
 	jsrto	(SingleObjLoad2).l, JmpTo21_SingleObjLoad2	; reload propeller after defeat
 	bne.w	+	; rts
 
 	move.l	#Obj56,(a1) ; load obj56
-	move.l	a0,objoff_34(a1)	; linked to main object
+	move.l	a0,EhzBossParent(a1)	; linked to main object
 	move.l	#Obj56_MapUnc_2F970,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_EggChoppers,1,0),art_tile(a1)
 	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
@@ -61396,9 +61406,9 @@ loc_2F3A2:	; Obj56_VehicleMain_SubA_0:
 	move.b	render_flags(a0),render_flags(a1)
 	move.b	#$C,routine(a1)
 	move.b	#2,anim(a1)
-	move.w	#$10,objoff_2A(a1)	; timer
-	move.w	#$32,objoff_2A(a0)	; timer
-	addq.b	#2,objoff_2C(a0)	; tertiary routine - increase
+	move.w	#$10,EHzBossCountDown(a1)	; timer
+	move.w	#$32,EHzBossCountDown(a0)	; timer
+	addq.b	#2,S2BossRoutine(a0)	; tertiary routine - increase
 	jsrto	(PlayLevelMusic).l, JmpTo2_PlayLevelMusic ; play level Music
 	move.b	#1,(Boss_defeated_flag).w
 +
@@ -61406,18 +61416,18 @@ loc_2F3A2:	; Obj56_VehicleMain_SubA_0:
 ; ===========================================================================
 
 loc_2F424:	; Obj56_VehicleMain_SubA_2:
-	subi.w	#1,objoff_2A(a0)	; timer
+	subi.w	#1,EHzBossCountDown(a0)	; timer
 	bpl.s	+	; rts
-	bset	#2,objoff_2D(a0)	; robotnik flying off
-	move.w	#$60,objoff_2A(a0)	; timer
-	addq.b	#2,objoff_2C(a0)	; tertiary routine
+	bset	#2,EhzBossStatus(a0)	; robotnik flying off
+	move.w	#$60,EHzBossCountDown(a0)	; timer
+	addq.b	#2,S2BossRoutine(a0)	; tertiary routine
 	jsrto	(LoadPLC_AnimalExplosion).l, JmpTo2_LoadPLC_AnimalExplosion ; PLC_Explosion
 +
 	rts
 ; ===========================================================================
 
 loc_2F442:	; Obj56_VehicleMain_SubA_4:
-	subi.w	#1,objoff_2A(a0)	; timer
+	subi.w	#1,EHzBossCountDown(a0)	; timer
 	bpl.s	loc_2F45C
 	bset	#0,status(a0)
 	bset	#0,render_flags(a0)
@@ -61439,7 +61449,7 @@ loc_2F46E:
 	tst.b	render_flags(a0)
 	bmi.s	return_2F482
 	addq.w	#4,sp
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	jsrto	(DeleteObject2).l, JmpTo5_DeleteObject2
 	jmpto	(DeleteObject).l, JmpTo52_DeleteObject
 ; ===========================================================================
@@ -61471,9 +61481,9 @@ loc_2F4A6:	; routine to handle hits
 	bmi.s	loc_2F4EE	; sonic has just defeated the boss (i.e. bit 7 set)
 	tst.b	collision_flags(a0)	; set to 0 when boss was hit by Touch_Enemy_Part2
 	bne.s	return_2F4EC	; not 0, i.e. boss not hit
-	tst.b	objoff_3E(a0)
+	tst.b	objoff_3E-$4(a0)
 	bne.s	loc_2F4D0	; boss already invincibile
-	move.b	#$20,objoff_3E(a0)	; boss invincibility timer
+	move.b	#$20,objoff_3E-$4(a0)	; boss invincibility timer
 	move.w	#SndID_BossHit,d0
 	jsr	(PlaySound).l	; play boss hit sound
 
@@ -61486,7 +61496,7 @@ loc_2F4D0:
 
 loc_2F4DE:
 	move.w	d0,(a1)	; set respective color
-	subq.b	#1,objoff_3E(a0)	; decrease boss invincibility timer
+	subq.b	#1,objoff_3E-$4(a0)	; decrease boss invincibility timer
 	bne.s	return_2F4EC
 	move.b	#$F,collision_flags(a0)	; if invincibility ended, allow collision again
 
@@ -61500,9 +61510,9 @@ loc_2F4EE:	;	boss defeated
 	move.b	#6,routine_secondary(a0)
 	move.w	#0,x_vel(a0)
 	move.w	#-$180,y_vel(a0)
-	move.w	#$B3,objoff_3C(a0)	; timer
-	bset	#3,objoff_2D(a0)	; flag to separate spike from vehicle
-	movea.l	objoff_34(a0),a1 ; address top part
+	move.w	#$B3,EhzBossTimer(a0)	; timer
+	bset	#3,EhzBossStatus(a0)	; flag to separate spike from vehicle
+	movea.l	EhzBossParent(a0),a1 ; address top part
 	move.b	#4,anim(a1)	; flying off animation
 	move.b	#6,mapping_frame(a1)
 	moveq	#PLCID_Capsule,d0
@@ -61513,7 +61523,7 @@ loc_2F4EE:	;	boss defeated
 
 loc_2F52A:	; Obj56_PropellerReloaded:	; Propeller after defeat
 	subi.w	#1,y_pos(a0)	; move up
-	subi.w	#1,objoff_2A(a0)	; decrease timer
+	subi.w	#1,EHzBossCountDown(a0)	; decrease timer
 	bpl.w	JmpTo35_DisplaySprite
 	move.b	#4,routine(a0)	; Propeller normal
 	lea	(Ani_obj56_a).l,a1
@@ -61533,13 +61543,13 @@ off_2F55C:	offsetTable
 ; ---------------------------------------------------------------------------
 
 loc_2F560:	; Obj56_Propeller_Sub0
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	cmpi.l	#Obj56,(a1)
 	bne.w	JmpTo52_DeleteObject	; if boss non-existant
-	btst	#0,objoff_2D(a1)	; is robotnik on ground?
+	btst	#0,EhzBossStatus(a1)	; is robotnik on ground?
 	beq.s	loc_2F58E	; if not, branch
 	move.b	#1,anim(a0)
-	move.w	#$18,objoff_2A(a0)	; timer until deletion
+	move.w	#$18,EHzBossCountDown(a0)	; timer until deletion
 	addq.b	#2,routine_secondary(a0)
 	move.b	#MusID_StopSFX,d0
 	jsrto	(PlaySound).l, JmpTo6_PlaySound
@@ -61564,9 +61574,9 @@ loc_2F5A0:
 ; ---------------------------------------------------------------------------
 
 loc_2F5C6:	; Obj56_Propeller_Sub2
-	subi.w	#1,objoff_2A(a0)	; timer
+	subi.w	#1,EHzBossCountDown(a0)	; timer
 	bpl.s	loc_2F5E8
-	cmpi.w	#-$10,objoff_2A(a0)
+	cmpi.w	#-$10,EHzBossCountDown(a0)
 	ble.w	JmpTo52_DeleteObject
 	move.b	#4,priority(a0)
 	addi.w	#1,y_pos(a0)	; move down
@@ -61598,10 +61608,10 @@ loc_2F618:
 ; ---------------------------------------------------------------------------
 
 loc_2F626:	; Obj56_GroundVehicle_Sub2:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	btst	#1,objoff_2D(a1)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
+	btst	#1,EhzBossStatus(a1)
 	beq.w	JmpTo35_DisplaySprite	; boss not moving yet (inactive)
-	btst	#2,objoff_2D(a1)	; robotnik flying off flag
+	btst	#2,EhzBossStatus(a1)	; robotnik flying off flag
 	bne.w	JmpTo35_DisplaySprite
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
@@ -61686,24 +61696,24 @@ loc_2F706:
 ; ---------------------------------------------------------------------------
 
 loc_2F714:	; Obj56_Wheel_Sub2:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	cmpi.l	#Obj56,(a1)
 	bne.w	JmpTo52_DeleteObject	; if boss non-existant
-	btst	#1,objoff_2D(a1)
+	btst	#1,EhzBossStatus(a1)
 	beq.w	JmpTo35_DisplaySprite	; boss not moving yet (inactive)
 	addq.b	#2,routine_secondary(a0)
 	cmpi.b	#2,priority(a0)
 	bne.s	BranchTo_JmpTo35_DisplaySprite
 	move.w	y_pos(a0),d0
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	add.w	d0,objoff_2E(a1)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
+	add.w	d0,Wheels_Ypos(a1)
 
 BranchTo_JmpTo35_DisplaySprite ; BranchTo
 	bra.w	JmpTo35_DisplaySprite
 ; ---------------------------------------------------------------------------
 
 loc_2F746:	; Obj56_Wheel_Sub4:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	cmpi.l	#Obj56,(a1)
 	bne.w	JmpTo52_DeleteObject	; if boss non-existant
 	move.b	status(a1),status(a0)
@@ -61725,8 +61735,8 @@ loc_2F77E:
 	cmpi.b	#2,priority(a0)
 	bne.s	loc_2F798
 	move.w	y_pos(a0),d0
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
-	add.w	d0,objoff_2E(a1)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
+	add.w	d0,Wheels_Ypos(a1)
 
 loc_2F798:
 	lea	(Ani_obj56_b).l,a1
@@ -61735,10 +61745,10 @@ loc_2F798:
 ; ---------------------------------------------------------------------------
 
 loc_2F7A6:	; Obj56_Wheel_Sub6:
-	subi.w	#1,objoff_2A(a0)	; timer, initially set to $A (first delay until wheels rolling off)
+	subi.w	#1,EHzBossCountDown(a0)	; timer, initially set to $A (first delay until wheels rolling off)
 	bpl.w	JmpTo35_DisplaySprite
 	addq.b	#2,routine_secondary(a0)	; Sub8
-	move.w	#$A,objoff_2A(a0)
+	move.w	#$A,EHzBossCountDown(a0)
 	move.w	#-$300,y_vel(a0)	; first bounce higher
 	cmpi.b	#2,priority(a0)
 	beq.w	JmpTo35_DisplaySprite
@@ -61747,7 +61757,7 @@ loc_2F7A6:	; Obj56_Wheel_Sub6:
 ; ---------------------------------------------------------------------------
 
 loc_2F7D2:	; Obj56_Wheel_Sub8:
-	subq.w	#1,objoff_2A(a0)	; timer, initially set to $A (second delay until wheels rolling off)
+	subq.w	#1,EHzBossCountDown(a0)	; timer, initially set to $A (second delay until wheels rolling off)
 	bpl.w	JmpTo35_DisplaySprite
 	jsrto	(ObjectMoveAndFall).l, JmpTo4_ObjectMoveAndFall
 	jsrto	(ObjCheckFloorDist).l, JmpTo3_ObjCheckFloorDist
@@ -61779,13 +61789,13 @@ loc_2F816:
 ; ---------------------------------------------------------------------------
 
 loc_2F824:	; Obj56_Spike_Sub2:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	cmpi.l	#Obj56,(a1)
 	bne.w	JmpTo52_DeleteObject	; if boss non-existant
-	btst	#3,objoff_2D(a1)
+	btst	#3,EhzBossStatus(a1)
 	bne.s	loc_2F88A	; spike separated from vehicle
 	bsr.w	loc_2F8AA
-	btst	#1,objoff_2D(a1)
+	btst	#1,EhzBossStatus(a1)
 	beq.w	JmpTo35_DisplaySprite	; boss not moving yet (inactive)
 	move.b	#$8B,collision_flags(a0)	; spike still linked to vehicle
 	move.w	x_pos(a1),x_pos(a0)
@@ -61840,17 +61850,17 @@ loc_2F8C8:
 ; ---------------------------------------------------------------------------
 
 loc_2F8D2:
-	bset	#3,objoff_2D(a1)	; flag to separate spike from vehicle
+	bset	#3,EhzBossStatus(a1)	; flag to separate spike from vehicle
 	rts
 ; ===========================================================================
 
 loc_2F8DA:	; Obj56_VehicleTop:
-	movea.l	objoff_34(a0),a1 ; parent address (vehicle)
+	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	move.l	x_pos(a1),x_pos(a0)
 	move.l	y_pos(a1),y_pos(a0)
 	move.b	status(a1),status(a0)	; update position and status
 	move.b	render_flags(a1),render_flags(a0)
-	move.b	objoff_3E(a1),d0	; boss invincibility timer
+	move.b	objoff_3E-$4(a1),d0	; boss invincibility timer
 	cmpi.b	#$1F,d0	; boss just got hit?
 	bne.s	loc_2F906
 	move.b	#2,anim(a0)	; robotnik animation when hit
@@ -80893,13 +80903,17 @@ JmpTo65_Adjust2PArtPointer ; JmpTo
 
 
 
-
+CapsuleRoutine = $45
+CapsuleTimer = $46
+CapsuleParent = $3C
+CapsuleFlag1 = $12
+AnotherWordedFlag = $42
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 3E - Egg prison
 ; ----------------------------------------------------------------------------
 ; Sprite_3F1E4:
-Obj3E:
+Obj3E:     rts
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj3E_Index(pc,d0.w),d1
@@ -80924,7 +80938,7 @@ Obj3E_ObjLoadData:
 
 loc_3F212:
 	movea.l	a0,a1
-	lea	objoff_38(a0),a3
+	lea	objoff_38-$4(a0),a3
 	lea	Obj3E_ObjLoadData(pc),a2
 	moveq	#3,d1
 	bra.s	loc_3F228
@@ -80939,14 +80953,14 @@ loc_3F228:
 	move.l	(a0),(a1) ; load obj
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
-	move.w	y_pos(a0),objoff_30(a1)
+	move.w	y_pos(a0),objoff_30-$4(a1)
 	move.l	#Obj3E_MapUnc_3F436,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Capsule,1,0),art_tile(a1)
 	move.b	#$84,render_flags(a1)
 	moveq	#0,d0
 	move.b	(a2)+,d0
 	sub.w	d0,y_pos(a1)
-	move.w	y_pos(a1),objoff_30(a1)
+	move.w	y_pos(a1),objoff_30-$4(a1)
 	move.b	(a2)+,routine(a1)
 	move.b	(a2)+,width_pixels(a1)
 	move.b	(a2)+,priority(a1)
@@ -80959,7 +80973,7 @@ loc_3F272:
 
 loc_3F278:
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	CapsuleRoutine(a0),d0
 	move.w	off_3F2AE(pc,d0.w),d1
 	jsr	off_3F2AE(pc,d1.w)
 	move.w	#$2B,d1
@@ -80978,10 +80992,10 @@ off_3F2AE:	offsetTable
 ; ===========================================================================
 
 loc_3F2B4:
-	movea.w	objoff_38(a0),a1 ; a1=object
-	tst.w	objoff_32(a1)
+	movea.w	objoff_38-$4(a0),a1 ; a1=object
+	tst.w	objoff_32-$4(a1)
 	beq.s	++	; rts
-	movea.w	objoff_3A(a0),a2 ; a2=object
+	movea.w	objoff_3A-$4(a0),a2 ; a2=object
 	jsr	(SingleObjLoad).l
 	bne.s	+
 	move.l	#Obj58,(a1) ; load obj
@@ -80991,15 +81005,15 @@ loc_3F2B4:
 +
 	move.w	#-$400,y_vel(a2)
 	move.w	#$800,x_vel(a2)
-	addq.b	#2,routine_secondary(a2)
-	move.w	#$1D,objoff_34(a0)
-	addq.b	#2,routine_secondary(a0)
+	addq.b	#2,CapsuleRoutine(a2)
+	move.w	#$1D,CapsuleTimer(a0)
+	addq.b	#2,CapsuleRoutine(a0)
 +
 	rts
 ; ===========================================================================
 
 loc_3F2FC:
-	subq.w	#1,objoff_34(a0)
+	subq.w	#1,CapsuleTimer(a0)
 	bpl.s	return_3F352
 	move.b	#1,anim(a0)
 	moveq	#7,d6
@@ -81012,16 +81026,16 @@ loc_3F2FC:
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	add.w	d4,x_pos(a1)
-	move.b	#1,objoff_38(a1)
+	move.b	#1,CapsuleFlag1(a1)
 	addq.w	#7,d4
-	move.w	d5,objoff_36(a1)
+	move.w	d5,AnotherWordedFlag(a1)
 	subq.w	#8,d5
 	dbf	d6,-
 +
-	movea.w	objoff_3C(a0),a2 ; a2=object
+	movea.w	CapsuleParent(a0),a2 ; a2=object
 	move.w	#$B4,anim_frame_duration(a2)
-	addq.b	#2,routine_secondary(a2)
-	addq.b	#2,routine_secondary(a0)
+	addq.b	#2,CapsuleRoutine(a2)
+	addq.b	#2,CapsuleRoutine(a0)
 
 return_3F352:
 	rts
@@ -81033,19 +81047,19 @@ loc_3F354:
 	move.w	#8,d3
 	move.w	x_pos(a0),d4
 	jsr	(SolidObject).l
-	move.w	objoff_30(a0),y_pos(a0)
+	move.w	objoff_30-$4(a0),y_pos(a0)
 	move.b	status(a0),d0
 	andi.b	#standing_mask,d0
 	beq.s	+
 	addq.w	#8,y_pos(a0)
 	clr.b	(Update_HUD_timer).w
-	move.w	#1,objoff_32(a0)
+	move.w	#1,objoff_32-$4(a0)
 +
 	jmp	(MarkObjGone).l
 ; ===========================================================================
 
 loc_3F38E:
-	tst.b	routine_secondary(a0)
+	tst.b	CapsuleRoutine(a0)
 	beq.s	+
 	tst.b	render_flags(a0)
 	bpl.w	JmpTo66_DeleteObject
@@ -81060,7 +81074,7 @@ JmpTo66_DeleteObject ; JmpTo
 ; ===========================================================================
 
 loc_3F3A8:
-	tst.b	routine_secondary(a0)
+	tst.b	CapsuleRoutine(a0)
 	beq.s	return_3F404
 	move.b	(Vint_runcount+3).w,d0
 	andi.b	#7,d0
@@ -81078,8 +81092,8 @@ loc_3F3A8:
 	neg.w	d0
 +
 	add.w	d0,x_pos(a1)
-	move.b	#1,objoff_38(a1)
-	move.w	#$C,objoff_36(a1)
+	move.b	#1,CapsuleFlag1(a1)
+	move.w	#$C,AnotherWordedFlag(a1)
 
 loc_3F3F4:
 	subq.w	#1,anim_frame_duration(a0)
@@ -81461,7 +81475,7 @@ loc_3F802:
 loc_3F81C:
 	movea.w	a0,a3
 	bsr.w	AddPoints2
-	move.L	#Obj58,(a1) ; load obj
+	move.L	#Obj27,(a1) ; load obj
 	move.b	#0,routine(a1)
 	tst.w	y_vel(a0)
 	bmi.s	loc_3F844

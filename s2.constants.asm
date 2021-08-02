@@ -124,13 +124,13 @@ Art_Address         = $38
 DPLC_Address        = $3C
 ; ---------------------------------------------------------------------------
 ; conventions followed by some/most bosses:
-boss_subtype		= $A
-boss_invulnerable_time	= $14
-boss_sine_count		= $1A	;mapping_frame
+boss_subtype		= $46  ;$12
+boss_invulnerable_time	= $47  ;$13
+boss_sine_count		= mapping_frame  ;$1A	;mapping_frame
 boss_routine		= $26	;angle
-boss_defeated		= $2C
-boss_hitcount2		= $32
-boss_hurt_sonic		= $38	; flag set by collision response routine when sonic has just been hurt (by boss?)
+boss_defeated		= $45
+boss_hitcount2		= $29
+boss_hurt_sonic		= $44	; flag set by collision response routine when sonic has just been hurt (by boss?)
 ; ---------------------------------------------------------------------------
 ; Player Status Variables
 Status_Facing       = 0
@@ -154,10 +154,10 @@ Status_Underwater   = 6
 ;mainspr_height		= height_pixels
 ;mainspr_childsprites 	= y_sub+1	; amount of child sprites
 ;-----------------------------------------------------------------------------
-mainspr_mapframe	= $11
-mainspr_width		= $14
-mainspr_height		= $15
-mainspr_childsprites 	= $16	; amount of child sprites
+mainspr_mapframe	= $12 ;mapping_frame ;$12 ; also these varables also work but i decided to use that insted
+mainspr_width		= width_pixels ;$13
+mainspr_height		= height_pixels ;$16
+mainspr_childsprites 	= $17	; amount of child sprites
 ;------------------------------------------------------------------------------
 sub2_x_pos		= $18	;x_vel
 sub2_y_pos		= $1A	;y_vel
@@ -1460,7 +1460,7 @@ PalChangeSpeed:			ds.w	1
 Collision_addr:			ds.l	1
 				ds.b	$D	; $FFFFF79A-$FFFFF7A6 ; seems unused
 Boss_defeated_flag:		ds.b	1
-				ds.b	2	; $FFFFF7A8-$FFFFF7A9 ; seems unused
+Screen_Y_wrap_value:		ds.w	1	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
 				ds.b	5	; $FFFFF7AB-$FFFFF7AF ; seems unused
 MTZ_Platform_Cog_X:			ds.w	1	; X position of moving MTZ platform for cog animation.
