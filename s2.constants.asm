@@ -124,12 +124,12 @@ Art_Address         = $38
 DPLC_Address        = $3C
 ; ---------------------------------------------------------------------------
 ; conventions followed by some/most bosses:
-boss_subtype		= $46  ;$12
-boss_invulnerable_time	= $47  ;$13
+boss_subtype		= $12  ;$12
+boss_invulnerable_time	= $13  ;$13
 boss_sine_count		= mapping_frame  ;$1A	;mapping_frame
 boss_routine		= $26	;angle
 boss_defeated		= $45
-boss_hitcount2		= $29
+boss_hitcount2		= $42
 boss_hurt_sonic		= $44	; flag set by collision response routine when sonic has just been hurt (by boss?)
 ; ---------------------------------------------------------------------------
 ; Player Status Variables
@@ -154,7 +154,7 @@ Status_Underwater   = 6
 ;mainspr_height		= height_pixels
 ;mainspr_childsprites 	= y_sub+1	; amount of child sprites
 ;-----------------------------------------------------------------------------
-mainspr_mapframe	= $12 ;mapping_frame ;$12 ; also these varables also work but i decided to use that insted
+mainspr_mapframe	= $16 ;$12 ; also these varables also work but i decided to use that insted
 mainspr_width		= width_pixels ;$13
 mainspr_height		= height_pixels ;$16
 mainspr_childsprites 	= $17	; amount of child sprites

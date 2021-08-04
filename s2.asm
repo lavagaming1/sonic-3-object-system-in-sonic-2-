@@ -58382,7 +58382,7 @@ Obj5D_status2		= $46 ;objoff_2E
 Obj5D_x_vel		= $46     ;objoff_2E	; and $2F
 Obj5D_x_pos_next	= $40 ;objoff_30
 Obj5D_timer		= $40 ;objoff_30
-SecondaryRoutineCpzBoss = $30 ; 1 byte 
+SecondaryRoutineCpzBoss = $30 ; 1 byte
 Obj5D_y_offset		= $31 ;objoff_31
 Obj5D_timer3		= $32 ;;objoff_32
 Obj5D_parent		= $34 ;objoff_34
@@ -62633,20 +62633,22 @@ JmpTo3_LoadPLC_AnimalExplosion ; JmpTo
 ; ----------------------------------------------------------------------------
 ; OST Variables:
 ; Main Vehicle
-obj89_hammer_y_vel	= objoff_2E		; falling hammer's y velocity
-obj89_target		= objoff_38
-obj89_hammer_y_pos	= objoff_3A		; falling hammer's y position
-obj89_hammer_flags	= objoff_3E
-
+obj89_hammer_y_vel	= $2E ;objoff_2E		; falling hammer's y velocity
+obj89_target		= $38 ;objoff_38
+obj89_hammer_y_pos	= $3A ;objoff_3A		; falling hammer's y position
+obj89_hammer_flags	= $3E ;objoff_3E
+ArzBossRoutine = $33
 ; Pillars & Arrows
-obj89_pillar_parent		= objoff_2A	; address of main vehicle
-obj89_pillar_shake_time		= objoff_30
-obj89_pillar_shaking		= objoff_38
-obj89_eyes_timer		= objoff_30
-obj89_arrow_routine		= objoff_2A
-obj89_arrow_timer		= objoff_30
-obj89_arrow_parent2		= objoff_34
-obj89_arrow_parent		= objoff_38	; address of main vehicle
+obj89_pillar_parent		= $2E ;$46 ;objoff_2A	; address of main vehicle
+obj89_pillar_shake_time		= $30;$42 ;objoff_30
+obj89_pillar_shaking		= $31 ;objoff_38
+obj89_eyes_timer		= $34 ;objoff_30
+obj89_arrow_routine		= $32 ;objoff_2A
+obj89_arrow_timer		= $36 ;objoff_30
+obj89_arrow_parent2		= $38 ;objoff_34
+obj89_arrow_parent		= $40 ;objoff_38	; address of main vehicle
+ArzBossSineCount = $44
+SecRoutineArzBoss = $45
 
 ; Sprite_30480:
 Obj89:
@@ -62726,12 +62728,12 @@ Obj89_Init_RaisePillars:
 	move.w	#$2A50,x_pos(a1)
 	move.w	#$510,y_pos(a1)
 	addq.b	#4,boss_subtype(a1)	; => Obj89_Pillar
-	move.l	a0,obj89_pillar_parent(a1)
+	move.w	a0,obj89_pillar_parent(a1)
 	move.b	#0,mapping_frame(a1)
 	move.b	#2,priority(a1)
 	move.b	#$20,y_radius(a1)
 	movea.l	a1,a2				; save first pillar's address
-	jsrto	(SingleObjLoad2).l, JmpTo22_SingleObjLoad2
+	jsr	(SingleObjLoad2).l;, JmpTo22_SingleObjLoad2
 	bne.s	Obj89_Init_Standard
 	moveq	#0,d0
 
@@ -62751,8 +62753,7 @@ Obj89_Init_DuplicatePillar:
 
 ; loc_305F4:
 Obj89_Init_Standard:
-	bsr.w	Obj89_Init_AnimationArray
-	rts
+
 ; ===========================================================================
 ; loc_305FA:
 Obj89_Init_AnimationArray:
@@ -62770,7 +62771,7 @@ Obj89_Init_AnimationArray:
 ; loc_30620:
 Obj89_Main:
 	moveq	#0,d0
-	move.b	boss_routine(a0),d0
+	move.b	ArzBossRoutine(a0),d0
 	move.w	Obj89_Main_Index(pc,d0.w),d1
 	jmp	Obj89_Main_Index(pc,d1.w)
 ; ===========================================================================
@@ -62792,7 +62793,7 @@ Obj89_Main_Sub0:
 	cmpi.w	#$430,(Boss_Y_pos).w		; has boss reached its target?
 	blt.s	Obj89_Main_Sub0_Standard	; if not, branch
 	move.w	#$430,(Boss_Y_pos).w
-	addi.b	#2,boss_routine(a0)	; => Obj89_Main_Sub2
+	addi.b	#2,ArzBossRoutine(a0)	; => Obj89_Main_Sub2
 	move.w	#0,(Boss_Y_vel).w		; stop y movement
 	move.w	#-$C8,(Boss_X_vel).w		; move leftward
 	st	obj89_target(a0)
@@ -62821,7 +62822,7 @@ Obj89_Main_Sub2_GoingLeft:
 
 ; loc_3069E:
 Obj89_Main_Sub2_AtTarget:
-	addi.b	#2,boss_routine(a0)	; => Obj89_Main_Sub4
+	addi.b	#2,ArzBossRoutine(a0)	; => Obj89_Main_Sub4
 	move.w	#0,(Boss_X_vel).w
 
 ; loc_306AA:
@@ -62835,12 +62836,12 @@ Obj89_Main_Sub4:
 	bsr.w	Boss_MoveObject
 	bsr.w	Obj89_Main_HandleFace
 	bsr.w	Obj89_Main_AlignParts
-	cmpi.b	#-$40,boss_sine_count(a0)	; has boss reached the right height in its hovering animation?
+	cmpi.b	#-$40,ArzBossSineCount(a0)	; has boss reached the right height in its hovering animation?
 	bne.s	Obj89_Main_Sub4_Standard	; if not, branch
 	lea	(Boss_AnimationArray).w,a1
 	andi.b	#$F0,2*2(a1)			; reset hammer animation
 	ori.b	#3,2*2(a1)			; reset hammer animation timer
-	addq.b	#2,boss_routine(a0)	; => Obj89_Main_Sub6
+	addq.b	#2,ArzBossRoutine(a0)	; => Obj89_Main_Sub6
 	btst	#0,render_flags(a0)
 	sne	obj89_target(a0)		; target opposite side
 	move.w	#$1E,(Boss_Countdown).w
@@ -62863,7 +62864,7 @@ Obj89_Main_Sub6:
 	subi.w	#1,(Boss_Countdown).w		; decrement counter
 	bpl.s	Obj89_Main_Sub6_Standard	; branch, if counter > 0
 	clr.b	(Boss_CollisionRoutine).w	; disable hammer collision
-	move.b	#2,boss_routine(a0)	; => Obj89_Main_Sub2
+	move.b	#2,ArzBossRoutine(a0)	; => Obj89_Main_Sub2
 	bchg	#0,render_flags(a0)		; face opposite direction
 	beq.s	Obj89_Main_Sub6_MoveRight	; branch, if new direction is right
 	move.w	#-$C8,(Boss_X_vel).w		; move left
@@ -62906,15 +62907,16 @@ return_3078C:
 	rts
 ; ===========================================================================
 ; loc_3078E:
+
 Obj89_Main_HandleHoveringAndHits:
-	move.b	boss_sine_count(a0),d0
+	move.b	ArzBossSineCount(a0),d0
 	jsr	(CalcSine).l
 	asr.w	#6,d0
 	add.w	(Boss_Y_pos).w,d0
 	move.w	d0,y_pos(a0)
 	move.w	(Boss_X_pos).w,x_pos(a0)
-	addq.b	#2,boss_sine_count(a0)
-	cmpi.b	#8,boss_routine(a0)		; has boss been defeated?
+	addq.b	#2,ArzBossSineCount(a0)
+	cmpi.b	#8,ArzBossRoutine(a0)		; has boss been defeated?
 	bhs.s	return_307F2			; if yes, branch
 	tst.b	boss_hitcount2(a0)		; has boss run out of hits?
 	beq.s	Obj89_Main_KillBoss		; if yes, branch
@@ -62947,7 +62949,7 @@ Obj89_Main_KillBoss:
 	moveq	#100,d0
 	jsrto	(AddPoints).l, JmpTo5_AddPoints
 	move.w	#$B3,(Boss_Countdown).w		; set timer
-	move.b	#8,boss_routine(a0)	; => Obj89_Main_Sub8
+	move.b	#8,ArzBossRoutine(a0)	; => Obj89_Main_Sub8
 	lea	(Boss_AnimationArray).w,a1
 	move.b	#5,1*2(a1)			; use defeated animation
 	move.b	#0,1*2+1(a1)			; reset animation
@@ -63010,7 +63012,7 @@ Obj89_Main_SetupEscapeAnim:
 	bset	#0,render_flags(a0)
 	clr.w	(Boss_X_vel).w			; stop movement
 	clr.w	(Boss_Y_vel).w
-	addq.b	#2,boss_routine(a0)	; => Obj89_Main_SubA
+	addq.b	#2,ArzBossRoutine(a0)	; => Obj89_Main_SubA
 	move.w	#-$12,(Boss_Countdown).w
 
 ; loc_308D6:
@@ -63042,7 +63044,7 @@ Obj89_Main_SubA_Phase2:
 	beq.s	Obj89_Main_SubA_StopAscent
 	cmpi.w	#$20,(Boss_Countdown).w
 	blo.s	Obj89_Main_SubA_Standard
-	addq.b	#2,boss_routine(a0)	; => Obj89_Main_SubC
+	addq.b	#2,ArzBossRoutine(a0)	; => Obj89_Main_SubC
 	bra.s	Obj89_Main_SubA_Standard
 ; ===========================================================================
 ; loc_30922:
@@ -63099,14 +63101,14 @@ JmpTo54_DeleteObject ; JmpTo
 ; loc_309A8:
 Obj89_Pillar:
 	moveq	#0,d0
-	movea.l	obj89_pillar_parent(a0),a1 ; a1=object
-	cmpi.b	#8,boss_routine(a1)		; has boss been defeated?
+	movea.w	obj89_pillar_parent(a0),a1 ; a1=object
+	cmpi.b	#8,ArzBossRoutine(a1)		; has boss been defeated?
 	blt.s	Obj89_Pillar_Normal		; if not, branch
-	move.b	#4,routine_secondary(a0)
+	move.b	#4,SecRoutineArzBoss(a0)
 
 ; loc_309BC:
 Obj89_Pillar_Normal:
-	move.b	routine_secondary(a0),d0
+	move.b	SecRoutineArzBoss(a0),d0
 	move.w	Obj89_Pillar_Index(pc,d0.w),d1
 	jmp	Obj89_Pillar_Index(pc,d1.w)
 ; ===========================================================================
@@ -63130,7 +63132,7 @@ Obj89_Pillar_Sub0:
 	subi.w	#1,y_pos(a0)			; raise pillar
 	cmpi.w	#$488,y_pos(a0)			; has pillar reached its target height?
 	bgt.s	BranchTo_JmpTo37_DisplaySprite	; if not, branch
-	addq.b	#2,routine_secondary(a0)	; => Obj89_Pillar_Sub2
+	addq.b	#2,SecRoutineArzBoss(a0)	; => Obj89_Pillar_Sub2
 	move.b	#0,(Screen_Shaking_Flag).w	; stop screen shaking
 
 BranchTo_JmpTo37_DisplaySprite ; BranchTo
@@ -63141,7 +63143,7 @@ Obj89_Pillar_Sub2:
 	; note: the boss switches targets before bit 0 of obj89_hammer_flags is set.  In other
 	; words, it's always the pillar facing the new target that fires.
 	bsr.w	Obj89_Pillar_SolidObject
-	movea.l	obj89_pillar_parent(a0),a3 ; a3=object
+	movea.w	obj89_pillar_parent(a0),a3 ; a3=object
 	btst	#0,obj89_hammer_flags(a3)
 	beq.s	Obj89_Pillar_Sub2_Standard	; branch, if hammer hasn't hit a pillar
 	tst.b	obj89_target(a3)		; is boss targeting the right?
@@ -63169,14 +63171,14 @@ Obj89_Pillar_Sub2_Standard:
 Obj89_Pillar_ChkShake:
 	tst.b	obj89_pillar_shaking(a0)	; is pillar shaking?
 	beq.s	return_30AAE			; if not, branch
-	tst.w	obj89_pillar_shake_time(a0)	; has timer been set?
+	tst.b	obj89_pillar_shake_time(a0)	; has timer been set?
 	bgt.s	+				; if yes, branch
-	move.w	#$1F,obj89_pillar_shake_time(a0); else, initialize timer
+	move.b	#$1F,obj89_pillar_shake_time(a0); else, initialize timer
 +
-	subi.w	#1,obj89_pillar_shake_time(a0)
+	subi.b	#1,obj89_pillar_shake_time(a0)
 	bgt.s	Obj89_Pillar_Shake		; branch, if timer hasn't expired
 	sf	obj89_pillar_shaking(a0)	; stop shaking
-	move.w	#0,obj89_pillar_shake_time(a0)	; clear timer
+	move.b	#0,obj89_pillar_shake_time(a0)	; clear timer
 	tst.b	obj89_target(a3)		; is boss targeting the left?
 	bne.s	+				; if yes, branch
 	move.w	#$2A50,x_pos(a0)		; reset x position of left pillar
@@ -63220,7 +63222,7 @@ Obj89_Pillar_Shoot:
 	bne.w	return_30B40
         move.l	#Obj89,(a1) ; load obj89
 	move.b	#4,boss_subtype(a1)
-	move.b	#8,routine_secondary(a1)	; => Obj89_Pillar_BulgingEyes
+	move.b	#8,SecRoutineArzBoss(a1)	; => Obj89_Pillar_BulgingEyes
 	move.l	#Obj89_MapUnc_30D68,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_ARZBoss,0,0),art_tile(a1)
 	ori.b	#4,render_flags(a1)
@@ -63243,10 +63245,10 @@ Obj89_Pillar_Shoot:
 	bne.s	return_30B40
 	move.l	#Obj89,(a1)  ; load obj89
 	move.b	#4,boss_subtype(a1)
-	move.b	#6,routine_secondary(a1)	; => Obj89_Arrow
-	move.l	a2,obj89_arrow_parent2(a1)
+	move.b	#6,SecRoutineArzBoss(a1)	; => Obj89_Arrow
+	move.w	a2,obj89_arrow_parent2(a1)
 	move.b	d6,subtype(a1)
-	move.l	a3,obj89_arrow_parent(a1)
+	move.w	a3,obj89_arrow_parent(a1)
 
 return_30B40:
 	rts
@@ -63292,8 +63294,8 @@ Obj89_Pillar_SolidObject:
 ;loc_30B9E:
 Obj89_Arrow:
 	moveq	#0,d0
-	movea.l	obj89_arrow_parent(a0),a1 ; a1=object
-	cmpi.b	#8,boss_routine(a1)		; has boss been defeated?
+	movea.w	obj89_arrow_parent(a0),a1 ; a1=object
+	cmpi.b	#8,ArzBossRoutine(a1)		; has boss been defeated?
 	blt.s	Obj89_Arrow_Normal		; if not, branch
 	move.b	#6,obj89_arrow_routine(a0)	; => Obj89_Arrow_Sub6
 
@@ -63319,7 +63321,7 @@ Obj89_Arrow_Init:
 	move.b	#-$70,mainspr_width(a0)
 	move.b	#4,priority(a0)
 	addq.b	#2,obj89_arrow_routine(a0)	; => Obj89_Arrow_Sub2
-	movea.l	obj89_arrow_parent2(a0),a1 ; a1=object
+	movea.w	obj89_arrow_parent2(a0),a1 ; a1=object
 	move.w	x_pos(a1),x_pos(a0)		; align with parent object
 	move.w	y_pos(a1),y_pos(a0)
 	move.w	#4,y_vel(a0)
