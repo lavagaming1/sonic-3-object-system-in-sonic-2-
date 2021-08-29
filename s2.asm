@@ -32594,58 +32594,28 @@ PlatformObject_ChkYRange:
 	move.w	d2,y_pos(a1)
 ;loc_19E14:
 RideObject_SetRide:
-	btst	#3,status(a1)
-	beq.s	loc_19E30
-	moveq	#0,d0
-	move.b	interact(a1),d0
-    if object_size=$40
-	lsl.w	#6,d0
-    else
-	mulu.w	#object_size,d0
-    endif
-	addi.l	#Object_RAM,d0
-	movea.l	d0,a3	; a3=object
-	bclr	d6,status(a3)
+        	btst	#3,$2A(a1)
+		beq.s	loc_1C146
+		movea.w	$42(a1),a3
+		bclr	d6,$2A(a3)
 
-loc_19E30:
-	move.w	a0,d0
-	subi.w	#Object_RAM,d0
-    if object_size=$40
-	lsr.w	#6,d0
-    else
-	divu.w	#object_size,d0
-    endif
-	andi.w	#$7F,d0
-	move.b	d0,interact(a1)
-	move.b	#0,angle(a1)
-	move.w	#0,y_vel(a1)
-	move.w	x_vel(a1),inertia(a1)
-	btst	#1,status(a1)
-	beq.s	loc_19E7E
-	move.l	a0,-(sp)
-	movea.l	a1,a0
-	move.w	a0,d1
-	subi.w	#Object_RAM,d1
-	bne.s	loc_19E76
-	cmpi.w	#2,(Player_mode).w
-	beq.s	loc_19E76
-	jsr	(Sonic_ResetOnFloor_Part2).l
-	bra.s	loc_19E7C
-; ===========================================================================
-
-loc_19E76:
-	jsr	(Tails_ResetOnFloor_Part2).l
-
-loc_19E7C:
-	movea.l	(sp)+,a0 ; a0=character
-
-loc_19E7E:
-	bset	#3,status(a1)
-	bclr	#1,status(a1)
-	bset	d6,status(a0)
-
+loc_1C146:
+		move.w	a0,$42(a1)
+		move.b	#0,$26(a1)
+		move.w	#0,$1A(a1)
+		move.w	$18(a1),$1C(a1)
+		bset	#3,$2A(a1)
+		bset	d6,$2A(a0)
+		bclr	#1,$2A(a1)
+		beq.s	return_19E8E
+		move.l	a0,-(sp)
+		movea.l	a1,a0
+		jsr	(Sonic_ResetOnFloor).l
+		movea.l	(sp)+,a0
 return_19E8E:
-	rts
+locret_1E4D4:
+		rts
+; End of function RideObject_SetRide
 ; ===========================================================================
 ;loc_19E90:
 SlopedPlatform_cont:
@@ -33155,15 +33125,7 @@ Obj01_NotRight:
 	move.b	#AniIDSonAni_Wait,anim(a0)	; use "standing" animation
 	btst	#3,status(a0)
 	beq.w	Sonic_Balance
-	moveq	#0,d0
-	move.b	interact(a0),d0
-    if object_size=$40
-	lsl.w	#6,d0
-    else
-	mulu.w	#object_size,d0
-    endif
-	lea	(Object_RAM).w,a1 ; a1=character
-	lea	(a1,d0.w),a1 ; a1=object
+	movea.w	interact(a0),a1	; load interacting object's RAM space
 	tst.b	status(a1)
 	bmi.w	Sonic_Lookup
 	moveq	#0,d1
@@ -36175,15 +36137,9 @@ Obj02_NotRight:
 	move.b	#AniIDTailsAni_Wait,anim(a0)	; use "standing" animation
 	btst	#3,status(a0)
 	beq.s	Tails_Balance
-	moveq	#0,d0
-	move.b	interact(a0),d0
-    if object_size=$40
-	lsl.w	#6,d0
-    else
-	mulu.w	#object_size,d0
-    endif
-	lea	(Object_RAM).w,a1 ; a1=character
-	lea	(a1,d0.w),a1 ; a1=object
+
+        movea.w	interact(a0),a1	; load interacting object's RAM space
+        
 	tst.b	status(a1)
 	bmi.s	Tails_Lookup
 	moveq	#0,d1
@@ -63535,6 +63491,7 @@ obj57_sub5_y_vel	= objoff_2E	; word - y_vel of second digger when falling down
 obj57_sub2_y_vel	= objoff_30	; word - y_vel of first digger when falling down
 obj57_sub2_y_pos2	= objoff_34	; longword - y_pos of first digger when falling down
 obj57_sub5_y_pos2	= objoff_3A	; longword - y_pos of second digger when falling down
+MCZ_boss_routine = $42
 ; ----------------------------------------------------------------------------
 ; Sprite_30FA4:
 Obj57:
@@ -63559,7 +63516,7 @@ Obj57_Init:
 	move.w	#$560,y_pos(a0)
 	move.b	#5,mainspr_mapframe(a0)
 	addq.b	#2,boss_subtype(a0)
-	move.b	#2,boss_routine(a0)
+	move.b	#2,MCZ_boss_routine(a0)
 	bset	#6,render_flags(a0)	; use subobjects for rendering
 	move.b	#4,mainspr_childsprites(a0)
 	move.b	#$F,collision_flags(a0)
@@ -63608,7 +63565,7 @@ Obj57_InitAnimationData:
 ;loc_310BE:
 Obj57_Main:	; Main Vehicle
 	moveq	#0,d0
-	move.b	boss_routine(a0),d0
+	move.b	MCZ_boss_routine(a0),d0
 	move.w	Obj57_Main_Index(pc,d0.w),d1
 	jmp	Obj57_Main_Index(pc,d1.w)
 ; ===========================================================================
@@ -63641,7 +63598,7 @@ Obj57_Main_Sub0: ; boss just moving up
 	move.w	#$2120,d3
 +
 	move.w	d3,(Boss_X_pos).w
-	addq.b	#2,boss_routine(a0)	; stuff falling down
+	addq.b	#2,MCZ_boss_routine(a0)	; stuff falling down
 	bclr	#0,render_flags(a0)
 	move.w	(MainCharacter+x_pos).w,d0
 	sub.w	(Boss_X_pos).w,d0
@@ -63673,7 +63630,7 @@ Obj57_Main_Sub2: ; boss moving down, stuff falling down
 	bsr.w	Obj57_SpawnStoneSpike
 	cmpi.w	#$620,(Boss_Y_pos).w	; if below...
 	blt.s	Obj57_Main_Sub2_Standard
-	addq.b	#2,boss_routine(a0)	; ...next routine
+	addq.b	#2,MCZ_boss_routine(a0)	; ...next routine
 	move.b	#0,(Screen_Shaking_Flag).w	; no screen shaking
 
 Obj57_Main_Sub2_Standard:
@@ -63691,7 +63648,7 @@ Obj57_Main_Sub4: ; moving down, stop stuff falling down
 	cmpi.w	#$660,(Boss_Y_pos).w
 	blt.s	Obj57_Main_Sub4_Standard	; if above, keep moving down
 	move.w	#$660,(Boss_Y_pos).w	; if below, routine 6 + new anim
-	addq.b	#2,boss_routine(a0)
+	addq.b	#2,MCZ_boss_routine(a0)
 	lea	(Boss_AnimationArray).w,a1
 	andi.b	#$F0,2(a1)
 	ori.b	#6,2(a1)	; (6) prepare for digger rotation to diag/hztl
@@ -63756,7 +63713,7 @@ Obj57_Main_Sub6_ReAscend1:	; that's a dumb name for a label
 ;loc_312A2:
 Obj57_Main_Sub6_ReAscend2:	; set to routine 0 and make boss move up again
 	move.w	#0,(Boss_X_vel).w
-	move.b	#0,boss_routine(a0)
+	move.b	#0,MCZ_boss_routine(a0)
 	lea	(Boss_AnimationArray).w,a1
 	andi.b	#$F0,2(a1)
 	ori.b	#$B,2(a1)	; (B) prepare for digger rotation to diag/vert
@@ -63892,7 +63849,7 @@ Obj57_AddSinusOffset:	; called from routine $A and $C
 	addq.b	#2,boss_sine_count(a0)	; increment frame counter for sinus offset
 ;loc_31470:
 Obj57_HandleHits_Main:
-	cmpi.b	#8,boss_routine(a0)
+	cmpi.b	#8,MCZ_boss_routine(a0)
 	bhs.s	return_314B6		; skip if boss already defeated
 	tst.b	boss_hitcount2(a0)
 	beq.s	Obj57_FinalDefeat
@@ -63923,7 +63880,7 @@ Obj57_FinalDefeat:
 	moveq	#100,d0
 	jsrto	(AddPoints).l, JmpTo6_AddPoints
 	move.w	#$B3,(Boss_Countdown).w
-	move.b	#8,boss_routine(a0)	; routine boss defeated
+	move.b	#8,MCZ_boss_routine(a0)	; routine boss defeated
 	moveq	#PLCID_Capsule,d0
 	jsrto	(LoadPLC).l, JmpTo9_LoadPLC
 	rts
@@ -63943,7 +63900,7 @@ Obj57_Main_Sub8: ; boss defeated, standing still, exploding
 	bset	#0,render_flags(a0)
 	clr.w	(Boss_X_vel).w
 	clr.w	(Boss_Y_vel).w
-	addq.b	#2,boss_routine(a0)	; next routine
+	addq.b	#2,MCZ_boss_routine(a0)	; next routine
 	move.b	#$12,sub4_mapframe(a0)	; face grin when hit
 	move.w	#-$12,(Boss_Countdown).w
 
@@ -63979,7 +63936,7 @@ Obj57_Main_SubA: ; slowly hovering down, no explosions
 	move.b	#$D,7(a1)	; face grin when hit
 	move.b	#2,0(a2)	; There is a bug here. This should be a1 instead of a2. A random part of RAM gets written to instead.
 	move.b	#0,1(a1)	; hover thingies fire off
-	addq.b	#2,boss_routine(a0)
+	addq.b	#2,MCZ_boss_routine(a0)
 	bra.s	Obj57_Main_SubA_Standard
 ; ===========================================================================
 +
@@ -72437,9 +72394,9 @@ Obj9D_Obj98_MapUnc_37D96:	BINCLUDE "mappings/sprite/obj9D.bin"
 ; Object 9E - Crawlton (snake badnik) from MCZ
 ; ----------------------------------------------------------------------------
 ; Sprite_37E16:
-Obj9E:   
+Obj9E:
 	moveq	#0,d0
-	move.b	objoff_3B(a0),d0
+	move.b	routine(a0),d0
 	move.w	Obj9E_Index(pc,d0.w),d1
 	jmp	Obj9E_Index(pc,d1.w)
 ; ===========================================================================
@@ -72456,7 +72413,6 @@ Obj9E_Index:	offsetTable
 Obj9E_Init:
 	bsr.w	LoadSubObject
 	move.b	#$80,y_radius(a0)
-	addq.b	#2,objoff_3B(a0)
 	bra.w	loc_37F74
 ; ===========================================================================
 
@@ -72475,7 +72431,7 @@ loc_37E42:
 ; ===========================================================================
 
 loc_37E62:
-	addq.b	#2,objoff_3B(a0)
+	addq.b	#2,routine(a0)
 	move.b	#$10,objoff_3A(a0)
 	bclr	#0,render_flags(a0)
 	tst.w	d0
@@ -72499,7 +72455,7 @@ loc_37E98:
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ---------------------------------------------------------------------------
 +
-	addq.b	#2,objoff_3B(a0)
+	addq.b	#2,routine(a0)
 	move.b	#8,objoff_39(a0)
 	move.b	#$1C,objoff_3A(a0)
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
@@ -72512,7 +72468,7 @@ loc_37EB6:
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ---------------------------------------------------------------------------
 +
-	move.b	objoff_39(a0),objoff_3B(a0)
+	move.b	objoff_39(a0),routine(a0)
 	move.b	#$20,objoff_3A(a0)
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ===========================================================================
@@ -72523,7 +72479,7 @@ loc_37ED4:
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ---------------------------------------------------------------------------
 +
-	move.b	#6,objoff_3B(a0)
+	move.b	#6,routine(a0)
 	move.b	#2,objoff_39(a0)
 	move.b	#$1C,objoff_3A(a0)
 	neg.w	x_vel(a0)
@@ -72531,7 +72487,7 @@ loc_37ED4:
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ===========================================================================
 
-loc_37EFC: rts
+loc_37EFC:
 	movea.w	parent(a0),a1 ; a1=object
 	cmpi.l	#Obj9E,(a1)
 	bne.w	JmpTo65_DeleteObject
@@ -72540,10 +72496,10 @@ loc_37EFC: rts
 	beq.s	+
 	bset	#0,render_flags(a0)
 +
-	move.b	#$80,objoff_14(a0)
+	move.b	#$80,objoff_A(a0)
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
-	cmpi.b	#6,objoff_3B(a1)
+	cmpi.b	#6,routine(a1)
 	bne.s	loc_37F6C
 	move.w	x_vel(a1),d2
 	asr.w	#8,d2
@@ -72581,7 +72537,7 @@ loc_37F74:
 	bset	#6,render_flags(a1)
 	move.l	mappings(a0),mappings(a1)
 	move.w	art_tile(a0),art_tile(a1)
-	move.b	#$A,objoff_3B(a1)
+	move.b	#$A,routine(a1)
 	move.b	#0,mainspr_mapframe(a1)
 	move.b	#$80,mainspr_width(a1)
 	move.b	#7,mainspr_childsprites(a1)
@@ -72590,7 +72546,7 @@ loc_37F74:
 	move.w	d2,x_pos(a1)
 	move.w	y_pos(a0),d3
 	move.w	d3,y_pos(a1)
-	move.b	#$80,objoff_14(a1)
+	move.b	#$80,objoff_A(a1)
 	bset	#4,render_flags(a1)
 	lea	sub2_x_pos(a1),a2
 
@@ -81616,7 +81572,7 @@ Hurt_Sound:
 ; loc_3F926: KillSonic:
 KillCharacter:
 	tst.w	(Debug_placement_mode).w
-	bne.s	++
+	bne.s	++           
 	clr.b	status_secondary(a0)
 	move.b	#6,routine(a0)
 	jsrto	(Sonic_ResetOnFloor_Part2).l, JmpTo_Sonic_ResetOnFloor_Part2
@@ -81626,10 +81582,10 @@ KillCharacter:
 	move.w	#0,inertia(a0)
 	move.b	#AniIDSonAni_Death,anim(a0)
 	bset	#high_priority_bit,art_tile(a0)
-	move.w	#SndID_Hurt,d0
+        moveq	#SndID_Hurt,d0
 	cmpi.l	#Obj36,(a2)
 	bne.s	+
-	move.w	#SndID_HurtBySpikes,d0
+	moveq	#SndID_HurtBySpikes,d0
 +
 	jsr	(PlaySound).l
 +
