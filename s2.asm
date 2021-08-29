@@ -63408,7 +63408,7 @@ BranchTo_JmpTo55_DeleteObject ; BranchTo
 ; ===========================================================================
 ; loc_30CCC:
 Obj89_Arrow_Platform:
-	tst.w	obj89_arrow_timer(a0)		; is timer set?
+	tst.b	obj89_arrow_timer(a0)		; is timer set?
 	bne.s	Obj89_Arrow_Platform_Decay	; if yes, branch
 	move.w	#$1B,d1
 	move.w	#1,d2
@@ -63417,11 +63417,11 @@ Obj89_Arrow_Platform:
 	jsrto	(PlatformObject).l, JmpTo8_PlatformObject
 	btst	#3,status(a0)			; is Sonic standing on the arrow?
 	beq.s	return_30D02			; if not, branch
-	move.w	#$1F,obj89_arrow_timer(a0)	; else, set timer
+	move.b	#$1F,obj89_arrow_timer(a0)	; else, set timer
 
 ; loc_30CF4:
 Obj89_Arrow_Platform_Decay:
-	subi.w	#1,obj89_arrow_timer(a0)	; decrement timer
+	subi.b	#1,obj89_arrow_timer(a0)	; decrement timer
 	bne.s	return_30D02			; branch, if timer hasn't expired
 	move.b	#6,obj89_arrow_routine(a0)	; => Obj89_Arrow_Sub6
 
@@ -64119,8 +64119,19 @@ JmpTo5_ObjectMoveAndFall ; JmpTo
     endif
 
 
-
-
+SincountCnz = $41
+CNZBossFlags = $2D
+CNZBossHitCount = $42
+CNZBossMoveRoutine = $40
+CNZBoss_routine_secondary = $43
+CNZBoss_Parent_Addr = $46
+CNZBoss_Stuff = $3A
+SubSpritesY_vel = $30
+CnzBossSubsprites_X_vel = $2E
+CNZBoss_Flags_2 = $3F
+CNZBoss_Flags_3 = $3E
+CNZBoss_Flags_4 = $2C
+CnzBossWordSomehting = $28
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 51 - CNZ boss
@@ -64154,7 +64165,7 @@ Obj51_Init:
 	bset	#6,render_flags(a0)
 	move.b	#4,mainspr_childsprites(a0)
 	move.b	#$F,collision_flags(a0)
-	move.b	#8,objoff_32(a0)
+	move.b	#8,CNZBossHitCount(a0)
 	move.w	x_pos(a0),(Boss_X_pos).w
 	move.w	y_pos(a0),(Boss_Y_pos).w
 	move.w	x_pos(a0),sub2_x_pos(a0)
@@ -64169,13 +64180,13 @@ Obj51_Init:
 	move.w	x_pos(a0),sub5_x_pos(a0)
 	move.w	y_pos(a0),sub5_y_pos(a0)
 	move.b	#2,sub5_mapframe(a0)
-	move.b	#0,objoff_38(a0)
+	move.b	#0,CNZBossMoveRoutine(a0)
 	move.w	#0,(Boss_Y_vel).w
 	move.w	#-$180,(Boss_X_vel).w
-	move.b	#0,objoff_2D(a0)
+	move.b	#0,CNZBossFlags(a0)
 	move.w	#1,(Boss_Countdown).w
-	bsr.w	loc_319D6
-	rts
+;	bsr.w	loc_319D6
+;	rts
 ; ===========================================================================
 
 loc_319D6:
@@ -64219,7 +64230,7 @@ off_31A2A:	offsetTable
 
 loc_31A36:
 	moveq	#0,d0
-	move.b	objoff_38(a0),d0
+	move.b	CNZBossMoveRoutine(a0),d0
 	move.w	off_31A44(pc,d0.w),d0
 	jmp	off_31A44(pc,d0.w)
 ; ===========================================================================
@@ -64234,9 +64245,9 @@ loc_31A48:
 	move.w	#$28C0,(Boss_X_pos).w
 	move.w	#0,(Boss_Y_vel).w
 	move.w	#$180,(Boss_X_vel).w
-	move.b	#2,objoff_38(a0)
+	move.b	#2,CNZBossMoveRoutine(a0)
 	bset	#0,render_flags(a0)
-	move.b	#0,objoff_2D(a0)
+	move.b	#0,CNZBossFlags(a0)
 
 BranchTo_loc_31AA4 ; BranchTo
 	bra.w	loc_31AA4
@@ -64248,15 +64259,15 @@ loc_31A78:
 	move.w	#$29C0,(Boss_X_pos).w
 	move.w	#0,(Boss_Y_vel).w
 	move.w	#-$180,(Boss_X_vel).w
-	move.b	#0,objoff_38(a0)
+	move.b	#0,CNZBossMoveRoutine(a0)
 	bclr	#0,render_flags(a0)
-	move.b	#0,objoff_2D(a0)
+	move.b	#0,CNZBossFlags(a0)
 
 loc_31AA4:
 	bsr.w	Boss_MoveObject
-	tst.b	objoff_3F(a0)
+	tst.b	CNZBoss_Flags_2(a0)
 	beq.s	loc_31AB6
-	subq.b	#1,objoff_3F(a0)
+	subq.b	#1,CNZBoss_Flags_2(a0)
 	bra.w	loc_31B46
 ; ===========================================================================
 
@@ -64268,9 +64279,9 @@ loc_31AB6:
 	bhs.s	loc_31B46
 	cmpi.w	#$6B0,(MainCharacter+y_pos).w
 	blo.s	loc_31B06
-	cmpi.b	#3,objoff_2D(a0)
+	cmpi.b	#3,CNZBossFlags(a0)
 	bhs.s	loc_31B46
-	addq.b	#1,objoff_2D(a0)
+	addq.b	#1,CNZBossFlags(a0)
 	addq.b	#2,angle(a0)
 	move.b	#8,(Boss_AnimationArray).w
 	move.b	#0,(Boss_AnimationArray+3).w
@@ -64292,7 +64303,7 @@ loc_31B06:
 	addq.b	#4,angle(a0)
 	move.w	#0,(Boss_X_vel).w
 	move.w	#$180,(Boss_Y_vel).w
-	move.b	#0,objoff_3E(a0)
+	move.b	#0,CNZBoss_Flags_3(a0)
 	bra.w	loc_31C08
 ; ===========================================================================
 
@@ -64337,7 +64348,7 @@ loc_31BC6:
 	move.b	#0,(Boss_AnimationArray+9).w
 	move.b	#0,angle(a0)
 	move.w	#-1,(Boss_Countdown).w
-	move.b	#$40,objoff_3F(a0)
+	move.b	#$40,CNZBoss_Flags_2(a0)
 	bra.w	loc_31C08
 ; ===========================================================================
 
@@ -64346,7 +64357,7 @@ loc_31BF2:
 	bne.s	return_31C06
 	move.l	#Obj51,(a1)  ; load obj51
 	move.b	#4,boss_subtype(a1)
-	move.l	a0,objoff_34(a1)
+	move.l	a0,CNZBoss_Parent_Addr(a1)
 
 return_31C06:
 	rts
@@ -64368,13 +64379,13 @@ JmpTo39_DisplaySprite ; JmpTo
 
 loc_31C22:
 	bsr.w	Boss_MoveObject
-	tst.b	objoff_3E(a0)
+	tst.b	CNZBoss_Flags_3(a0)
 	bne.s	loc_31C60
-	cmpi.w	#$680,y_pos(a0)
-	blo.s	loc_31C08
-	move.w	#0,(Boss_X_vel).w
-	move.w	#-$180,(Boss_Y_vel).w
-	move.b	#-1,objoff_3E(a0)
+	cmpi.w	#$680,y_pos(a0)  ; is the player on ground ?
+	blo.s	loc_31C08          ; if not branch
+	move.w	#0,(Boss_X_vel).w         ; stop boss
+	move.w	#-$180,(Boss_Y_vel).w     ; move boss down
+	move.b	#-1,CNZBoss_Flags_3(a0)
 	move.b	#1,(Boss_CollisionRoutine).w
 	move.b	#0,(Boss_AnimationArray+3).w
 	move.b	#0,(Boss_AnimationArray+9).w
@@ -64424,18 +64435,17 @@ loc_31CBC:
 return_31CDA:
 	rts
 ; ===========================================================================
-
 loc_31CDC:
-	move.b	mapping_frame(a0),d0
+	move.b	SincountCnz(a0),d0
 	jsr	(CalcSine).l
 	asr.w	#6,d0
 	add.w	(Boss_Y_pos).w,d0
 	move.w	d0,y_pos(a0)
 	move.w	(Boss_X_pos).w,x_pos(a0)
-	addq.b	#2,mapping_frame(a0)
+	addq.b	#2,SincountCnz(a0)
 	cmpi.b	#6,angle(a0)
 	bhs.s	return_31D40
-	tst.b	objoff_32(a0)
+	tst.b	CNZBossHitCount(a0)
 	beq.s	loc_31D42
 	tst.b	collision_flags(a0)
 	bne.s	return_31D40
@@ -64473,7 +64483,7 @@ loc_31D42:
 ; ===========================================================================
 
 loc_31D5C:
-	st	objoff_2C(a0)
+	st	CNZBoss_Flags_4(a0)
 	subq.w	#1,(Boss_Countdown).w
 	bmi.s	loc_31D7E
 	move.b	#0,(Boss_CollisionRoutine).w
@@ -64492,7 +64502,7 @@ loc_31D7E:
 	andi.b	#$F0,6(a1)
 	ori.b	#3,6(a1)
 	move.b	#8,0(a1)
-	move.b	#$DD,(Level_Layout+$C54).w
+	move.b	#$DD,(Level_Layout+$C54).w  ; huh
 	move.b	#1,(Screen_redraw_flag).w
 	move.w	#-$12,(Boss_Countdown).w
 
@@ -64584,14 +64594,14 @@ loc_31E76:
 	move.w	d1,sub3_y_pos(a0)
 	move.w	d0,sub4_x_pos(a0)
 	move.w	d1,sub4_y_pos(a0)
-	tst.b	objoff_2C(a0)
+	tst.b	CNZBoss_Flags_4(a0)
 	bne.s	loc_31EAE
 	move.w	d0,sub5_x_pos(a0)
 	move.w	d1,sub5_y_pos(a0)
 	move.w	d0,sub2_x_pos(a0)
 	move.w	d1,sub2_y_pos(a0)
-	move.w	d1,objoff_3A(a0)
-	move.w	d1,objoff_34(a0)
+	move.w	d1,CNZBoss_Stuff(a0)
+	move.w	d1,CNZBoss_Parent_Addr(a0)
 	rts
 ; ===========================================================================
 
@@ -64599,44 +64609,44 @@ loc_31EAE:
 	cmpi.w	#$78,(Boss_Countdown).w
 	bgt.s	return_31F22
 	subi.w	#1,sub5_x_pos(a0)
-	move.l	objoff_3A(a0),d0
-	move.w	objoff_2E(a0),d1
-	addi.w	#$38,objoff_2E(a0)
+	move.l	CNZBoss_Stuff(a0),d0
+	move.w	CnzBossSubsprites_X_vel(a0),d1
+	addi.w	#$38,CnzBossSubsprites_X_vel(a0)
 	ext.l	d1
 	asl.l	#8,d1
 	add.l	d1,d0
-	move.l	d0,objoff_3A(a0)
-	move.w	objoff_3A(a0),sub5_y_pos(a0)
+	move.l	d0,CNZBoss_Stuff(a0)
+	move.w	CNZBoss_Stuff(a0),sub5_y_pos(a0)
 	cmpi.w	#$6F0,sub5_y_pos(a0)
 	blt.s	loc_31EE8
-	move.w	#0,objoff_2E(a0)
+	move.w	#0,CnzBossSubsprites_X_vel(a0)
 
 loc_31EE8:
 	cmpi.w	#$3C,(Boss_Countdown).w
 	bgt.s	return_31F22
 	addi.w	#1,sub2_x_pos(a0)
-	move.l	objoff_34(a0),d0
-	move.w	objoff_30(a0),d1
-	addi.w	#$38,objoff_30(a0)
+	move.l	CNZBoss_Parent_Addr(a0),d0
+	move.w	SubSpritesY_vel(a0),d1
+	addi.w	#$38,SubSpritesY_vel(a0)
 	ext.l	d1
 	asl.l	#8,d1
 	add.l	d1,d0
-	move.l	d0,objoff_34(a0)
-	move.w	objoff_34(a0),sub2_y_pos(a0)
+	move.l	d0,CNZBoss_Parent_Addr(a0)
+	move.w	CNZBoss_Parent_Addr(a0),sub2_y_pos(a0)
 	cmpi.w	#$6F0,sub2_y_pos(a0)
 	blt.s	return_31F22
-	move.w	#0,objoff_30(a0)
+	move.w	#0,SubSpritesY_vel(a0)
 
 return_31F22:
 	rts
 ; ===========================================================================
 
 loc_31F24:
-	movea.l	objoff_34(a0),a1 ; a1=object
+	movea.l	CNZBoss_Parent_Addr(a0),a1 ; a1=object
 	cmpi.b	#6,angle(a1)
 	bhs.w	JmpTo59_DeleteObject
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	CNZBoss_routine_secondary(a0),d0
 	move.w	off_31F40(pc,d0.w),d1
 	jmp	off_31F40(pc,d1.w)
 ; ===========================================================================
@@ -64652,8 +64662,8 @@ loc_31F48:
 	move.w	#make_art_tile(ArtTile_ArtNem_CNZBoss_Fudge,0,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
 	move.b	#7,priority(a0)
-	addq.b	#2,routine_secondary(a0)
-	movea.l	objoff_34(a0),a1 ; a1=object
+	addq.b	#2,CNZBoss_routine_secondary(a0)
+	movea.l	CNZBoss_Parent_Addr(a0),a1 ; a1=object
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
 	addi.w	#$30,y_pos(a0)
@@ -64665,20 +64675,20 @@ loc_31F48:
 ; ===========================================================================
 
 loc_31F96:
-	movea.l	objoff_34(a0),a1 ; a1=object
+	movea.l	CNZBoss_Parent_Addr(a0),a1 ; a1=object
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
-	move.w	objoff_28(a0),d0
+	move.w	CnzBossWordSomehting(a0),d0
 	add.w	d0,y_pos(a0)
 	addi.w	#1,d0
 	cmpi.w	#$2E,d0
 	blt.s	+
 	move.w	#$2E,d0
 +
-	move.w	d0,objoff_28(a0)
+	move.w	d0,CnzBossWordSomehting(a0)
 	tst.w	(Boss_Countdown).w
 	bne.w	JmpTo39_DisplaySprite
-	addq.b	#2,routine_secondary(a0)
+	addq.b	#2,CNZBoss_routine_secondary(a0)
 	move.w	#0,x_vel(a0)
 	move.w	#0,y_vel(a0)
 	jmpto	(DisplaySprite).l, JmpTo39_DisplaySprite
@@ -64725,7 +64735,7 @@ loc_32030:
 	move.w	#-$300,y_vel(a0)
 	move.w	#-$100,x_vel(a0)
 	move.b	#4,boss_subtype(a0)
-	move.b	#6,routine_secondary(a0)
+	move.b	#6,CNZBoss_routine_secondary(a0)
 	move.b	#$98,collision_flags(a0)
 	jsrto	(SingleObjLoad2).l, JmpTo23_SingleObjLoad2
 	bne.s	return_3207E
@@ -72427,7 +72437,7 @@ Obj9D_Obj98_MapUnc_37D96:	BINCLUDE "mappings/sprite/obj9D.bin"
 ; Object 9E - Crawlton (snake badnik) from MCZ
 ; ----------------------------------------------------------------------------
 ; Sprite_37E16:
-Obj9E:
+Obj9E:   
 	moveq	#0,d0
 	move.b	objoff_3B(a0),d0
 	move.w	Obj9E_Index(pc,d0.w),d1
@@ -72521,7 +72531,7 @@ loc_37ED4:
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ===========================================================================
 
-loc_37EFC:
+loc_37EFC: rts
 	movea.w	parent(a0),a1 ; a1=object
 	cmpi.l	#Obj9E,(a1)
 	bne.w	JmpTo65_DeleteObject
