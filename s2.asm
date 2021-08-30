@@ -27619,7 +27619,7 @@ ObjPtr_ARZBoss:		dc.l Obj89	; ARZ boss
 ObjPtr_WFZPalSwitcher:	dc.l Obj8B	; Cycling palette switcher from Wing Fortress Zone
 ObjPtr_Whisp:		dc.l Obj8C	; Whisp (blowfly badnik) from ARZ
 ObjPtr_GrounderInWall:	dc.l Obj8D	; Grounder in wall, from ARZ
-ObjPtr_GrounderInWall2:	dc.l Obj8D	; Obj8E = Obj8D
+ObjPtr_GrounderInWall2:	dc.l ObjGrounderNotInWall	; Obj8E
 ObjPtr_GrounderWall:	dc.l Obj8F	; Wall behind which Grounder hides, from ARZ
 ObjPtr_GrounderRocks:	dc.l Obj90	; Rocks thrown by Grounder behind wall, from ARZ
 ObjPtr_ChopChop:	dc.l Obj91	; Chop Chop (piranha/shark badnik) from ARZ
@@ -63491,7 +63491,7 @@ obj57_sub5_y_vel	= objoff_2E	; word - y_vel of second digger when falling down
 obj57_sub2_y_vel	= objoff_30	; word - y_vel of first digger when falling down
 obj57_sub2_y_pos2	= objoff_34	; longword - y_pos of first digger when falling down
 obj57_sub5_y_pos2	= objoff_3A	; longword - y_pos of second digger when falling down
-MCZ_boss_routine = $42
+MCZ_boss_routine = $2E
 ; ----------------------------------------------------------------------------
 ; Sprite_30FA4:
 Obj57:
@@ -70438,6 +70438,9 @@ Obj8C_MapUnc_36A4E:	BINCLUDE "mappings/sprite/obj8C.bin"
 ; Object 8D - Grounder in wall, from ARZ
 ; ----------------------------------------------------------------------------
 ; Sprite_36A76:
+; note from lava you dont have to do this bc you only need the wall one the no wall one is just a moto bug tbh
+ObjGrounderNotInWall:
+       move.b  #1,routine_secondary(a0) ; set the in wall flag
 Obj8D:
 	moveq	#0,d0
 	move.b	routine(a0),d0
@@ -70469,8 +70472,7 @@ Obj8D_Init:
 	add.w	d1,y_pos(a0)
 	move.w	#0,y_vel(a0)
 +
-	move.l	(a0),d0
-	subi.l	#Obj8D,d0
+	tst.b  routine_secondary(a0)
 	beq.w	loc_36C64
 	move.b	#6,routine(a0)
 	rts
