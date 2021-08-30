@@ -57378,16 +57378,16 @@ JmpTo19_ObjectMove ; JmpTo
 ; Object 50 - Aquis (seahorse badnik) from OOZ
 ; ----------------------------------------------------------------------------
 ; OST Variables:
-Obj50_unkown1		= objoff_2A	; word
-Obj50_shooting_flag	= objoff_2D	; byte	; if set, shooting is disabled
-Obj50_shots_remaining	= objoff_2E	; word	; number of shots before retreating
-Obj50_unkown2		= objoff_30	; word
-Obj50_unkown3		= objoff_32	; word
-Obj50_unkown4		= objoff_34	; word
-Obj50_child		= objoff_36	; long	; pointer to wing object (main)
-Obj50_parent		= objoff_36	; long	; pointer to main object (wing)
-Obj50_unkown5		= objoff_3A	; word
-Obj50_timer		= objoff_3C	; byte	; time spent following the player before shooting and time to wait before actually shooting
+Obj50_unkown1		= $2E;objoff_2A	; word
+Obj50_shooting_flag	= $2D ;objoff_2D	; byte	; if set, shooting is disabled
+Obj50_shots_remaining	= $30 ;objoff_2E	; word	; number of shots before retreating
+Obj50_unkown2		= $32 ;objoff_30	; word
+Obj50_unkown3		= $34 ;objoff_32	; word
+Obj50_unkown4		= $36 ;objoff_34	; word
+Obj50_child		= $38 ;objoff_36	; long	; pointer to wing object (main)
+Obj50_parent		= $38 ;objoff_36	; long	; pointer to main object (wing)
+Obj50_unkown5		= $3C ;objoff_3A	; word
+Obj50_timer		= $3F ;objoff_3C	; byte	; time spent following the player before shooting and time to wait before actually shooting
 
 ; Sprite_2CCC8:
 Obj50:
