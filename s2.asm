@@ -47409,13 +47409,13 @@ Obj3D_Fragment:
 ; loc_24F52:
 Obj3D_InvisibleLauncher:
 	lea	(MainCharacter).w,a1 ; a1=character
-	lea	objoff_30(a0),a4
+	lea	objoff_2E(a0),a4
 	bsr.s	loc_24F74
 	lea	(Sidekick).w,a1 ; a1=character
-	lea	objoff_3A(a0),a4
+	lea	objoff_38(a0),a4
 	bsr.s	loc_24F74
-	move.b	objoff_30(a0),d0
-	add.b	objoff_3A(a0),d0
+	move.b	objoff_2E(a0),d0
+	add.b	objoff_38(a0),d0
 	beq.w	JmpTo3_MarkObjGone3
 	rts
 ; ===========================================================================
@@ -47474,15 +47474,7 @@ loc_25002:
 	bclr	#5,status(a1)
 	bset	#1,status(a1)
 	bset	#3,status(a1)
-	move.w	a0,d0
-	subi.w	#Object_RAM,d0
-    if object_size=$40
-	lsr.w	#6,d0
-    else
-	divu.w	#object_size,d0
-    endif
-	andi.w	#$7F,d0
-	move.b	d0,interact(a1)
+        movea.w	a0,interact(a1)
 	move.w	#SndID_Roll,d0
 	jsr	(PlaySound).l
 
@@ -61958,7 +61950,9 @@ JmpTo35_DisplaySprite ; JmpTo
 
 
 
-
+HTZBOSS_VaunruableTime = $47
+HTZBOSS_SecondaryRoutine = $46
+HTZBOSSHitcount = $44
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 52 - HTZ boss
@@ -61993,11 +61987,11 @@ Obj52_Init:
 	addq.b	#2,boss_subtype(a0)
 	bset	#6,render_flags(a0)
 	move.b	#$32,collision_flags(a0)
-	move.b	#8,objoff_36(a0)
+	move.b	#8,HTZBOSSHitcount(a0)
 	move.w	#-$E0,(Boss_Y_vel).w
 	move.w	x_pos(a0),(Boss_X_pos).w
 	move.w	y_pos(a0),(Boss_Y_pos).w
-	clr.b	objoff_14(a0)
+	clr.b	HTZBOSS_VaunruableTime(a0)
 	move.w	x_pos(a0),sub2_x_pos(a0)
 	move.w	y_pos(a0),sub2_y_pos(a0)
 	move.b	#2,sub2_mapframe(a0)
@@ -62200,7 +62194,7 @@ loc_2FEDE:
 ; loc_2FEF0:
 Obj52_FlameThrower:
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	HTZBOSS_SecondaryRoutine(a0),d0
 	move.w	off_2FEFE(pc,d0.w),d1
 	jmp	off_2FEFE(pc,d1.w)
 ; ===========================================================================
@@ -62214,7 +62208,7 @@ loc_2FF02:
 	move.w	#make_art_tile(ArtTile_ArtNem_HTZBoss,0,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
 	move.b	#4,priority(a0)
-	addq.b	#2,routine_secondary(a0)
+	addq.b	#2,HTZBOSS_SecondaryRoutine(a0)
 	move.b	#5,anim(a0)
 	move.b	#$98,collision_flags(a0)
 	subi.w	#$1C,y_pos(a0)
@@ -62242,7 +62236,7 @@ loc_2FF50:
 ; loc_2FF66:
 Obj52_LavaBall:
 	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
+	move.b	HTZBOSS_SecondaryRoutine(a0),d0
 	move.w	off_2FF74(pc,d0.w),d1
 	jmp	off_2FF74(pc,d1.w)
 ; ===========================================================================
@@ -62271,7 +62265,7 @@ loc_2FF94:
 	move.w	#make_art_tile(ArtTile_ArtNem_HTZBoss,0,0),art_tile(a1)
 	ori.b	#4,render_flags(a1)
 	move.b	#3,priority(a1)
-	addq.b	#2,routine_secondary(a1)
+	addq.b	#2,HTZBOSS_SecondaryRoutine(a1)
 	move.b	#7,anim(a1)
 	move.b	#$8B,collision_flags(a1)
 	move.b	d2,objoff_32(a1)
@@ -62311,7 +62305,7 @@ loc_30008:
 	move.w	#0,y_vel(a0)
 	move.l	#Obj20_MapUnc_23294,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_HtzFireball1,0,1),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo62_Adjust2PArtPointer
+
 	move.b	#0,mapping_frame(a0)
 	move.w	#9,objoff_36(a0)
 	move.b	#3,objoff_3A(a0)
@@ -62348,13 +62342,13 @@ Obj52_LavaBall_Move:
 loc_300A4:
 	cmpi.b	#8,angle(a0)
 	bhs.s	return_300EA
-	tst.b	objoff_36(a0)
+	tst.b	HTZBOSSHitcount(a0)
 	beq.s	Obj52_Defeat
 	tst.b	collision_flags(a0)
 	bne.s	return_300EA
-	tst.b	objoff_14(a0)
+	tst.b	HTZBOSS_VaunruableTime(a0)
 	bne.s	loc_300CE
-	move.b	#$20,objoff_14(a0)
+	move.b	#$20,HTZBOSS_VaunruableTime(a0)
 	move.w	#SndID_BossHit,d0
 	jsr	(PlaySound).l
 
@@ -62367,7 +62361,7 @@ loc_300CE:
 
 loc_300DC:
 	move.w	d0,(a1)
-	subq.b	#1,objoff_14(a0)
+	subq.b	#1,HTZBOSS_VaunruableTime(a0)
 	bne.s	return_300EA
 	move.b	#$32,collision_flags(a0)
 
@@ -64076,19 +64070,20 @@ JmpTo5_ObjectMoveAndFall ; JmpTo
     endif
 
 
-SincountCnz = $41
-CNZBossFlags = $2D
-CNZBossHitCount = $42
-CNZBossMoveRoutine = $40
-CNZBoss_routine_secondary = $43
-CNZBoss_Parent_Addr = $46
-CNZBoss_Stuff = $3A
-SubSpritesY_vel = $30
-CnzBossSubsprites_X_vel = $2E
-CNZBoss_Flags_2 = $3F
-CNZBoss_Flags_3 = $3E
-CNZBoss_Flags_4 = $2C
-CnzBossWordSomehting = $28
+SincountCnz = $40 ; 1 byte
+CNZBossFlags = $3D  ; 1 byte
+CNZBossHitCount = $41  ; 1 byte
+CNZBossMoveRoutine = $46  ; 1 byte
+CNZBoss_routine_secondary = $43   ; 1 byte
+CNZBossRoutine_Angle = $47 ; 1 byte
+CNZBoss_Parent_Addr = $30     ; long
+CNZBoss_Stuff = $34     ; long
+SubSpritesY_vel = $36   ; word
+CnzBossSubsprites_X_vel = $38   ; word
+CNZBoss_Flags_2 = $3A    ; byte
+CNZBoss_Flags_3 = $3B   ; byte
+CNZBoss_Flags_4 = $3C      ; byte
+CnzBossWordSomehting = $3E ; word
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 51 - CNZ boss
@@ -64118,11 +64113,11 @@ Obj51_Init:
 	move.b	#$20,mainspr_width(a0)
 	move.b	#$80,mainspr_height(a0)
 	addq.b	#2,boss_subtype(a0)
-	move.b	#0,angle(a0)
+	move.b	#0,CNZBossRoutine_Angle(a0)
 	bset	#6,render_flags(a0)
 	move.b	#4,mainspr_childsprites(a0)
 	move.b	#$F,collision_flags(a0)
-	move.b	#8,CNZBossHitCount(a0)
+	move.b	#8,boss_hitcount2(a0)
 	move.w	x_pos(a0),(Boss_X_pos).w
 	move.w	y_pos(a0),(Boss_Y_pos).w
 	move.w	x_pos(a0),sub2_x_pos(a0)
@@ -64172,7 +64167,7 @@ loc_31A04:
 
 loc_31A1C:
 	moveq	#0,d0
-	move.b	angle(a0),d0
+	move.b	CNZBossRoutine_Angle(a0),d0
 	move.w	off_31A2A(pc,d0.w),d1
 	jmp	off_31A2A(pc,d1.w)
 ; ===========================================================================
@@ -64239,7 +64234,7 @@ loc_31AB6:
 	cmpi.b	#3,CNZBossFlags(a0)
 	bhs.s	loc_31B46
 	addq.b	#1,CNZBossFlags(a0)
-	addq.b	#2,angle(a0)
+	addq.b	#2,CNZBossRoutine_Angle(a0)
 	move.b	#8,(Boss_AnimationArray).w
 	move.b	#0,(Boss_AnimationArray+3).w
 	move.b	#0,(Boss_AnimationArray+9).w
@@ -64257,7 +64252,7 @@ loc_31B06:
 	move.b	#$20,(Boss_AnimationArray+3).w
 	move.b	#$20,(Boss_AnimationArray+9).w
 	move.b	#9,(Boss_AnimationArray).w
-	addq.b	#4,angle(a0)
+	addq.b	#4,CNZBossRoutine_Angle(a0)
 	move.w	#0,(Boss_X_vel).w
 	move.w	#$180,(Boss_Y_vel).w
 	move.b	#0,CNZBoss_Flags_3(a0)
@@ -64303,7 +64298,7 @@ loc_31BC6:
 	bgt.w	loc_31C08
 	move.b	#0,(Boss_AnimationArray+3).w
 	move.b	#0,(Boss_AnimationArray+9).w
-	move.b	#0,angle(a0)
+	move.b	#0,CNZBossRoutine_Angle(a0)
 	move.w	#-1,(Boss_Countdown).w
 	move.b	#$40,CNZBoss_Flags_2(a0)
 	bra.w	loc_31C08
@@ -64321,7 +64316,7 @@ return_31C06:
 ; ===========================================================================
 
 loc_31C08:
-	bsr.w	loc_31CDC
+	bsr.w	CNZBossHandelHits
 	bsr.w	loc_31E76
 	bsr.w	loc_31C92
 	lea	(Ani_obj51).l,a1
@@ -64353,7 +64348,7 @@ loc_31C22:
 loc_31C60:
 	cmpi.w	#$654,y_pos(a0)
 	bhs.s	loc_31C08
-	move.b	#0,angle(a0)
+	move.b	#0,CNZBossRoutine_Angle(a0)
 	move.w	#0,(Boss_Y_vel).w
 	move.w	#-$180,(Boss_X_vel).w
 	btst	#0,render_flags(a0)
@@ -64392,7 +64387,7 @@ loc_31CBC:
 return_31CDA:
 	rts
 ; ===========================================================================
-loc_31CDC:
+CNZBossHandelHits:
 	move.b	SincountCnz(a0),d0
 	jsr	(CalcSine).l
 	asr.w	#6,d0
@@ -64400,15 +64395,15 @@ loc_31CDC:
 	move.w	d0,y_pos(a0)
 	move.w	(Boss_X_pos).w,x_pos(a0)
 	addq.b	#2,SincountCnz(a0)
-	cmpi.b	#6,angle(a0)
+	cmpi.b	#6,CNZBossRoutine_Angle(a0)
 	bhs.s	return_31D40
-	tst.b	CNZBossHitCount(a0)
+	tst.b	boss_hitcount2(a0)
 	beq.s	loc_31D42
 	tst.b	collision_flags(a0)
 	bne.s	return_31D40
-	tst.b	mainspr_height(a0)
+	tst.b	height_pixels(a0)
 	bne.s	loc_31D24
-	move.b	#$30,mainspr_height(a0)
+	move.b	#$30,height_pixels(a0)
 	move.w	#SndID_BossHit,d0
 	jsr	(PlaySound).l
 
@@ -64421,7 +64416,7 @@ loc_31D24:
 
 loc_31D32:
 	move.w	d0,(a1)
-	subq.b	#1,mainspr_height(a0)
+	subq.b	#1,height_pixels(a0)
 	bne.s	return_31D40
 	move.b	#$F,collision_flags(a0)
 
@@ -64433,7 +64428,7 @@ loc_31D42:
 	moveq	#100,d0
 	jsrto	(AddPoints).l, JmpTo7_AddPoints
 	move.w	#$B3,(Boss_Countdown).w
-	move.b	#6,angle(a0)
+	move.b	#6,CNZBossRoutine_Angle(a0)
 	moveq	#PLCID_Capsule,d0
 	jsrto	(LoadPLC).l, JmpTo10_LoadPLC
 	rts
@@ -64454,7 +64449,7 @@ loc_31D7E:
 	bset	#0,render_flags(a0)
 	clr.w	(Boss_X_vel).w
 	clr.w	(Boss_Y_vel).w
-	addq.b	#2,angle(a0)
+	addq.b	#2,CNZBossRoutine_Angle(a0)
 	lea	(Boss_AnimationArray).w,a1
 	andi.b	#$F0,6(a1)
 	ori.b	#3,6(a1)
@@ -64489,7 +64484,7 @@ loc_31DE2:
 	beq.s	loc_31E02
 	cmpi.w	#$20,(Boss_Countdown).w
 	blo.s	loc_31E0E
-	addq.b	#2,angle(a0)
+	addq.b	#2,CNZBossRoutine_Angle(a0)
 	bra.s	loc_31E0E
 ; ===========================================================================
 
@@ -64505,7 +64500,7 @@ loc_31E02:
 
 loc_31E0E:
 	bsr.w	Boss_MoveObject
-	bsr.w	loc_31CDC
+	bsr.w	CNZBossHandelHits
 	move.w	(Boss_Y_pos).w,y_pos(a0)
 	move.w	(Boss_X_pos).w,x_pos(a0)
 	bsr.w	loc_31E76
@@ -64527,7 +64522,7 @@ loc_31E44:
 
 loc_31E4A:
 	bsr.w	Boss_MoveObject
-	bsr.w	loc_31CDC
+	bsr.w	CNZBossHandelHits
 	move.w	(Boss_Y_pos).w,y_pos(a0)
 	move.w	(Boss_X_pos).w,x_pos(a0)
 	bsr.w	loc_31E76
@@ -64600,7 +64595,7 @@ return_31F22:
 
 loc_31F24:
 	movea.l	CNZBoss_Parent_Addr(a0),a1 ; a1=object
-	cmpi.b	#6,angle(a1)
+	cmpi.b	#6,CNZBossRoutine_Angle(a1)
 	bhs.w	JmpTo59_DeleteObject
 	moveq	#0,d0
 	move.b	CNZBoss_routine_secondary(a0),d0
@@ -81574,7 +81569,7 @@ Hurt_Sound:
 ; loc_3F926: KillSonic:
 KillCharacter:
 	tst.w	(Debug_placement_mode).w
-	bne.s	++           
+	bne.s	++
 	clr.b	status_secondary(a0)
 	move.b	#6,routine(a0)
 	jsrto	(Sonic_ResetOnFloor_Part2).l, JmpTo_Sonic_ResetOnFloor_Part2
