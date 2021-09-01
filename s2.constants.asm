@@ -185,55 +185,42 @@ sub9_y_pos		= $44
 sub9_mapframe		= $47
 next_subspr		= $6
 ; ---------------------------------------------------------------------------
-; unknown or inconsistently used offsets that are not applicable to sonic/tails:
-; (provided because rearrangement of the above values sometimes requires making space in here too)
-;sonic 3 and knuckles
-;objoff_12 =		2+x_pos
-;objoff_16 =		2+y_pos
-;objoff_1C =		$1C
-;objoff_1D =		$1D
-;objoff_27 =		$27
-;objoff_2E =		$2E
-;objoff_2F =		$2F
-;objoff_30 =		$30
-; enum   objoff_31=$31,objoff_32=$32,objoff_33=$33,objoff_34=$34,objoff_35=$35,objoff_36=$36,objoff_37=$37
-; enum 	objoff_38=$38,objoff_39=$39,objoff_3A=$3A,objoff_3B=$3B,objoff_3C=$3C,objoff_3D=$3D,objoff_3E=$3E
-; enum 	objoff_3F=$3F,objoff_40=$40,objoff_41=$41,objoff_42=$42,objoff_43=$43,objoff_44=$44,objoff_45=$45
-; enum 	objoff_46=$46,objoff_47=$47,objoff_48=$48,objoff_49=$49
-;sonic 2 part   updated
-objoff_A =		2+x_pos;$12 ; note: x_pos can be 4 bytes, but sometimes the last 2 bytes of x_pos are used for other unrelated things
-objoff_B =		$13 ;3+x_pos ; unused
-objoff_E =		$14     ;2+y_pos	; unused
-objoff_F =		$15    ;3+y_pos ; unused
-objoff_10 =		$14
-objoff_12 =             $16 ;added
-objoff_14 =		$18
-objoff_15 =		$19
-objoff_1F =		$23
-objoff_27 =		$2B
-objoff_28 =		$2C ; overlaps subtype, but a few objects use it for other things anyway
- enum               objoff_29=$2D,objoff_2A=$2E,objoff_2B=$2F,objoff_2C=$30,objoff_2D=$31,objoff_2E=$32,objoff_2F=$33
- enum objoff_30=$34,objoff_31=$35,objoff_32=$36,objoff_33=$37,objoff_34=$38,objoff_35=$39,objoff_36=$3A,objoff_37=$3B
- enum objoff_38=$3C,objoff_39=$3D,objoff_3A=$3E,objoff_3B=$3F,objoff_3C=$40,objoff_3D=$41,objoff_3E=$42,objoff_3F=$43
- enum objoff_44=$44,objoff_45=$45,objoff_46=$46,objoff_47=$47,objoff_48=$48,objoff_49=$49
+
+objoff_12 =		2+x_pos;$12 ; note: x_pos can be 4 bytes, but sometimes the last 2 bytes of x_pos are used for other unrelated things
+objoff_13 =		$13 ;3+x_pos ; unused
+objoff_14 =		$14     ;2+y_pos	; unused
+objoff_15 =		$15    ;3+y_pos ; unused
+objoff_23 =             $23
+objoff_2B  =		$2B
+objoff_2C =		$2C ; overlaps subtype, but a few objects use it for other things anyway
+ ;enum                objoff_29_s2=$2D,objoff_2A_s2=$2E,objoff_2B_s2=$2F,objoff_2C_s2=$30,objoff_2D_s2=$31,objoff_2E_s2=$32,objoff_2F_s2=$33
+ ;enum objoff_30_s2=$34,objoff_31_s2=$35,objoff_32_s2=$36,objoff_33_s2=$37,objoff_34_s2=$38,objoff_35_s2=$39,objoff_36_s2=$3A,objoff_37_s2=$3B
+ ;enum objoff_38_s2=$3C,objoff_39_s2=$3D,objoff_3A_s2=$3E,objoff_3B_s2=$3F,objoff_3C_s2=$40,objoff_3D_s2=$41,objoff_3E_s2=$42,objoff_3F_s2=$43
+ ;enum objoff_44=$44,objoff_45=$45,objoff_46=$46,objoff_47=$47,objoff_48=$48,objoff_49=$49
+ enum                objoff_2D=$2D,objoff_2E=$2E,objoff_2F=$2F,objoff_30=$30,objoff_31=$31,objoff_32=$32,objoff_33=$33  ; done
+
+ enum objoff_34=$34,objoff_35=$35,objoff_36=$36,objoff_37=$37,objoff_38=$38,objoff_39=$39,objoff_3A=$3A,objoff_3B=$3B
+
+ enum objoff_3C=$3C,objoff_3D=$3D,objoff_3E=$3E,objoff_3F=$3F,objoff_40=$40,objoff_41,objoff_42=$42,objoff_43=$43
+
 ; ---------------------------------------------------------------------------
 ; Special Stage object properties:
-ss_dplc_timer = $24 ;s2 => 23
-ss_x_pos = objoff_2A
-ss_x_sub = objoff_2C
-ss_y_pos = objoff_2E
-ss_y_sub = objoff_30
-ss_init_flip_timer = objoff_32
-ss_flip_timer = objoff_33
-ss_z_pos = objoff_34
-ss_hurt_timer = objoff_36
-ss_slide_timer = objoff_37
-ss_parent = objoff_38
-ss_rings_base = objoff_3C	; word
-ss_rings_hundreds = objoff_3C
-ss_rings_tens = objoff_3D
-ss_rings_units = objoff_3E
-ss_last_angle_index = objoff_3F
+ss_dplc_timer = $49 ;s2 => 23
+ss_x_pos = $2E;objoff_2A
+ss_x_sub = $30 ;objoff_2C
+ss_y_pos = $32 ;objoff_2E
+ss_y_sub = $34 ;objoff_30
+ss_init_flip_timer = $36 ;objoff_32
+ss_flip_timer = $37 ;objoff_33
+ss_z_pos = $38 ;objoff_34
+ss_hurt_timer = $3A ;objoff_36
+ss_slide_timer = $3B ;objoff_37
+ss_parent = $3C ;objoff_38
+ss_rings_base = $3E ;objoff_3C	; word
+ss_rings_hundreds = $3E ;objoff_3C
+ss_rings_tens = $3F ;objoff_3D
+ss_rings_units = $40 ;objoff_3E
+ss_last_angle_index = $41 ;objoff_3F
 ; ---------------------------------------------------------------------------
 ; property of all objects:
 object_size =		$4A ; the size of an object
