@@ -70117,10 +70117,9 @@ InheritParentXYFlip:
 
 ;loc_367D0:
 LoadChildObject:
-        move.w	(a2)+,d6
 	jsr	(SingleObjLoad2).l
 	bne.s	+	; rts
-	move.w	d6,d0
+	move.w	(a2)+,d0
 	move.w	a1,(a0,d0.w) ; store pointer to child in parent's SST
 	move.l	(a2)+,(a1) ; load obj
 	move.b	(a2)+,subtype(a1)
@@ -78221,7 +78220,7 @@ ObjC3_SubObjData:
 SecondRoutine_WFZBoss = $43
 WFZ_BossParent = $40
 Child_Refrence_WFZ = $30
-HitCount_WFZ = $42
+HitCount_WFZ = $12
 Max_LeftVarable = $34
 Max_RightVarable = $44
 parent_LaerShooters = $3C
@@ -78324,10 +78323,10 @@ ObjC5_CaseStart:
 	addi.w	#$60,y_pos(a1)		; right laser wall (y)
 	lea	(ObjC5_LaserShooterData).l,a2
 	bsr.w	LoadChildObject
-	lea	(ObjC5_PlatformReleaserData).l,a2
-	bsr.w	LoadChildObject
-	lea	(ObjC5_RobotnikData).l,a2
-	bsr.w	LoadChildObject
+;	lea	(ObjC5_PlatformReleaserData).l,a2
+;	bsr.w	LoadChildObject
+;	lea	(ObjC5_RobotnikData).l,a2
+;	bsr.w	LoadChildObject
 	move.w	#$5A,WFZ_BossParent(a0)	; How long for the boss music to start playing and the boss to start
 	moveq	#MusID_FadeOut,d0
 	jsrto	(PlaySound).l, JmpTo12_PlaySound
@@ -78410,7 +78409,7 @@ ObjC5_CaseAnimate:
 	jsrto	(AnimateSprite).l, JmpTo25_AnimateSprite
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
-
+; routines to set to the red case that beeps and shoots
 ObjC5_CaseLSLoad:		; loads up the laser shooter (LS)
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
 	move.w	#$E,WFZ_BossParent(a0)	; Time the laser shooter moves down
@@ -78444,8 +78443,8 @@ ObjC5_CaseWaitLoadLaser:
 
 ObjC5_CaseLoadLaser:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	lea	(ObjC5_LaserData).l,a2
-	bsr.w	LoadChildObject		; loads laser
+;	lea	(ObjC5_LaserData).l,a2
+;	bsr.w	LoadChildObject		; loads laser
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
@@ -78551,8 +78550,8 @@ ObjC5_LaserWall:
 	move.b	SecondRoutine_WFZBoss(a0),d0
 	move.w	ObjC5_LaserWallIndex(pc,d0.w),d1
 	jsr	ObjC5_LaserWallIndex(pc,d1.w)
-	tst.b	(a0)
-	beq.w	return_37A48
+	tst.l	(a0)  ; is the object alive ?
+	beq.w	return_37A48   ; if yea then stop collsion
 	move.w	x_pos(a0),-(sp)
 	move.w	#$13,d1
 	move.w	#$40,d2
@@ -78677,8 +78676,8 @@ ObjC5_PlatformReleaserLoadP:	; P=Platforms
 	tst.b	HitCount_WFZ(a0,d0.w)
 	bne.s	BranchTo8_JmpTo45_DisplaySprite
 	st	HitCount_WFZ(a0,d0.w)
-	lea	(ObjC5_PlatformData).l,a2
-	bsr.w	LoadChildObject
+;	lea	(ObjC5_PlatformData).l,a2
+;	bsr.w	LoadChildObject
 	move.b	WFZBoss_ShootOut(a0),WFZBoss_ShootOut(a1)
 
 BranchTo8_JmpTo45_DisplaySprite
@@ -78722,8 +78721,9 @@ ObjC5_PlatformInit:
 	move.b	#7,mapping_frame(a0)
 	move.w	#$100,y_vel(a0)			; Y speed
 	move.w	#$60,WFZ_BossParent(a0)
-	lea	(ObjC5_PlatformHurtData).l,a2	; loads the invisible object that hurts sonic
-	bra.w	LoadChildObject
+;	lea	(ObjC5_PlatformHurtData).l,a2	; loads the invisible object that hurts sonic
+;	bra.w	LoadChildObject
+        rts
 ; ===========================================================================
 
 ObjC5_PlatformDownWait:		; waits for it to go down some
@@ -78832,20 +78832,20 @@ ObjC5_LaserShooterIndex: offsetTable
 ObjC5_LaserShooterInit:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
 	move.b	#4,mapping_frame(a0)
-	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+	jmp	(DisplaySprite).l
 ; ===========================================================================
 
 ObjC5_LaserShooterFollow:
 	movea.w	Child_Refrence_WFZ(a0),a1 ; a1=object (laser case)
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
-	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+	jmp	(DisplaySprite).l
 ; ===========================================================================
 
 ObjC5_LaserShooterDown:
 	movea.w	Child_Refrence_WFZ(a0),a1 ; a1=object (laser case)
 	move.w	x_pos(a1),x_pos(a0)
-	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+	jmp	(DisplaySprite).l
 ; ===========================================================================
 ;------------------------------------------------------------------
 ;  laser wall ig orrrrrrr
@@ -78980,8 +78980,8 @@ ObjC5_RobotnikInit:
 	move.b	#1,anim(a0)
 	move.w	#$2C60,x_pos(a0)
 	move.w	#$4E6,y_pos(a0)
-	lea	(ObjC5_RobotnikPlatformData).l,a2
-	bsr.w	LoadChildObject
+;	lea	(ObjC5_RobotnikPlatformData).l,a2
+;	bsr.w	LoadChildObject
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
@@ -79141,8 +79141,28 @@ ObjC5_MapUnc_3CCD8:	BINCLUDE "mappings/sprite/objC5_a.bin"
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjC5_MapUnc_3CEBC:	BINCLUDE "mappings/sprite/objC5_b.bin"
+                  even
+; this is an important ConQuest  Routine (Dulled Towork with s2 childs since the orignal is fucked for somereason)
+CreateChildSimplePositons:
+		moveq	#0,d2				; child routine that sets a timer and a child distance
+		move.w	(a2)+,d6
 
+CreateChildSimplePositons2:
+		jsr	(Create_New_Sprite3).l
+		bne.s	+
+		move.w	a0,parent3(a1)
+		move.l	mappings(a0),mappings(a1)
+		move.w	art_tile(a0),art_tile(a1)
+		move.l	(a2)+,(a1)
+		move.b  (a2)+,subtype(a1)
+		move.w	x_pos(a0),x_pos(a1)
+		move.w	y_pos(a0),y_pos(a1)
+		dbf	d6,CreateChildSimplePositons2
+                moveq	#0,d0
 
++
+		rts
+; End of function CreateChildComplexPositons
 
 
 ; ===========================================================================
