@@ -1055,54 +1055,37 @@ Decomp_Buffer:			ds.b	$200
 Sprite_Table_Input:		ds.b	$400	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
 Sprite_Table_Input_End:
 
-Object_RAM:			; The various objects in the game are loaded in this area.
-				; Each game mode uses different objects, so some slots are reused.
-				; The section below declares labels for the objects used in main gameplay.
-				; Objects for other game modes are declared further down.
-Reserved_Object_RAM:
+Object_RAM:
 MainCharacter:			; first object (usually Sonic except in a Tails Alone game)
 				ds.b	object_size
 Sidekick:			; second object (Tails in a Sonic and Tails game)
 				ds.b	object_size
-TitleCard:
-TitleCard_ZoneName:		; level title card: zone name
-GameOver_GameText:		; "GAME" from GAME OVER
-TimeOver_TimeText:		; "TIME" from TIME OVER
-				ds.b	object_size
-TitleCard_Zone:			; level title card: "ZONE"
-GameOver_OverText:		; "OVER" from GAME OVER
-TimeOver_OverText:		; "OVER" from TIME OVER
-				ds.b	object_size
-TitleCard_ActNumber:		; level title card: act number
-				ds.b	object_size
-TitleCard_Background:		; level title card: background
-				ds.b	object_size
-TitleCard_Bottom:		; level title card: yellow part at the bottom
-				ds.b	object_size
-TitleCard_Left:			; level title card: red part on the left
-				ds.b	object_size
+Reserved_object_3		ds.b object_size	; during a level, an object whose sole purpose is to clear the collision response list is stored here
 
-				; Reserved object RAM, free slots
-				ds.b	object_size
-				ds.b	object_size
-				ds.b	object_size
-				ds.b	object_size
-				ds.b	object_size
 
-CPZPylon:			; Pylon in the foreground in CPZ
-				ds.b	object_size
-WaterSurface1:			; First water surface
-Oil:				; Oil at the bottom of OOZ
-				ds.b	object_size
-WaterSurface2:			; Second water surface
-				ds.b	object_size
-Reserved_Object_RAM_End:
+Dynamic_object_RAM:
+Dynamic_Object_RAM:	        ds.b object_size*90	; $1A04 bytes ; 90 objects
+Dynamic_Object_RAM_End =	*
+Level_object_RAM:             = Dynamic_Object_RAM_End	; $4EA bytes ; various fixed in-level objects
+;--------------------------------------------------------------------------------------------
+;RamVarables that were not reserved in s3k but their slots still exists
 
-Dynamic_Object_RAM:		; Dynamic object RAM
-				ds.b	$28*object_size
-Dynamic_Object_RAM_2P_End:	; SingleObjLoad stops searching here in 2P mode
-				ds.b	$48*object_size
-Dynamic_Object_RAM_End:
+TitleCard:   = Dynamic_Object_RAM+object_size*2            ;       = Dynamic_Object_RAM+object_size*2
+TitleCard_ZoneName: = Dynamic_Object_RAM+object_size*2 ;ds.b object_size	;	= Dynamic_Object_RAM+object_size*2                    ; "TIME" from TIME OVER
+
+TitleCard_Zone:     = Dynamic_Object_RAM+object_size*3 ;ds.b object_size       ;     = Dynamic_Object_RAM+object_size*3
+
+TitleCard_ActNumber: = Dynamic_Object_RAM+object_size*4; ds.b object_size     ;      = Dynamic_Object_RAM+object_size*4
+                                 ;       = Dynamic_Object_RAM+object_size*5
+
+TitleCard_Background: = Dynamic_Object_RAM+object_size*5 ;ds.b object_size	;	= Dynamic_Object_RAM+object_size*6 ; level title card: background
+
+;
+TitleCard_Bottom:  = Dynamic_Object_RAM+object_size*6 ;ds.b object_size      ;	= Dynamic_Object_RAM+object_size*7	; level title card: yellow part at the bottom
+;
+TitleCard_Left:	= Dynamic_Object_RAM+object_size*7 ;ds.b object_size	;	= Dynamic_Object_RAM+object_size*8 ; level title card: red part on the left
+
+
 
 LevelOnly_Object_RAM:
 Tails_Tails:			; address of the Tail's Tails object
@@ -1131,10 +1114,12 @@ Tails_InvincibilityStars:
 				ds.b	object_size
 				ds.b	object_size
 				ds.b	object_size
+Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
 Object_RAM_End:
-				ds.b	$60	; unused
+                                ds.b    $434
+				ds.b	$200	; unused
 
 Primary_Collision:		ds.b	$300
 Secondary_Collision:		ds.b	$300
@@ -1263,7 +1248,7 @@ Underwater_palette_line2:	ds.b palette_line_size
 Underwater_palette_line3:	ds.b palette_line_size
 Underwater_palette_line4:	ds.b palette_line_size
 
-				ds.b	$100	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
+				ds.b	$500	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
 
 Game_Mode:			ds.w	1	; 1 byte ; see GameModesArray (master level trigger, Mstr_Lvl_Trigger)
 Ctrl_1_Logical:					; 2 bytes
@@ -1827,7 +1812,7 @@ SpecialStageResults:
 				ds.b	$C*object_size
 SpecialStageResults2:
 				ds.b	object_size
-				ds.b	$51*object_size
+				ds.b	$40*object_size
 SS_Dynamic_Object_RAM_End:
 				ds.b	object_size
 SS_Object_RAM_End:
@@ -1908,7 +1893,7 @@ SS_Misc_Variables_End:
 SS_Horiz_Scroll_Buf_1:		ds.b	$400
 SS_Horiz_Scroll_Buf_1_End:
 
-	phase	ramaddr($FFFFF73E)	; Still in SS RAM
+	phase	ramaddr(Boss_CollisionRoutine-$1)	; Still in SS RAM
 SS_Offset_X:			ds.w	1
 SS_Offset_Y:			ds.w	1
 SS_Swap_Positions_Flag:	ds.b	1

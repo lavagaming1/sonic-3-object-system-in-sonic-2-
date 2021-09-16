@@ -4424,18 +4424,18 @@ Level_TtlCard:
 ; Level_ChkWater:
 	tst.b	(Water_flag).w	; does level have water?
 	beq.s	+	; if not, branch
-	move.l	#Obj04,(WaterSurface1).w ; load Obj04 (water surface) at $FFFFB380
-	move.w	#$60,(WaterSurface1+x_pos).w ; set horizontal offset
-	move.l	#Obj04,(WaterSurface2).w ; load Obj04 (water surface) at $FFFFB3C0
-	move.w	#$120,(WaterSurface2+x_pos).w ; set different horizontal offset
+	move.l	#Obj04,(Dynamic_Object_RAM+object_size).w ; load Obj04 (water surface) at $FFFFB380
+	move.w	#$60,(Dynamic_Object_RAM+object_size+x_pos).w ; set horizontal offset
+	move.l	#Obj04,(Wave_Splash).w ; load Obj04 (water surface) at $FFFFB3C0
+	move.w	#$120,(Wave_Splash+x_pos).w ; set different horizontal offset
 +
 	cmpi.b	#chemical_plant_zone,(Current_Zone).w	; check if zone == CPZ
 	bne.s	+			; branch if not
-	move.l	#Obj7C,(CPZPylon).w ; load Obj7C (CPZ pylon) at $FFFFB340
+	move.l	#Obj7C,(Dynamic_Object_RAM+object_size*8).w ; load Obj7C (CPZ pylon) at $FFFFB340
 +
 	cmpi.b	#oil_ocean_zone,(Current_Zone).w	; check if zone == OOZ
 	bne.s	Level_ClrHUD		; branch if not
-	move.l	#Obj07,(Oil).w ; load Obj07 (OOZ oil) at $FFFFB380
+	move.l	#Obj07,(Dynamic_Object_RAM+object_size).w ; load Obj07 (OOZ oil) at $FFFFB380
 ; Level_LoadObj: misnomer now
 Level_ClrHUD:
 	moveq	#0,d0
@@ -4527,15 +4527,15 @@ Level_FromCheckpoint:
 	tst.l	(TitleCard_Background).w
 	bne.s	-	; loop while the title card background is still loaded
 
-	lea	(TitleCard).w,a1
-	move.b	#$16,TitleCard_ZoneName-TitleCard+routine(a1)
-	move.w	#$2D,TitleCard_ZoneName-TitleCard+anim_frame_duration(a1)
-	move.b	#$16,TitleCard_Zone-TitleCard+routine(a1)
-	move.w	#$2D,TitleCard_Zone-TitleCard+anim_frame_duration(a1)
-	tst.l	TitleCard_ActNumber-TitleCard(a1)
+
+	move.b	#$16,(TitleCard_ZoneName+routine).w
+	move.w	#$2D,(TitleCard_ZoneName+anim_frame_duration).w
+	move.b	#$16,(TitleCard_Zone+routine).w
+	move.w	#$2D,(TitleCard_Zone+anim_frame_duration).w
+	tst.l	(TitleCard_ActNumber).w
 	beq.s	+	; branch if the act number has been unloaded
-	move.b	#$16,TitleCard_ActNumber-TitleCard+routine(a1)
-	move.w	#$2D,TitleCard_ActNumber-TitleCard+anim_frame_duration(a1)
+	move.b	#$16,(TitleCard_ActNumber+routine).w ;TitleCard_ActNumber-TitleCard+routine(a1)
+	move.w	#$2D,(TitleCard_ActNumber+anim_frame_duration).w ;TitleCard_ActNumber-TitleCard+anim_frame_duration(a1)
 +	move.b	#0,(Control_Locked).w
 	move.b	#0,(Control_Locked_P2).w
 	move.b	#1,(Level_started_flag).w
@@ -4698,9 +4698,9 @@ UpdateWaterSurface:
 +		; match obj x-position to screen position
 	move.w	d1,d0
 	addi.w	#$60,d0
-	move.w	d0,(WaterSurface1+x_pos).w
+	move.w	d0,(Dynamic_Object_RAM+(object_size)+x_pos).w
 	addi.w	#$120,d1
-	move.w	d1,(WaterSurface2+x_pos).w
+	move.w	d1,(Wave_Splash+x_pos).w
 +
 	rts
 ; End of function UpdateWaterSurface
@@ -19432,7 +19432,7 @@ LevEvents_OOZ2_Routine1:
 	blo.s	+	; rts
 	move.w	(Camera_X_pos).w,(Camera_Min_X_pos).w
 	move.w	(Camera_X_pos).w,(Tails_Min_X_pos).w
-	move.w	#$2D8,(Oil+y_pos).w
+	move.w	#$2D8,(Dynamic_Object_RAM+(object_size)+y_pos).w
 	move.w	#$1E0,(Camera_Max_Y_pos).w
 	move.w	#$1E0,(Tails_Max_Y_pos).w
 	addq.b	#2,(Dynamic_Resize_Routine).w
@@ -27391,7 +27391,7 @@ Obj3C_MapUnc_15ECC:	BINCLUDE "mappings/sprite/obj3C.bin"
 
 ; sub_15F9C: ObjectsLoad:
 RunObjects:
-                tst.b	(Teleport_flag).w
+	        tst.b	(Teleport_flag).w
 		bne.s	RunObjects_End
 		lea	(Object_RAM).w,a0
 		tst.w	(Two_player_mode).w
@@ -27402,7 +27402,7 @@ RunObjects:
 		bhs.s	RunObjectsWhenPlayerIsDead
 
 loc_1AAFA:
-		move.w	#(Object_RAM_End-Object_RAM)/object_size-1,d7
+		moveq	#(Object_RAM_End-Object_RAM)/object_size-1,d7
 
 	; continue straight to RunObject
 ; ---------------------------------------------------------------------------
@@ -27416,14 +27416,14 @@ loc_1AAFA:
 ; sub_15FCC:
 
 RunObject:
-	move.l  (a0),d0  	; get the object's ID
-	beq.s	RunNextObject ; if it's obj00, skip it
+	move.l  (a0),d0
+	beq.s	RunNextObject
 	movea.l	d0,a1
 	jsr	(a1)
 
  ;loc_15FDC:
 RunNextObject:
-	lea	object_size(a0),a0 ; load 0bj address
+        lea	object_size(a0),a0 ; load 0bj address
 	dbf	d7,RunObject
 RunObjects_End:
        rts
@@ -27433,11 +27433,11 @@ RunObjects_End:
 ; this skips certain objects to make enemies and things pause when Sonic dies
 ; loc_15FE6:
 RunObjectsWhenPlayerIsDead:
-		moveq	#((Dynamic_Object_RAM+object_size)-Object_RAM)/object_size-1,d7
+		moveq	#((Dynamic_object_RAM+object_size)-Object_RAM)/object_size-1,d7
 		bsr.s	RunObject
-		moveq	#((LevelOnly_Object_RAM+object_size)-(Dynamic_Object_RAM+object_size))/object_size-1,d7
+		moveq	#((Level_object_RAM+object_size)-(Dynamic_object_RAM+object_size))/object_size-1,d7
 		bsr.s	RunObjectDisplayOnly
-		moveq	#(Object_RAM_End-(LevelOnly_Object_RAM+object_size))/object_size-1,d7
+		moveq	#(Object_RAM_End-(Level_object_RAM+object_size))/object_size-1,d7
 		bra.s	RunObject
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -27456,7 +27456,6 @@ loc_1AB28:
 		rts
 
 ; End of function RunObjectDisplayOnly
-
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; OBJECT POINTER ARRAY ; object pointers ; sprite pointers ; object list ; sprite list
@@ -34716,10 +34715,11 @@ CheckGameOver:
 	subq.b	#1,(Life_count).w	; subtract 1 from number of lives
 	bne.s	Obj01_ResetLevel	; if it's not a game over, branch
 	move.w	#0,restart_countdown(a0)
-	move.L	#Obj39,(GameOver_GameText).w ; load Obj39 (game over text)
-	move.L	#Obj39,(GameOver_OverText).w ; load Obj39 (game over text)
-	move.b	#1,(GameOver_OverText+mapping_frame).w
-	move.w	a0,(GameOver_GameText+parent).w
+	move.l	#Obj39,(Reserved_object_3).w ; load Obj39 (game over text)
+	move.l	#Obj39,(Dynamic_Object_RAM).w; load Obj39 (game over text)
+	move.b	#0,(Reserved_object_3+mapping_frame).w
+	move.b	#1,(Dynamic_Object_RAM+mapping_frame).w
+	move.w	a0,(Reserved_object_3+parent).w
 	clr.b	(Time_Over_flag).w
 ; loc_1B26E:
 Obj01_Finished:
@@ -34741,11 +34741,11 @@ Obj01_ResetLevel:
 	tst.b	(Time_Over_flag).w
 	beq.s	Obj01_ResetLevel_Part2
 	move.w	#0,restart_countdown(a0)
-	move.L	#Obj39,(TimeOver_TimeText).w ; load Obj39 (game over text)
-	move.L	#Obj39,(TimeOver_OverText).w; load Obj39
-	move.b	#2,(TimeOver_TimeText+mapping_frame).w
-	move.b	#3,(TimeOver_OverText+mapping_frame).w
-	move.w	a0,(TimeOver_TimeText+parent).w
+	move.l	#Obj39,(Reserved_object_3).w
+	move.l	#Obj39,(Dynamic_Object_RAM).w
+ 	move.b	#0,(Reserved_object_3+mapping_frame).w
+	move.b	#1,(Dynamic_Object_RAM+mapping_frame).w
+	move.w	a0,(Reserved_object_3+parent).w
 	bra.s	Obj01_Finished
 ; ---------------------------------------------------------------------------
 Obj01_ResetLevel_Part2:
@@ -37483,10 +37483,11 @@ Obj02_CheckGameOver_2Pmode:
 	subq.b	#1,(Life_count_2P).w
 	bne.s	Obj02_ResetLevel
 	move.w	#0,restart_countdown(a0)
-	move.l	#Obj39,(GameOver_GameText).w ; load Obj39
-	move.l	#Obj39,(GameOver_OverText).w ; load Obj39
-	move.b	#1,(GameOver_OverText+mapping_frame).w
-	move.w	a0,(GameOver_GameText+parent).w
+        move.l	#Obj39,(Reserved_object_3).w
+       	move.l	#Obj39,(Dynamic_Object_RAM).w
+       	move.b	#0,(Reserved_object_3+mapping_frame).w
+       	move.b	#1,(Dynamic_Object_RAM+mapping_frame).w
+       	move.w	a0,(Reserved_object_3+parent).w
 	clr.b	(Time_Over_flag_2P).w
 ; loc_1CCCC:
 Obj02_Finished:
@@ -37525,11 +37526,11 @@ Obj02_ResetLevel_Part2:
 	tst.b	(Time_Over_flag_2P).w
 	beq.s	Obj02_ResetLevel_Part3
 	move.w	#0,restart_countdown(a0)
-	move.l	#Obj39,(TimeOver_TimeText).w ; load Obj39
-	move.l	#Obj39,(TimeOver_OverText).w ; load Obj39
-	move.b	#2,(TimeOver_TimeText+mapping_frame).w
-	move.b	#3,(TimeOver_OverText+mapping_frame).w
-	move.w	a0,(TimeOver_TimeText+parent).w
+        move.l	#Obj39,(Reserved_object_3).w ; load Obj39 Reserved_object_3
+	move.l	#Obj39,(Dynamic_Object_RAM).w ; load Obj39 Dynamic_Object_RAM
+	move.b	#2,(Reserved_object_3+mapping_frame).w
+	move.b	#3,(Dynamic_Object_RAM+mapping_frame).w
+	move.w	a0,(Reserved_object_3+parent).w
 	bra.s	Obj02_Finished
 ; ---------------------------------------------------------------------------
 Obj02_ResetLevel_Part3:
@@ -77348,39 +77349,25 @@ ObjB8_Obj98_MapUnc_3BA46:	BINCLUDE "mappings/sprite/objB8.bin"
 ; ----------------------------------------------------------------------------
 ; Sprite_3BABA:
 ObjB9:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	ObjB9_Index(pc,d0.w),d1
-	jmp	ObjB9_Index(pc,d1.w)
-; ===========================================================================
-; off_3BAC8:
-ObjB9_Index:	offsetTable
-		offsetTableEntry.w ObjB9_Init
-		offsetTableEntry.w loc_3BAD2
-		offsetTableEntry.w loc_3BAF0
-; ===========================================================================
-; BranchTo6_LoadSubObject
-ObjB9_Init:
+
+        move.l  #Laser_Main,(a0)
 	bra.w	LoadSubObject
 ; ===========================================================================
 
-loc_3BAD2:
+Laser_Main:
 	tst.b	render_flags(a0)
-	bmi.s	+
-	bra.w	loc_3BAF8
+	bmi.s	MoveLasterAndSound
+	bra.w	MoveLaser_Display
 ; ===========================================================================
-+
-	addq.b	#2,routine(a0)
+MoveLasterAndSound:
+	move.l  #MoveLaser_Display,(a0)
 	move.w	#-$1000,x_vel(a0)
 	moveq	#SndID_LargeLaser,d0
-	jsrto	(PlaySound).l, JmpTo12_PlaySound
-	bra.w	loc_3BAF8
+	jsr	(PlaySound).l
 ; ===========================================================================
 
-loc_3BAF0:
-	jsrto	(ObjectMove).l, JmpTo26_ObjectMove
-	bra.w	loc_3BAF8
-loc_3BAF8:
+MoveLaser_Display:
+	jsr	(ObjectMove).l
 	move.w	x_pos(a0),d0
 	move.w	(Camera_X_pos).w,d1
 	subi.w	#$40,d1
@@ -77395,6 +77382,7 @@ ObjB9_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjB9_MapUnc_3BB18:	BINCLUDE "mappings/sprite/objB9.bin"
+        even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object BA - Wheel from WFZ
