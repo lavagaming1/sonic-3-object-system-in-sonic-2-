@@ -22259,6 +22259,7 @@ Obj2A_MapUnc_11666:	BINCLUDE "mappings/sprite/obj2A.bin"
 ; Object 2D - One way barrier from CPZ and DEZ
 ; ----------------------------------------------------------------------------
 ; Sprite_1169A:
+DoorWayMoveUpDown = $40
 Obj2D:
 	moveq	#0,d0
 	move.b	routine(a0),d0
@@ -22299,7 +22300,7 @@ Obj2D_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_ARZBarrierThing,1,0),art_tile(a0)
 	move.b	#8,width_pixels(a0)
 +
-	bsr.w	Adjust2PArtPointer
+
 	ori.b	#4,render_flags(a0)
 	move.b	#4,priority(a0)
 	move.w	y_pos(a0),objoff_36(a0)
@@ -22313,13 +22314,13 @@ Obj2D_Init:
 	subi.w	#-$1E8,d2
 	addi.w	#$1E8,d3
 +
-	move.w	d2,objoff_3C(a0)
+	move.w	d2,DoorWayMoveUpDown(a0)
 	move.w	d3,objoff_3E(a0)
 ; loc_1175E:
 Obj2D_Main:
 	btst	#0,status(a0)
 	bne.s	+
-	move.w	objoff_3C(a0),d2
+	move.w	DoorWayMoveUpDown(a0),d2
 	move.w	x_pos(a0),d3
 	tst.b	routine_secondary(a0)                ; check if barrier is moving up
 	beq.s	++
@@ -22331,7 +22332,7 @@ Obj2D_Main:
 	move.w	objoff_3E(a0),d3
 	tst.b	routine_secondary(a0)                ; check if barrier is moving up
 	beq.s	+
-	move.w	objoff_3C(a0),d2
+	move.w	DoorWayMoveUpDown(a0),d2
 +
 	move.w	objoff_36(a0),d4
 	move.w	d4,d5
