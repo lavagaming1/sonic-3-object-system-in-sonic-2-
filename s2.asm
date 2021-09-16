@@ -20542,13 +20542,13 @@ JmpTo_CalcSine ; JmpTo
 ; Sprite_FC9C:
 Obj15:
 	btst	#6,render_flags(a0)
-	bne.w	+
+	bne.w	DisplayChains_Subsprite
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj15_Index(pc,d0.w),d1
 	jmp	Obj15_Index(pc,d1.w)
 ; ---------------------------------------------------------------------------
-+
+DisplayChains_Subsprite:
 	move.w	#$200,d0
 	bra.w	DisplaySprite3
 ; ===========================================================================
@@ -20574,38 +20574,38 @@ Obj15_Init:
 	move.w	y_pos(a0),objoff_3C(a0)
 	move.w	x_pos(a0),objoff_3E(a0)
 	cmpi.b	#mystic_cave_zone,(Current_Zone).w
-	bne.s	+
+	bne.s	.ifNotMysticCave
 	move.l	#Obj15_Obj7A_MapUnc_10256,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,0,0),art_tile(a0)
 	move.b	#$18,width_pixels(a0)
 	move.b	#8,y_radius(a0)
-+
+ .ifNotMysticCave:
 	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w
-	bne.s	+
+	bne.s	.IfNotAquaticRuins
 	move.l	#Obj15_Obj83_MapUnc_1021E,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,0,0),art_tile(a0)
 	move.b	#$20,width_pixels(a0)
 	move.b	#8,y_radius(a0)
-+
-	bsr.w	Adjust2PArtPointer
+ .IfNotAquaticRuins:
+
 	moveq	#0,d1
 	move.b	subtype(a0),d1
-	bpl.s	+
+	bpl.s	.IfSubtypeIs0
 	addq.b	#4,routine(a0)
-+
+ .IfSubtypeIs0:
 	move.b	d1,d4
 	andi.b	#$70,d4
 	andi.w	#$F,d1
 	move.w	x_pos(a0),d2
 	move.w	y_pos(a0),d3
 	jsrto	(SingleObjLoad2).l, JmpTo2_SingleObjLoad2
-	bne.w	+++
+	bne.w	.MoveInit_Swing
 	move.l	(a0),(a1) ; load obj15
 	move.l	mappings(a0),mappings(a1)
 	move.w	art_tile(a0),art_tile(a1)
 	move.b	#4,render_flags(a1)
 	cmpi.b	#$20,d4
-	bne.s	+
+	bne.s	.IfNotSubtype20
 	move.b	#4,routine(a1)
 	move.b	#4,priority(a1)
 	move.b	#$10,width_pixels(a1)
@@ -20617,20 +20617,21 @@ Obj15_Init:
 	move.w	d3,y_pos(a1)
 	addi.w	#$48,d3
 	move.w	d3,y_pos(a0)
-	bra.s	++
+	bra.s	.Unk_init_Addresses
 ; ===========================================================================
-+
+ .IfNotSubtype20:
 	bset	#6,render_flags(a1)
 	move.b	#$48,mainspr_width(a1)
 	move.b	d1,mainspr_childsprites(a1)
 	subq.b	#1,d1
 	lea	sub2_x_pos(a1),a2
 
--	move.w	d2,(a2)+	; sub?_x_pos
+ .Loop_SwinignDistance:
+	move.w	d2,(a2)+	; sub?_x_pos
 	move.w	d3,(a2)+	; sub?_y_pos
 	move.w	#1,(a2)+	; sub2_mapframe
 	addi.w	#$10,d3
-	dbf	d1,-
+	dbf	d1,.Loop_SwinignDistance
 
 	move.b	#2,sub2_mapframe(a1)
 	move.w	sub6_x_pos(a1),x_pos(a1)
@@ -20642,9 +20643,9 @@ Obj15_Init:
 	move.w	d3,y_pos(a0)
 	move.b	#$50,mainspr_height(a1)
 	bset	#4,render_flags(a1)
-+
+ .Unk_init_Addresses:
 	move.l	a1,objoff_34(a0)
-+
+.MoveInit_Swing
 	move.w	#$8000,angle(a0)
 	move.w	#0,objoff_42(a0)
 	move.b	subtype(a0),d1
@@ -20866,7 +20867,7 @@ Obj15_State4:
 	tst.b	(Oscillating_Data+$18).w
 	bne.w	BranchTo_loc_1000C
 	jsrto	(SingleObjLoad2).l, JmpTo2_SingleObjLoad2
-	bne.s	loc_100E4
+	bne.w	loc_100E4
 	moveq	#0,d0
 
 	move.w	#bytesToLcnt(object_size),d1
@@ -20890,29 +20891,28 @@ Obj15_State4:
 	bset	#1,status(a1)
 	move.w	a0,d0
 	subi.w	#Object_RAM,d0
-    if object_size=$40
-	lsr.w	#6,d0
-    else
-	divu.w	#object_size,d0
-    endif
+        lsr.w	#6,d0
+	move.b	Dvisiton_4a(pc,d0.w),d0
+	bmi.s	Fail_Divisiton
+
 	andi.w	#$7F,d0
 	move.w	a1,d1
 	subi.w	#Object_RAM,d1
-    if object_size=$40
-	lsr.w	#6,d1
-    else
-	divu.w	#object_size,d1
-    endif
+
+	lsr.w	#6,d1			; divide by $40
+	move.b	Dvisiton_4a(pc,d1.w),d1		; load the right number of objects from table
+	bmi.s	Fail_Divisiton			; if negative, we have failed!
+
 	andi.w	#$7F,d1
-	lea	(MainCharacter).w,a1 ; a1=character
-	cmp.b	interact(a1),d0
+	lea     (MainCharacter).w,a2
+	cmp.w	interact(a2),a0
 	bne.s	+
-	move.b	d1,interact(a1)
+	move.w	a1,interact(a2)
 +
-	lea	(Sidekick).w,a1 ; a1=character
-	cmp.b	interact(a1),d0
+        lea     (Sidekick).w,a2
+	cmp.w	interact(a2),a0
 	bne.s	loc_100E4
-	move.b	d1,interact(a1)
+	move.w	a1,interact(a2)
 
 loc_100E4:
 	move.b	#3,mapping_frame(a0)
@@ -20921,6 +20921,23 @@ loc_100E4:
 
 BranchTo_loc_1000C ; BranchTo
 	bra.w	loc_1000C
+Fail_Divisiton:
+          rts
+Dvisiton_4a:	dc.b -1
+.a :=	1		; .a is the object slot we are currently processing
+.b :=	1		; .b is used to calculate when there will be a conversion error due to object_size being > $40
+
+	rept (Dynamic_Object_RAM_End-Dynamic_object_RAM)/object_size-1
+		if (object_size * (.a-1)) / $40 > .b+1	; this line checks, if there would be a conversion error
+			dc.b .a-1, .a-1			; and if is, it generates 2 entries to correct for the error
+		else
+			dc.b .a-1
+		endif
+
+.b :=		(object_size * (.a-1)) / $40		; this line adjusts .b based on the iteration count to check
+.a :=		.a+1					; run interation counter
+	endm
+	even
 ; ===========================================================================
 ; loc_100F8:
 Obj15_State5:
