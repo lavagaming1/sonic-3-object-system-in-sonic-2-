@@ -1388,7 +1388,8 @@ Demo_button_index_2P:		ds.w	1	; index into button press demo data, for player 2
 Demo_press_counter_2P:		ds.w	1	; frames remaining until next button press, for player 2
 Tornado_Velocity_X:		ds.w	1	; speed of tails' plane in scz ($FFFFF736)
 Tornado_Velocity_Y:		ds.w	1
-ScreenShift:			ds.b	1
+ScreenShift:			ds.b	1                             
+
 				ds.b	4	; $FFFFF73B-$FFFFF73E
 Boss_CollisionRoutine:		ds.b	1
 Boss_AnimationArray:		ds.b	$10	; up to $10 bytes; 2 bytes per entry
@@ -1814,7 +1815,7 @@ SpecialStageResults2:
 				ds.b	object_size
 				ds.b	$40*object_size
 SS_Dynamic_Object_RAM_End:
-				ds.b	object_size
+				ds.b	object_size-$16
 SS_Object_RAM_End:
 
 				; The special stage mode also uses the rest of the RAM for

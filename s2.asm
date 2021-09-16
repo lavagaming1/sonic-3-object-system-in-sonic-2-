@@ -82419,7 +82419,8 @@ Hurt_ChkSpikes:
 	move.b	#AniIDSonAni_Hurt2,anim(a0)
 	move.b	#$78,invulnerable_time(a0)
 	move.w	#SndID_Hurt,d0	; load normal damage sound
-	cmpi.l	#Obj36,(a2)	; was damage caused by spikes?
+	move.l  (a2),d1
+	cmp.l	#Obj36,d1
 	bne.s	Hurt_Sound	; if not, branch
 	move.w	#SndID_HurtBySpikes,d0	; load spikes damage sound
 
@@ -82450,7 +82451,8 @@ KillCharacter:
 	move.b	#AniIDSonAni_Death,anim(a0)
 	bset	#high_priority_bit,art_tile(a0)
         moveq	#SndID_Hurt,d0
-	cmpi.l	#Obj36,(a2)
+        move.l  (a2),d1
+	cmp.l	#Obj36,d1
 	bne.s	+
 	moveq	#SndID_HurtBySpikes,d0
 +
