@@ -1038,7 +1038,8 @@ ramaddr function x,-(-x)&$FFFFFFFF
 
 ; ---------------------------------------------------------------------------
 ; RAM variables - General
-	phase	ramaddr($FFFF0000)	; Pretend we're in the RAM
+	phase	ramaddr($FFFF0000)	; Pretend we're in the RAM       
+RAM_start:
 RAM_Start:
 
 Chunk_Table:			ds.b	$8000	; was "Metablock_Table"
