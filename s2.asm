@@ -22278,7 +22278,7 @@ Obj2A_MapUnc_11666:	BINCLUDE "mappings/sprite/obj2A.bin"
 ; ----------------------------------------------------------------------------
 ; Sprite_1169A:
 DoorWayMoveUpDown = $40
-Obj2D:
+Obj2D: rts
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj2D_Index(pc,d0.w),d1
@@ -48410,7 +48410,7 @@ JmpTo28_DeleteObject ; JmpTo
 ; Object 2C - Sprite that makes leaves fly off when you hit it from ARZ
 ; ----------------------------------------------------------------------------
 ; Sprite_26104:
-Obj2C: 
+Obj2C:
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj2C_Index(pc,d0.w),d1
@@ -74199,6 +74199,7 @@ loc_39182:
 ; End of subroutine loc_39182
 
 ; ===========================================================================
+         even
 word_391E0:
 	dc.w objoff_42
 	dc.l ObjA9
@@ -74569,7 +74570,7 @@ ObjAD_Obj98_MapUnc_395B4:	BINCLUDE "mappings/sprite/objAE.bin"
 ; (also handles Eggman's remote-control window)
 ; ----------------------------------------------------------------------------
 ; Sprite_3972C:
-ObjAF:
+ObjAF:      rts
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	ObjAF_Index(pc,d0.w),d1
@@ -74603,15 +74604,15 @@ ObjAF_Init:
 	move.b	#$10,x_radius(a0)
 	move.b	#0,collision_flags(a0)
 	move.b	#8,collision_property(a0)
-	lea	(word_39DC2).l,a2
-	bsr.w	LoadChildObject
-	move.b	#$E,routine(a1)
-	lea	(word_39DC6).l,a2
-	bsr.w	LoadChildObject
-	move.b	#$14,routine(a1)
-	lea	(word_39DCA).l,a2
-	bsr.w	LoadChildObject
-	move.b	#$1A,routine(a1)
+	;lea	(word_39DC2).l,a2
+	;bsr.w	LoadChildObject
+	;move.b	#$E,routine(a1)
+	;lea	(word_39DC6).l,a2
+	;bsr.w	LoadChildObject
+	;move.b	#$14,routine(a1)
+	;lea	(word_39DCA).l,a2
+	;bsr.w	LoadChildObject
+	;move.b	#$1A,routine(a1)
 	rts
 ; ===========================================================================
 
@@ -78215,18 +78216,19 @@ ObjC3_Main:
 ObjC3_SubObjData:
 	subObjData Obj27_MapUnc_21120,make_art_tile(ArtTile_ArtNem_Explosion,0,0),4,5,$C,0
 ; ===========================================================================
-SecondRoutine_WFZBoss = $43
-WFZ_BossParent = $40
-Child_Refrence_WFZ = $30
-HitCount_WFZ = $12
-Max_LeftVarable = $34
-Max_RightVarable = $44
-parent_LaerShooters = $3C
-WFZFlickerVarable = $49   ; byte
-WFZBoss_ShootOut = $48    ; byte
-WFZParentCustomize = $3E   ; word
-Small_PlatformsParent = $3A ; word
-RobotnickParentAddr = $38   ; word
+SecondRoutine_WFZBoss = $3C  ;  ; byte  its routine sec varable that gets called by ani script
+WFZFlickerVarable = $13  ;   ; byte ; used to interupt displaying giving a flickery look
+WFZBoss_ShootOut = $2D    ; byte
+WFZ_BossParent =  $2E    ;word
+WFZCountDown =   $2E   ;word   ; timer for events 
+Child_Refrence_WFZ = $30 ; word ; main things for the parents (mother object)
+HitCount_WFZ =    $34 ;word
+Max_LeftVarable =  $36   ;word
+Max_RightVarable =  $38  ;word
+parent_LaerShooters = $3A  ; word
+WFZParentCustomize = $46   ; word laser and stuff parent
+Small_PlatformsParent = $3E ; word
+RobotnickParentAddr =  $44  ; word
 ; ----------------------------------------------------------------------------
 ; Object C5 - WFZ boss
 ; ----------------------------------------------------------------------------
@@ -78321,32 +78323,33 @@ ObjC5_CaseStart:
 	addi.w	#$60,y_pos(a1)		; right laser wall (y)
 	lea	(ObjC5_LaserShooterData).l,a2
 	bsr.w	LoadChildObject
-;	lea	(ObjC5_PlatformReleaserData).l,a2
-;	bsr.w	LoadChildObject
-;	lea	(ObjC5_RobotnikData).l,a2
-;	bsr.w	LoadChildObject
-	move.w	#$5A,WFZ_BossParent(a0)	; How long for the boss music to start playing and the boss to start
+	lea	(ObjC5_PlatformReleaserData).l,a2
+	bsr.w	LoadChildObject
+	lea	(ObjC5_RobotnikData).l,a2
+	bsr.w	LoadChildObject
+	move.w	#$5A,WFZCountDown(a0)	; How long for the boss music to start playing and the boss to start
 	moveq	#MusID_FadeOut,d0
 	jsrto	(PlaySound).l, JmpTo12_PlaySound
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+
 ; ===========================================================================
 
 ObjC5_CaseWaitDown:
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bmi.s	ObjC5_CaseSpeedDown
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_CaseSpeedDown:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$60,WFZ_BossParent(a0)	; How long the laser carrier goes down
+	move.w	#$60,WFZCountDown(a0)	; How long the laser carrier goes down
 	moveq	#MusID_Boss,d0
 	jsrto	(PlayMusic).l, JmpTo5_PlayMusic
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_CaseDown:
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	beq.s	ObjC5_CaseStopDown
 	jsrto	(ObjectMove).l, JmpTo26_ObjectMove
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
@@ -78369,12 +78372,12 @@ ObjC5_CaseXSpeed:
 ObjC5_CasePMLoader:
 	move.w	d1,x_vel(a0)
 	bset	#2,status(a0)		; makes the platform maker load
-	move.w	#$70,WFZ_BossParent(a0)	; how long to go back and forth before letting out laser
+	move.w	#$70,WFZCountDown(a0)	; how long to go back and forth before letting out laser
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_CaseBoundaryChk:			; waits and makes sure the carrier does not go beyond the limit
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bmi.s	ObjC5_CaseOpeningAnim
 	move.w	x_pos(a0),d0
 	tst.w	x_vel(a0)
@@ -78409,15 +78412,17 @@ ObjC5_CaseAnimate:
 ; ===========================================================================
 ; routines to set to the red case that beeps and shoots
 ObjC5_CaseLSLoad:		; loads up the laser shooter (LS)
+
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$E,WFZ_BossParent(a0)	; Time the laser shooter moves down
+	move.w	#$E,WFZCountDown(a0)	; Time the laser shooter moves down
 	movea.w	parent_LaerShooters(a0),a1 ; a1=object (laser shooter)
 	move.b	#4,SecondRoutine_WFZBoss(a1)
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_CaseLSDown:
-	subq.w	#1,WFZ_BossParent(a0)
+
+	subq.w	#1,WFZCountDown(a0)
 	beq.s	ObjC5_CaseAddCollision
 	movea.w	parent_LaerShooters(a0),a1 ; a1=object (laser shooter)
 	addq.w	#1,y_pos(a1)	; laser shooter down speed
@@ -78426,7 +78431,7 @@ ObjC5_CaseLSDown:
 
 ObjC5_CaseAddCollision:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$40,WFZ_BossParent(a0)	; Length before shooting laser
+	move.w	#$40,WFZCountDown(a0)	; Length before shooting laser
 	bset	#4,status(a0)		; makes the hit sound and flashes happen only once when you hit it
 	bset	#6,status(a0)		; makes sure collision gets restored
 	move.b	#6,collision_flags(a0)
@@ -78434,20 +78439,20 @@ ObjC5_CaseAddCollision:
 ; ===========================================================================
 
 ObjC5_CaseWaitLoadLaser:
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bmi.s	ObjC5_CaseLoadLaser
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_CaseLoadLaser:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-;	lea	(ObjC5_LaserData).l,a2
-;	bsr.w	LoadChildObject		; loads laser
+	lea	(ObjC5_LaserData).l,a2
+	bsr.w	LoadChildObject		; loads laser
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_CaseWaitMove:
-	movea.w	parent(a0),a1 ; a1=object
+	movea.w	WFZParentCustomize(a0),a1 ; a1=object
 	btst	#2,status(a1)		; waits to check if laser fired
 	bne.s	ObjC5_CaseLaserSpeed
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
@@ -78455,7 +78460,7 @@ ObjC5_CaseWaitMove:
 
 ObjC5_CaseLaserSpeed:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$80,WFZ_BossParent(a0)	; how long to move the laser
+	move.w	#$80,WFZCountDown(a0)	; how long to move the laser
 	bsr.w	Obj_GetOrientationToPlayer	; tests if sonic is to the right or left
 	move.w	#$80,d1		; Speed when moving with laser
 	tst.w	d0
@@ -78468,7 +78473,7 @@ ObjC5_CaseLaserSpeedSet:
 ; ===========================================================================
 
 ObjC5_CaseBoundaryLaserChk:		; make sure you stay in range when firing laser
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bmi.s	ObjC5_CaseStopLaserDelete
 	move.w	x_pos(a0),d0
 	tst.w	x_vel(a0)
@@ -78492,18 +78497,18 @@ ObjC5_CaseLaserMoveDisplay:
 
 ObjC5_CaseStopLaserDelete:		; stops collision and deletes laser
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$E,WFZ_BossParent(a0)	; time for laser shooter to move back up
+	move.w	#$E,WFZCountDown(a0)	; time for laser shooter to move back up
 	bclr	#3,status(a0)
 	bclr	#4,status(a0)
 	bclr	#6,status(a0)
 	clr.b	collision_flags(a0)	; no more collision
-	movea.w	parent(a0),a1 		; a1=object (laser)
+	movea.w	WFZParentCustomize(a0),a1 		; a1=object (laser)
 	jsrto	(DeleteObject2).l, JmpTo6_DeleteObject2	; delete the laser
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_CaseLSUp:
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	beq.s	ObjC5_CaseClosingAnim
 	movea.w	parent_LaerShooters(a0),a1 ; a1=object (laser shooter)
 	subq.w	#1,y_pos(a1)
@@ -78636,13 +78641,13 @@ ObjC5_PlatformReleaserWaitDown:
 
 ObjC5_PlatformReleaserSetDown:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$40,WFZ_BossParent(a0)	; time to go down
+	move.w	#$40,WFZCountDown(a0)	; time to go down
 	move.w	#$40,y_vel(a0)		; speed to go down
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_PlatformReleaserDown:
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	beq.s	ObjC5_PlatformReleaserStop
 	jsrto	(ObjectMove).l, JmpTo26_ObjectMove
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
@@ -78651,7 +78656,7 @@ ObjC5_PlatformReleaserDown:
 ObjC5_PlatformReleaserStop:
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
 	clr.w	y_vel(a0)
-	move.w	#$10,WFZ_BossParent(a0)
+	move.w	#$10,WFZCountDown(a0)
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
@@ -78659,9 +78664,9 @@ ObjC5_PlatformReleaserLoadWait:
 	movea.w	Child_Refrence_WFZ(a0),a1 ; a1=object
 	btst	#5,status(a1)
 	bne.s	ObjC5_PlatformReleaserDestroyP
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bne.s	BranchTo8_JmpTo45_DisplaySprite
-	move.w	#$80,WFZ_BossParent(a0)	; Time between loading platforms
+	move.w	#$80,WFZCountDown(a0)	; Time between loading platforms
 	moveq	#0,d0
 	move.b	WFZBoss_ShootOut(a0),d0
 	addq.b	#1,d0
@@ -78674,8 +78679,8 @@ ObjC5_PlatformReleaserLoadP:	; P=Platforms
 	tst.b	HitCount_WFZ(a0,d0.w)
 	bne.s	BranchTo8_JmpTo45_DisplaySprite
 	st	HitCount_WFZ(a0,d0.w)
-;	lea	(ObjC5_PlatformData).l,a2
-;	bsr.w	LoadChildObject
+	lea	(ObjC5_PlatformData).l,a2
+	bsr.w	LoadChildObject
 	move.b	WFZBoss_ShootOut(a0),WFZBoss_ShootOut(a1)
 
 BranchTo8_JmpTo45_DisplaySprite
@@ -78703,7 +78708,7 @@ ObjC5_Platform:
 	jsr	ObjC5_PlatformIndex(pc,d1.w)
 	lea	(Ani_objC5).l,a1
 	jsrto	(AnimateSprite).l, JmpTo25_AnimateSprite
-	tst.b	(a0)
+	tst.l	(a0)
 	beq.w	return_37A48
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
@@ -78718,22 +78723,22 @@ ObjC5_PlatformInit:
 	move.b	#3,anim(a0)
 	move.b	#7,mapping_frame(a0)
 	move.w	#$100,y_vel(a0)			; Y speed
-	move.w	#$60,WFZ_BossParent(a0)
-;	lea	(ObjC5_PlatformHurtData).l,a2	; loads the invisible object that hurts sonic
-;	bra.w	LoadChildObject
-        rts
+	move.w	#$60,WFZCountDown(a0)
+	lea	(ObjC5_PlatformHurtData).l,a2	; loads the invisible object that hurts sonic
+	bra.w	LoadChildObject
+
 ; ===========================================================================
 
 ObjC5_PlatformDownWait:		; waits for it to go down some
 	bsr.w	ObjC5_PlatformCheckExplode
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	beq.s	ObjC5_PlatformLeft
 	bra.w	ObjC5_PlatformMakeSolid
 ; ===========================================================================
 
 ObjC5_PlatformLeft:			; goes left and makes a time limit (for going left)
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$60,WFZ_BossParent(a0)
+	move.w	#$60,WFZCountDown(a0)
 	move.w	#-$100,x_vel(a0)		; X speed
 	move.w	y_pos(a0),Max_LeftVarable(a0)
 	bra.w	ObjC5_PlatformMakeSolid
@@ -78741,9 +78746,9 @@ ObjC5_PlatformLeft:			; goes left and makes a time limit (for going left)
 
 ObjC5_PlatformTestChangeDirection:
 	bsr.w	ObjC5_PlatformCheckExplode
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bne.s	ObjC5_PlatformTestLeftRight
-	move.w	#$C0,WFZ_BossParent(a0)
+	move.w	#$C0,WFZCountDown(a0)
 	neg.w	x_vel(a0)
 
 ObjC5_PlatformTestLeftRight:	; tests to see if a value should be added to go left or right
@@ -78835,6 +78840,7 @@ ObjC5_LaserShooterInit:
 
 ObjC5_LaserShooterFollow:
 	movea.w	Child_Refrence_WFZ(a0),a1 ; a1=object (laser case)
+
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
 	jmp	(DisplaySprite).l
@@ -78901,12 +78907,12 @@ ObjC5_LaserNoLaser: ; without this the laser would just stay on the shooter not 
 
 ObjC5_LaseNext:		; just sets up a time to wait for the laser to shoot when it's loaded and done flickering
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$40,WFZ_BossParent(a0)
+	move.w	#$40,WFZCountDown(a0)
 	rts
 ; ===========================================================================
 
 ObjC5_LaseWaitShoot:
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bmi.s	ObjC5_LaseStartShooting
 	rts
 ; ===========================================================================
@@ -78932,7 +78938,7 @@ ObjC5_LaserShoot:
 
 ObjC5_LaseShotOut:	; laser is fully shot out and lets the laser case know so it moves
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$80,WFZ_BossParent(a0)
+	move.w	#$80,WFZCountDown(a0)
 	bset	#2,status(a0)
 	movea.w	Child_Refrence_WFZ(a0),a1 ; a1=object (laser case)
 	bset	#3,status(a1)
@@ -78978,8 +78984,8 @@ ObjC5_RobotnikInit:
 	move.b	#1,anim(a0)
 	move.w	#$2C60,x_pos(a0)
 	move.w	#$4E6,y_pos(a0)
-;	lea	(ObjC5_RobotnikPlatformData).l,a2
-;	bsr.w	LoadChildObject
+	lea	(ObjC5_RobotnikPlatformData).l,a2
+	bsr.w	LoadChildObject
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
@@ -78994,19 +79000,19 @@ ObjC5_RobotnikAnimate:
 
 ObjC5_RobotnikTimer:		; Increase routine and set timer
 	addq.b	#2,SecondRoutine_WFZBoss(a0)
-	move.w	#$C0,WFZ_BossParent(a0)
+	move.w	#$C0,WFZCountDown(a0)
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_RobotnikDown:
-	subq.w	#1,WFZ_BossParent(a0)
+	subq.w	#1,WFZCountDown(a0)
 	bmi.s	ObjC5_RobotnikDelete
 	addq.w	#1,y_pos(a0)
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 ObjC5_RobotnikDelete:		; Deletes robotnik and the platform he's on
-	movea.w	parent(a0),a1 ; a1=object (Robotnik Platform)
+	movea.w	WFZParentCustomize(a0),a1 ; a1=object (Robotnik Platform)
 	jsrto	(DeleteObject2).l, JmpTo6_DeleteObject2
 	bra.w	JmpTo65_DeleteObject
 ; ===========================================================================
@@ -79074,35 +79080,42 @@ ObjC5_LaserWallData:
 	dc.w WFZ_BossParent
 	dc.l ObjC5
 	dc.b $94
+	even
 ObjC5_PlatformData:
 	dc.w WFZParentCustomize
 	dc.l ObjC5
 	dc.b $98
+	even
 ObjC5_PlatformHurtData:
 	dc.w parent_LaerShooters
 	dc.l ObjC5
 	dc.b $9A
+	even
 ObjC5_LaserShooterData:
 	dc.w parent_LaerShooters
 	dc.l ObjC5
 	dc.b $9C
+	even
 ObjC5_PlatformReleaserData:
 	dc.w Small_PlatformsParent
 	dc.l ObjC5
 	dc.b $96
+	even
 ObjC5_LaserData:
 	dc.w WFZParentCustomize
 	dc.l ObjC5
 	dc.b $9E
+	even
 ObjC5_RobotnikData:
 	dc.w RobotnickParentAddr
 	dc.l ObjC5
 	dc.b $A0
+	even
 ObjC5_RobotnikPlatformData:
 	dc.w WFZParentCustomize
 	dc.l ObjC5
 	dc.b $A2
-
+        even
 ; off_3CC80:
 ObjC5_SubObjData:		; Laser Case
 	subObjData ObjC5_MapUnc_3CCD8,make_art_tile(ArtTile_ArtNem_WFZBoss,0,0),4,4,$20,0
@@ -79207,14 +79220,14 @@ ObjC6_State2_States: offsetTable
 ; loc_3CF10:
 ObjC6_State2_State1: ; a1=object (set in loc_3D94C)
 	addq.b	#2,routine_secondary(a0) ; => ObjC6_State2_State2
- ;       jsr	(SingleObjLoad2).l
-;	bne.s	+	; rts
-;	move.w	a1,objoff_42(a0) ; store pointer to child in parent's SST
-;	move.l	(a0),(a1) ; load obj
-;	move.b	#$A8,subtype(a1)
-;	move.w	a0,objoff_30(a1) ; store pointer to parent in child's SST
-;	move.w	#$3F8,x_pos(a1)
-;	move.w	#$160,y_pos(a1)
+        jsr	(SingleObjLoad2).l
+	bne.s	+	; rts
+	move.w	a1,objoff_42(a0) ; store pointer to child in parent's SST
+	move.l	(a0),(a1) ; load obj
+	move.b	#$A8,subtype(a1)
+	move.w	a0,objoff_30(a1) ; store pointer to parent in child's SST
+	move.w	#$3F8,x_pos(a1)
+	move.w	#$160,y_pos(a1)
 
 
 	move.w	a0,(DEZ_Eggman).w
@@ -79666,6 +79679,7 @@ loc_3D52A:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#3,mapping_frame(a0)
 	move.b	#5,priority(a0)
+
 	lea	(ChildObjC7_Shoulder).l,a2
 	bsr.w	LoadChildObject
 	lea	(ChildObjC7_FrontForearm).l,a2
@@ -81452,66 +81466,79 @@ ChildObjC7_Shoulder:
 	dc.w objoff_30
 	dc.l ObjC7
 	dc.b   4
+	even
 ;word_3E560
 ChildObjC7_FrontLowerLeg:
 	dc.w objoff_32
 	dc.l ObjC7
 	dc.b   6
+	even
 ;word_3E564
 ChildObjC7_FrontForearm:
 	dc.w objoff_34
 	dc.l ObjC7
 	dc.b   8
+	even
 ;word_3E568
 ChildObjC7_Arm:
 	dc.w objoff_36
 	dc.l ObjC7
 	dc.b  $A
+	even
 ;word_3E56C
 ChildObjC7_FrontThigh:
 	dc.w objoff_38
 	dc.l ObjC7
 	dc.b  $C
+	even
 ;word_3E570
 ChildObjC7_Head:
 	dc.w objoff_3A
 	dc.l ObjC7
 	dc.b  $E
+	even
 ;word_3E574
 ChildObjC7_Jet:
 	dc.w objoff_3C
 	dc.l ObjC7
 	dc.b $10
+	even
 ;word_3E578
 ChildObjC7_BackLowerLeg:
 	dc.w objoff_3E
 	dc.l ObjC7
 	dc.b $12
+	even
 ;word_3E57C
 ChildObjC7_BackForearm:
 	dc.w objoff_40
 	dc.l ObjC7
 	dc.b $14
+	even
 ;word_3E580
 ChildObjC7_BackThigh:
 	dc.w objoff_42
 	dc.l ObjC7
 	dc.b $16
+	even
 ;word_3E584
 ChildObjC7_TargettingSensor:
 	dc.w objoff_14
 	dc.l ObjC7
 	dc.b $18
+	even
 ;word_3E588
 ChildObjC7_TargettingLock:
 	dc.w objoff_14
 	dc.l ObjC7
 	dc.b $1A
+	even
 ;word_3E58C
 ChildObjC7_EggmanBomb:
 	dc.w objoff_14
 	dc.l ObjC7
 	dc.b $1C
+	even
 ;off_3E590
 ObjC7_SubObjData:
 	subObjData ObjC7_MapUnc_3E5F8,make_art_tile(ArtTile_ArtNem_DEZBoss,0,0),4,4,$38,$00
