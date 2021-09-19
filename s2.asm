@@ -71981,7 +71981,9 @@ Obj9A_Init:
 	move.w	#-$80,x_vel(a0)
 	bsr.w	loc_37A4A
 	lea	(Ani_obj9A).l,a1
-	bra.w	MakeChildJetThing
+	bsr.w	MakeChildJetThing
+	move.b  #1,objoff_12(a1)
+	rts
 ; ===========================================================================
 ; loc_37964:
 Obj9A_Main:
@@ -72118,13 +72120,29 @@ Obj9C:
 ; loc_37A98:
 Obj9C_Main:
 	movea.w	objoff_30(a0),a1 ; a1=object
+	tst.l   (a1)
+	beq.s   DeleteChildS2
+	cmpi.l  #Obj27,(a1)       ; is the parent an exploation ?
+        beq.s   DeleteChildS2     ; mark child object destroyed
+        cmpi.l  #Obj58,(a1)       ; is the parent an exploation ? (if this routine is used in a boss)
+        beq.s   DeleteChildS2     ; mark child object destroyed
+	tst.b   objoff_12(a0)
+	bne.s   Turtle_Enemy
 	move.w	x_pos(a1),x_pos(a0)
 	subi.w  #$4,x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
 	subi.w  #$B,y_pos(a0)
+Flicker_Obj_SCZ:	
 	bchg	#0,status+1(a0)
 	beq.s   loc_37ABE
 	bra.w	Obj_DeleteBehindScreen
+Turtle_Enemy:
+       	move.w	x_pos(a1),x_pos(a0)
+	subi.w  #$4,x_pos(a0)
+	move.w	y_pos(a1),y_pos(a0)
+	bra.s   Flicker_Obj_SCZ
+DeleteChildS2:
+	jmp   DeleteObject
 ; ===========================================================================
 loc_37ABE: ; still used in 1 badnick
       rts
