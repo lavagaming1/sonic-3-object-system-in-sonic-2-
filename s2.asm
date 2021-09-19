@@ -28138,9 +28138,6 @@ BuildSprites_LevelLoop:
 ; loc_16630:
 BuildSprites_ObjLoop:
 	movea.w	(a4,d6.w),a0 ; a0=object
-	tst.l	id(a0)			; is this object slot occupied?
-	beq.w	BuildSprites_NextObj	; if not, check next one
-
 	andi.b	#$7F,render_flags(a0)	; clear on-screen flag
 	move.b	render_flags(a0),d0
 	move.b	d0,d4
@@ -30487,7 +30484,7 @@ ChkLoadObj:
 	bpl.s	+		; branch, if the object doesn't get a respawn table entry
 	move.b	d2,respawn_index(a1)
 +
-	move.w	d0,d1		; copy for later
+ move.w	d0,d1		; copy for later
 	andi.w	#$FFF,d0	; get y-position
 	move.w	d0,y_pos(a1)
 	rol.w	#3,d1	; adjust bits
@@ -71984,8 +71981,7 @@ Obj9A_Init:
 	move.w	#-$80,x_vel(a0)
 	bsr.w	loc_37A4A
 	lea	(Ani_obj9A).l,a1
-	move.l	a1,objoff_32(a0)
-	bra.w	loc_37ABE
+	bra.w	MakeChildJetThing
 ; ===========================================================================
 ; loc_37964:
 Obj9A_Main:
@@ -72116,46 +72112,22 @@ return_37A80:
 ; ----------------------------------------------------------------------------
 ; Sprite_37A82:
 Obj9C:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj9C_Index(pc,d0.w),d1
-	jmp	Obj9C_Index(pc,d1.w)
-; ===========================================================================
-; off_37A90:
-Obj9C_Index:	offsetTable
-		offsetTableEntry.w Obj9C_Init
-		offsetTableEntry.w Obj9C_Main
-; ===========================================================================
-; BranchTo2_LoadSubObject
-Obj9C_Init:
-	bra.w	LoadSubObject
+	bsr.w	LoadSubObject
+	move.l  #Obj9C_Main,(a0)
 ; ===========================================================================
 ; loc_37A98:
 Obj9C_Main:
 	movea.w	objoff_30(a0),a1 ; a1=object
-	move.b	objoff_36(a0),d0
-	cmp.l	(a1),d0
-	bne.w	JmpTo65_DeleteObject
-	move.l	x_pos(a1),x_pos(a0)
-	move.l	y_pos(a1),y_pos(a0)
-	movea.l	objoff_32(a0),a1
-	jsrto	(AnimateSprite).l, JmpTo25_AnimateSprite
+	move.w	x_pos(a1),x_pos(a0)
+	subi.w  #$4,x_pos(a0)
+	move.w	y_pos(a1),y_pos(a0)
+	subi.w  #$B,y_pos(a0)
+	bchg	#0,status+1(a0)
+	beq.s   loc_37ABE
 	bra.w	Obj_DeleteBehindScreen
 ; ===========================================================================
-
-loc_37ABE:
-	jsrto	(SingleObjLoad2).l, JmpTo25_SingleObjLoad2
-	bne.s	+	; rts
-	move.l	#Obj9C,(a1) ; load obj9C
-	move.b	#6,mapping_frame(a1)
-	move.b	#$1A,subtype(a1) ; <== Obj9C_SubObjData
-	move.w	a0,objoff_30(a1)
-	move.w	x_pos(a0),x_pos(a1)
-	move.w	y_pos(a0),y_pos(a1)
-	move.l	objoff_32(a0),objoff_32(a1)
-	move.l	(a0),objoff_36(a1)
-+
-	rts
+loc_37ABE: ; still used in 1 badnick
+      rts
 
 ; ===========================================================================
 ; this code is for Obj9A
@@ -74386,8 +74358,7 @@ ObjAC_Init:
 	move.w	#-$500,x_vel(a0)
 +
 	lea_	Ani_obj9C,a1
-	move.l	a1,objoff_32(a0)
-	bra.w	loc_37ABE
+	bra.w	MakeChildJetThing
 ; ===========================================================================
 ; loc_393B6:
 ObjAC_Main:
@@ -74402,8 +74373,20 @@ ObjAC_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjAC_MapUnc_393CC:	BINCLUDE "mappings/sprite/objAC.bin"
-
-
+                even
+MakeChildJetThing:
+	jsrto	(SingleObjLoad2).l, JmpTo25_SingleObjLoad2
+	bne.s	+	; rts
+	move.l	#Obj9C,(a1) ; load obj9C
+	move.b	#6,mapping_frame(a1)
+	move.b	#$1A,subtype(a1) ; <== Obj9C_SubObjData
+	move.w	a0,objoff_30(a1)
+	move.w	x_pos(a0),x_pos(a1)
+	move.w	y_pos(a0),y_pos(a1)
+	move.l	objoff_32(a0),objoff_32(a1)
+	move.l	(a0),objoff_36(a1)
++
+	rts
 
 
 ; ===========================================================================

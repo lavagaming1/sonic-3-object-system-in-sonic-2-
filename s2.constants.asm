@@ -1389,7 +1389,7 @@ Demo_button_index_2P:		ds.w	1	; index into button press demo data, for player 2
 Demo_press_counter_2P:		ds.w	1	; frames remaining until next button press, for player 2
 Tornado_Velocity_X:		ds.w	1	; speed of tails' plane in scz ($FFFFF736)
 Tornado_Velocity_Y:		ds.w	1
-ScreenShift:			ds.b	1                             
+ScreenShift:			ds.b	1
 
 				ds.b	4	; $FFFFF73B-$FFFFF73E
 Boss_CollisionRoutine:		ds.b	1
@@ -1432,7 +1432,11 @@ Demo_press_counter:		ds.b	1	; frames remaining until next button press, for play
 				ds.b	1	; $FFFFF793 ; seems unused
 PalChangeSpeed:			ds.w	1
 Collision_addr:			ds.l	1
-				ds.b	$D	; $FFFFF79A-$FFFFF7A6 ; seems unused
+				ds.b	$4	; $FFFFF79A-$FFFFF7A6 ; seems unused
+LastD0ObjManager:		ds.w    1
+Calcword:			ds.w    1
+Obj_index_Addr_Loc:			ds.l    1
+                                ds.b    1
 Boss_defeated_flag:		ds.b	1
 Screen_Y_wrap_value:		ds.w	1	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
