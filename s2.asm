@@ -22278,7 +22278,7 @@ Obj2A_MapUnc_11666:	BINCLUDE "mappings/sprite/obj2A.bin"
 ; ----------------------------------------------------------------------------
 ; Sprite_1169A:
 DoorWayMoveUpDown = $40
-Obj2D: rts
+Obj2D:
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj2D_Index(pc,d0.w),d1
@@ -79362,7 +79362,7 @@ ObjC6_State3_States: offsetTable
 ; ===========================================================================
 ; loc_3D04A:
 ObjC6_State3_State1:
-	movea.w	EggmanParentStuff(a0),a1 ; a1=object
+	movea.w	objoff_30(a0),a1 ; a1=object
 	btst	#2,status(a1)
 	bne.s	loc_3D05E
 	bsr.w	loc_3D086
@@ -79415,10 +79415,12 @@ word_3D0D0:
 	dc.w objoff_42
 	dc.L ObjC6
 	dc.b $A8
+	even
 word_3D0D4:
 	dc.w objoff_40
 	dc.l ObjC6
 	dc.b $AA
+	even
 ; animation script
 ; off_3D0D8:
 Ani_objC5_objC6:offsetTable
@@ -79647,7 +79649,9 @@ ObjC8_MapUnc_3D450:	BINCLUDE "mappings/sprite/objC8.bin"
 
 
 
-
+ChildRefrenceDEZBOSS = $46
+ParentRefrence_2 = $12 ; insted of $14
+DelaySomthing = anim_frame_duration+1
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object C7 - Eggrobo (final boss) from Death Egg
@@ -79755,7 +79759,7 @@ loc_3D5C2:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#$79,anim_frame_duration(a0)
 	move.w	#-$100,y_vel(a0)
-	movea.w	objoff_3C(a0),a1 ; a1=object
+	movea.w	ChildRefrenceDEZBOSS(a0),a1 ; a1=object
 	move.b	#4,routine_secondary(a1)
 	moveq	#MusID_EndBoss,d0
 	jmpto	(PlayMusic).l, JmpTo5_PlayMusic
@@ -79777,7 +79781,7 @@ loc_3D5EA:
 	move.b	#$16,collision_flags(a0)
 	move.b	#$C,collision_property(a0)
 	bsr.w	ObjC7_InitCollision
-	movea.w	objoff_3C(a0),a1 ; a1=object
+	movea.w	ChildRefrenceDEZBOSS(a0),a1 ; a1=object
 	move.b	#6,routine_secondary(a1)
 	rts
 ; ===========================================================================
@@ -79806,7 +79810,7 @@ loc_3D640:
 	clr.b	prev_anim(a0)
 	cmpi.b	#2,d0
 	bne.s	+	; rts
-	movea.w	objoff_3C(a0),a1 ; a1=object
+	movea.w	ChildRefrenceDEZBOSS(a0),a1 ; a1=object
 	move.b	#4,routine_secondary(a1)
 	move.b	#2,anim(a1)
 +
@@ -79972,7 +79976,7 @@ loc_3D7B8:
 	clr.w	y_vel(a0)
 	move.b	#1,(Screen_Shaking_Flag).w
 	move.w	#$40,(DEZ_Shake_Timer).w
-	movea.w	objoff_3C(a0),a1 ; a1=object
+	movea.w	ChildRefrenceDEZBOSS(a0),a1 ; a1=object
 	move.b	#6,routine_secondary(a1)
 	moveq	#SndID_Smash,d0
 	jmpto	(PlaySound).l, JmpTo12_PlaySound
@@ -80614,19 +80618,20 @@ return_3DD4E:
 ; ===========================================================================
 ;loc_3DD50
 ObjC7_TargettingSensor:
-	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
-	move.w	off_3DD5E(pc,d0.w),d1
-	jmp	off_3DD5E(pc,d1.w)
-; ===========================================================================
-off_3DD5E:	offsetTable
-		offsetTableEntry.w loc_3DD64	; 0
-		offsetTableEntry.w loc_3DDA6	; 2
-		offsetTableEntry.w loc_3DE3C	; 4
-; ===========================================================================
+;	moveq	#0,d0
+;	move.b	routine_secondary(a0),d0
+;	move.w	off_3DD5E(pc,d0.w),d1
+;	jmp	off_3DD5E(pc,d1.w)
+;; ===========================================================================
+;off_3DD5E:	offsetTable
+;		offsetTableEntry.w loc_3DD64	; 0
+;		offsetTableEntry.w loc_3DDA6	; 2
+;		offsetTableEntry.w loc_3DE3C	; 4
+;; ===========================================================================
 
-loc_3DD64:
-	addq.b	#2,routine_secondary(a0)
+;loc_3DD64:
+	;addq.b	#2,routine_secondary(a0)
+	move.l  #loc_3DDA6,(a0)
 	move.b	#$10,mapping_frame(a0)
 	ori.w	#high_priority,art_tile(a0)
 	move.b	#1,priority(a0)
@@ -80677,7 +80682,7 @@ loc_3DDA6:
 ; ===========================================================================
 
 loc_3DE0A:
-	addq.b	#2,routine_secondary(a0)
+	move.l	#loc_3DE3C,(a0)
 	move.w	#$40,objoff_2E(a0)
 	move.b	#4,angle(a0)
 	lea	(MainCharacter).w,a1 ; a1=character
@@ -80731,7 +80736,7 @@ loc_3DE82:
 
 loc_3DEA2:
 	movea.w	objoff_30(a0),a1 ; a1=object
-	tst.b	(a1)
+	tst.l	(a1) ; is something alive
 	beq.w	JmpTo65_DeleteObject
 	subq.w	#1,objoff_2E(a0)
 	bne.s	+
@@ -80899,7 +80904,7 @@ ObjC7_Beaten:
 	clr.w	y_vel(a0)
 	bsr.w	ObjC7_RemoveCollision
 	bsr.w	ObjC7_Break
-	movea.w	objoff_3C(a0),a1 ; a1=object
+	movea.w	ChildRefrenceDEZBOSS(a0),a1 ; a1=object
 	jsrto	(DeleteObject2).l, JmpTo6_DeleteObject2
 	addq.w	#4,sp
 	rts
@@ -80931,6 +80936,7 @@ ObjC7_BreakSpeeds:
 	dc.w -$200,-$300	; 10
 	dc.w	 0,-$400	; 12
 	dc.w  $100,-$300	; 14
+	even
 ObjC7_BreakSpeeds_End
 ;byte_3E0E6
 ObjC7_BreakOffsets:
@@ -80942,6 +80948,7 @@ ObjC7_BreakOffsets:
 	dc.b objoff_3E	; 5
 	dc.b objoff_40	; 6
 	dc.b objoff_42	; 7
+	even
 ObjC7_BreakOffsets_End
 ; ===========================================================================
 ;loc_3E0EE
@@ -80970,6 +80977,7 @@ ObjC7_ChildCollision:
 	dc.b $8F	; 7
 	dc.b $9C	; 8
 	dc.b $8B	; 9
+	even
 ObjC7_ChildCollision_End
 ;byte_3E114
 ObjC7_ChildOffsets:
@@ -80979,10 +80987,11 @@ ObjC7_ChildOffsets:
 	dc.b objoff_36	; 3
 	dc.b objoff_38	; 4
 	dc.b objoff_3A	; 5
-	dc.b objoff_3C	; 6
+	dc.b ChildRefrenceDEZBOSS	; 6
 	dc.b objoff_3E	; 7
 	dc.b objoff_40	; 8
 	dc.b objoff_42	; 9
+	even
 ObjC7_ChildOffsets_End
 ; ===========================================================================
 ;loc_3E11E
@@ -81018,6 +81027,7 @@ CreateEggmanBombs:
 EggmanBomb_InitSpeeds:
 	dc.w   $60,-$800
 	dc.w   $C0,-$A00
+	even
 ; ===========================================================================
 
 loc_3E168:
@@ -81041,7 +81051,7 @@ loc_3E168:
 ; ===========================================================================
 byte_3E19E:
 	dc.b objoff_30, objoff_32, objoff_34, objoff_36	; 3
-	dc.b objoff_38, objoff_3A, objoff_3C, objoff_3E	; 7
+	dc.b objoff_38, objoff_3A, ChildRefrenceDEZBOSS, objoff_3E	; 7
 	dc.b objoff_40, objoff_42, 0
 	even
 ; ===========================================================================
@@ -81061,14 +81071,14 @@ loc_3E1AA:
 	adda.w	(a2,d0.w),a2
 	move.b	(a2)+,d0
 	move.b	(a2)+,d3
-	move.b	objoff_23(a0),d2
+	move.b	DelaySomthing(a0),d2
 	addq.b	#1,d2
 	cmp.b	d3,d2
 	blo.s	+
 	addq.b	#1,anim_frame(a0)
 	moveq	#0,d2
 +
-	move.b	d2,objoff_23(a0)
+	move.b	d2,DelaySomthing(a0)
 	moveq	#0,d5
 
 -	move.b	(a2)+,d5
@@ -81132,7 +81142,7 @@ off_3E24C:	offsetTable
 ; ===========================================================================
 
 loc_3E252:
-	tst.b	objoff_23(a0)
+	tst.b	DelaySomthing(a0)
 	bne.s	return_3E23C
 	move.b	anim_frame(a0),d1
 	addq.b	#1,d1
@@ -81207,15 +81217,19 @@ ObjC7_ChildDeltas:
 	dc.b objoff_3E, $FC, $3C	; 5
 	dc.b objoff_40, $F4,   8	; 6
 	dc.b objoff_42,   4, $24	; 7
+	even
 off_3E2F6:
 	dc.l ObjC7_GroupAni_3E318
 	dc.b 0, 1, 2, 3, $FF, 0
+	even
 off_3E300:
 	dc.l ObjC7_GroupAni_3E318
 	dc.b 5, 6, 7, 8, $FF, 0
+	even
 off_3E30A:
 	dc.l ObjC7_GroupAni_3E318
 	dc.b 0, 1, 2, 3, 4, 5, 6, 7, 8, $C0
+	even
 ; -----------------------------------------------------------------------------
 ; Custom animation
 ; -----------------------------------------------------------------------------
@@ -81240,6 +81254,7 @@ ObjC7_GroupAni_3E318:		offsetTable ;BINCLUDE "mappings/sprite/objC7_a.bin"
 		offsetTableEntry.w byte_3E394
 		offsetTableEntry.w byte_3E3A8
 		offsetTableEntry.w byte_3E3BC
+		even
 
 byte_3E32A:	c7anilistheader 8
 	c7ani       $00, $E0, $0C
@@ -81356,9 +81371,11 @@ off_3E40C:
 	dc.b   4,  5,  6,  7,   8, $40, SndID_Hammer
 	dc.b   9, $A,  1,  2,   3, $40, SndID_Hammer
 	dc.b   4,  5,  6,  7,   8, $40, SndID_Hammer, $C0
+	even
 off_3E42C:
 	dc.l ObjC7_GroupAni_3E438
 	dc.b $88, $87, $86, $85, $B, $40, SndID_Hammer, $C0
+	even
 ; -----------------------------------------------------------------------------
 ; Custom animation
 ; -----------------------------------------------------------------------------
@@ -81529,7 +81546,7 @@ ChildObjC7_Head:
 	even
 ;word_3E574
 ChildObjC7_Jet:
-	dc.w objoff_3C
+	dc.w ChildRefrenceDEZBOSS
 	dc.l ObjC7
 	dc.b $10
 	even
@@ -81553,26 +81570,26 @@ ChildObjC7_BackThigh:
 	even
 ;word_3E584
 ChildObjC7_TargettingSensor:
-	dc.w objoff_14
+	dc.w ParentRefrence_2
 	dc.l ObjC7
 	dc.b $18
 	even
 ;word_3E588
 ChildObjC7_TargettingLock:
-	dc.w objoff_14
+	dc.w ParentRefrence_2
 	dc.l ObjC7
 	dc.b $1A
 	even
 ;word_3E58C
 ChildObjC7_EggmanBomb:
-	dc.w objoff_14
+	dc.w ParentRefrence_2
 	dc.l ObjC7
 	dc.b $1C
 	even
 ;off_3E590
 ObjC7_SubObjData:
 	subObjData ObjC7_MapUnc_3E5F8,make_art_tile(ArtTile_ArtNem_DEZBoss,0,0),4,4,$38,$00
-
+        even
 ; animation script
 ; off_3E59A:
 Ani_objC7_a:	offsetTable
@@ -81605,6 +81622,7 @@ byte_3E5F0:	dc.b   3,$13,$12,$11,$10,$16,$FF
 ; sprite mappings
 ; ------------------------------------------------------------------------------
 ObjC7_MapUnc_3E5F8:	BINCLUDE "mappings/sprite/objC7.bin"
+             even
 ; ===========================================================================
 
 ; ---------------------------------------------------------------------------
