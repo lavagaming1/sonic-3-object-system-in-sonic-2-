@@ -58063,7 +58063,6 @@ Obj58_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Obj58_MapUnc_2D50A,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_FieryExplosion,0,1),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo59_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#0,priority(a0)
 	move.b	#0,collision_flags(a0)
@@ -58073,7 +58072,7 @@ Obj58_Init:
 	move.w	#SndID_BossExplosion,d0
 	jmp	(PlaySound).l
 ; ===========================================================================
-	rts
+
 ; ===========================================================================
 ; loc_2D4EC:
 Obj58_Main:
@@ -73725,11 +73724,33 @@ Ani_SpinyShot:	offsetTable
 ; ------------------------------------------------------------------------------
 ObjA5_ObjA6_Obj98_MapUnc_38CCA:	BINCLUDE "mappings/sprite/objA6.bin"
 ; ===========================================================================
+; 3E is unused as well as 12 and 13
+Grabber_Timer = $2C ;$44      ; word
+Grabber_Timer_lowbyte =  Grabber_Timer+1
+GrabberParent = $2E ;parent3      ; word
+GrabberFlags_2 = $2B ;$46
+GrabberMainChildRefrence = $30
+Grabber_Flags = $33 ;$40    ; byte
+Grabber_SonicGrabFlag = $34 ;$3D  ; byte
+Unk_Controlerflag = $35
+ButtonMashValue = $36 ; byte
+Grabber_UnkFlag_3 = $37
+GrabberStringRefrence = $38 ; word
+Grabber_Saved_Restored_y_vel = $3A ; word
+Grabber_UnkFlags = $3D ; byte ????
+
+Grabber_Character_Store = $40   ; word
+Grabber_ControlsStored = $42
+
+Grabber_RespawnAddr_customCharacterAddr = $44 ; word
+GrabbedCharacterAddr = $46 ;word
+
+
 ; ----------------------------------------------------------------------------
 ; Object A7 - Grabber (spider badnik) from CPZ
 ; ----------------------------------------------------------------------------
 ; Sprite_38DBA:
-ObjA7: rts
+ObjA7:
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	ObjA7_Index(pc,d0.w),d1
@@ -73749,8 +73770,8 @@ ObjA7_Init:
 	neg.w	d0
 +
 	move.w	d0,x_vel(a0)
-	move.w	#$FF,objoff_2E(a0)
-	move.b	#2,objoff_31(a0)
+	move.w	#$FF,Grabber_Timer(a0)
+	move.b	#2,Grabber_SonicGrabFlag(a0)
 	lea	(word_391E0).l,a2
 	bsr.w	LoadChildObject
 	lea	(word_391E4).l,a2
@@ -73767,14 +73788,14 @@ ObjA7_Main:
 	jsrto	(ObjectMove).l, JmpTo26_ObjectMove
 	moveq	#0,d0
 	moveq	#$10,d1
-	movea.w	objoff_40(a0),a1 ; a1=object
+	movea.w	GrabberParent(a0),a1 ; a1=object
 	bsr.w	Obj_AlignChildXY
 	movea.w	parent(a0),a1 ; a1=object
 	move.w	x_pos(a0),x_pos(a1)
-	movea.w	objoff_3E(a0),a1 ; a1=object
+	movea.w	GrabberStringRefrence(a0),a1 ; a1=object
 	move.w	x_pos(a0),x_pos(a1)
-	lea	objoff_3E(a0),a2 ; a2=object
-	bra.w	loc_39182
+	lea	GrabberStringRefrence(a0),a2 ; a2=object
+	bra.w	GrabberMarkObjGone
 ; ===========================================================================
 off_38E46:	offsetTable
 		offsetTableEntry.w loc_38E52	;  0
@@ -73794,9 +73815,9 @@ loc_38E52:
 	bhi.s	loc_38E84
 
 loc_38E66:
-	subq.w	#1,objoff_2E(a0)
+	subq.w	#1,Grabber_Timer(a0)
 	bpl.s	return_38E82
-	move.w	#$FF,objoff_2E(a0)
+	move.w	#$FF,Grabber_Timer(a0)
 	neg.w	x_vel(a0)
 	bchg	#0,render_flags(a0)
 	bchg	#0,status(a0)
@@ -73807,14 +73828,14 @@ return_38E82:
 
 loc_38E84:
 	addq.b	#2,routine_secondary(a0)
-	move.w	x_vel(a0),objoff_32(a0)
+	move.w	x_vel(a0),Grabber_Saved_Restored_y_vel(a0)
 	clr.w	x_vel(a0)
-	move.b	#$10,objoff_30(a0)
+	move.b	#$10,GrabberMainChildRefrence(a0)
 	rts
 ; ===========================================================================
 
 loc_38E9A:
-	subq.b	#1,objoff_30(a0)
+	subq.b	#1,GrabberMainChildRefrence(a0)
 	bmi.s	loc_38EA2
 	rts
 ; ===========================================================================
@@ -73822,16 +73843,16 @@ loc_38E9A:
 loc_38EA2:
 	addq.b	#2,routine_secondary(a0)
 	move.w	#$200,y_vel(a0)
-	move.b	#$40,objoff_30(a0)
+	move.b	#$40,GrabberMainChildRefrence(a0)
 	rts
 ; ===========================================================================
 
 loc_38EB4:
-	tst.b	objoff_34(a0)
+	tst.b	Grabber_Flags(a0)
 	bne.s	ObjA7_GrabCharacter
-	subq.b	#1,objoff_30(a0)
+	subq.b	#1,GrabberMainChildRefrence(a0)
 	beq.s	loc_38ED6
-	cmpi.b	#$20,objoff_30(a0)
+	cmpi.b	#$20,GrabberMainChildRefrence(a0)
 	bne.s	loc_38ECC
 	neg.w	y_vel(a0)
 
@@ -73843,7 +73864,7 @@ loc_38ECC:
 loc_38ED6:
 	move.b	#0,routine_secondary(a0)
 	clr.w	y_vel(a0)
-	move.w	objoff_32(a0),x_vel(a0)
+	move.w	Grabber_Saved_Restored_y_vel(a0),x_vel(a0)
 	move.b	#0,mapping_frame(a0)
 	rts
 ; ===========================================================================
@@ -73851,7 +73872,7 @@ loc_38ED6:
 ;loc_38EEE:
 ObjA7_GrabCharacter:
 	addq.b	#2,routine_secondary(a0)
-	movea.w	objoff_36(a0),a1
+	movea.w	Grabber_Character_Store(a0),a1
 	move.b	#$81,obj_control(a1)
 	clr.w	x_vel(a1)
 	clr.w	y_vel(a1)
@@ -73860,23 +73881,23 @@ ObjA7_GrabCharacter:
 	tst.w	y_vel(a0)
 	bmi.s	loc_38F2A
 	neg.w	y_vel(a0)
-	move.b	objoff_30(a0),d0
+	move.b	GrabberMainChildRefrence(a0),d0
 	subi.b	#$40,d0
 	neg.w	d0
 	addq.b	#1,d0
-	move.b	d0,objoff_30(a0)
+	move.b	d0,GrabberMainChildRefrence(a0)
 
 loc_38F2A:
-	move.b	#1,objoff_2E(a0)
-	move.b	#$10,objoff_2F(a0)
-	move.b	#$20,objoff_3B(a0)
+	move.b	#1,Grabber_Timer(a0)
+	move.b	#$10,Grabber_Timer_lowbyte(a0) ;set blinking timer
+	move.b	#$20,ButtonMashValue(a0)
 	rts
 ; ===========================================================================
 
 loc_38F3E:
 	bsr.w	ObjA7_CheckExplode
 	bsr.w	loc_390BC
-	subq.b	#1,objoff_30(a0)
+	subq.b	#1,GrabberMainChildRefrence(a0)
 	beq.s	loc_38F4E
 	rts
 ; ===========================================================================
@@ -73890,11 +73911,9 @@ loc_38F4E:
 loc_38F58:
 	bsr.w	ObjA7_CheckExplode
 	bra.w	loc_390BC
-; ===========================================================================
-	rts
-; ===========================================================================
 
-BranchTo_ObjA7_CheckExplode ; BranchTo
+;----------------------------------------------------------------------
+BranchTo_ObjA7_CheckExplode
 	bra.w	ObjA7_CheckExplode
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -73922,11 +73941,11 @@ ObjA8_Init:
 ; ===========================================================================
 
 loc_38F88:
-	movea.w	objoff_30(a0),a1 ; a1=object
-	cmpi.l	#ObjA8,(a1)
+	movea.w	GrabberMainChildRefrence(a0),a1 ; a1=object
+	cmpi.l	#ObjA7,(a1)
 	bne.w	JmpTo65_DeleteObject
 	bsr.w	InheritParentXYFlip
-	movea.w	objoff_30(a0),a1 ; a1=object
+	movea.w	GrabberMainChildRefrence(a0),a1 ; a1=object
 	move.b	mapping_frame(a1),d0
 	addq.b	#3,d0
 	move.b	d0,mapping_frame(a0)
@@ -73940,9 +73959,9 @@ loc_38F88:
 	clr.b	collision_flags(a0)
 	addq.b	#2,routine(a0)
 	add.w	d0,d0
-	st	objoff_34(a1)
-	move.w	word_38FE0-6(pc,d0.w),objoff_36(a1)
-	move.w	word_38FE0(pc,d0.w),objoff_38(a1)
+	st	Grabber_Flags(a1)
+	move.w	word_38FE0-6(pc,d0.w),Grabber_Character_Store(a1)
+	move.w	word_38FE0(pc,d0.w),Grabber_ControlsStored(a1)
 
 BranchTo2_JmpTo45_DisplaySprite
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
@@ -73956,11 +73975,11 @@ word_38FE0:	dc.w MainCharacter	; 0
 ; ===========================================================================
 
 loc_38FE8:
-	movea.w	objoff_30(a0),a1 ; a1=object
-	move.w	objoff_36(a1),d0
+	movea.w	GrabberMainChildRefrence(a0),a1 ; a1=object
+	move.w	Grabber_Character_Store(a1),d0
 	beq.s	loc_3901A
 	movea.w	d0,a2 ; a2=object
-	cmpi.l	#ObjA8,(a1)
+	cmpi.l	#ObjA7,(a1)
 	bne.s	loc_3900A
 	move.w	x_pos(a0),x_pos(a2)
 	move.w	y_pos(a0),y_pos(a2)
@@ -73979,8 +73998,8 @@ loc_3901A:
 ; ===========================================================================
 
 loc_39022:
-	movea.w	objoff_30(a0),a1 ; a1=object
-	cmpi.l	#ObjA7,(a1); compare to objA7
+	movea.w	GrabberMainChildRefrence(a0),a1 ; a1=object
+	cmpi.l	#ObjA7,(a1) ; compare to objA7
 	bne.w	JmpTo65_DeleteObject
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
@@ -74008,7 +74027,7 @@ ObjA9_Init:
 ; ===========================================================================
 ; loc_39056:
 ObjA9_Main:
-	movea.w	objoff_30(a0),a1 ; a1=object
+	movea.w	GrabberMainChildRefrence(a0),a1 ; a1=object
 	cmpi.l	#ObjA7,(a1) ; compare to objA7 (grabber badnik)
 	bne.w	JmpTo65_DeleteObject
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
@@ -74036,7 +74055,7 @@ ObjAA_Init:
 ; ===========================================================================
 ; loc_39082:
 ObjAA_Main:
-	movea.w	objoff_30(a0),a1 ; a1=object
+	movea.w	GrabberMainChildRefrence(a0),a1 ; a1=object
 	cmpi.l	#ObjA7,(a1) ; compare to objA7 (grabber badnik)
 	bne.w	JmpTo65_DeleteObject
 	move.w	y_pos(a1),d0
@@ -74046,6 +74065,8 @@ ObjAA_Main:
 	move.b	d0,mapping_frame(a0)
 +
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+
+; ===========================================================================
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -74081,19 +74102,19 @@ ObjAB_Main:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 loc_390BC:
-	movea.w	objoff_38(a0),a1 ; a1=object
+	movea.w	GrabbedCharacterAddr(a0),a1 ; a1=object
 	move.w	(a1),d0
-	tst.b	objoff_35(a0)
+	tst.b	Unk_Controlerflag(a0)
 	beq.s	loc_390E6
-	subq.b	#1,objoff_3B(a0)
+	subq.b	#1,ButtonMashValue(a0)
 	beq.s	loc_390FA
-	move.b	objoff_3A(a0),d1
+	move.b	Grabber_UnkFlag_3(a0),d1
 	andi.b	#$C,d0
 	beq.s	return_390E4
 	cmp.b	d1,d0
 	beq.s	return_390E4
-	move.b	d0,objoff_3A(a0)
-	addq.b	#1,objoff_3C(a0)
+	move.b	d0,Grabber_UnkFlag_3(a0)
+	addq.b	#1,GrabberFlags_2(a0)
 
 return_390E4:
 	rts
@@ -74102,26 +74123,26 @@ loc_390E6:
 	andi.b	#$C,d0
 	beq.s	return_390E4
 	nop
-	st	objoff_35(a0)
-	move.b	d0,objoff_3A(a0)
+	st	Unk_Controlerflag(a0)
+	move.b	d0,Grabber_UnkFlag_3(a0)
 	nop
 	rts
 ; ---------------------------------------------------------------------------
 loc_390FA:
-	cmpi.b	#4,objoff_3C(a0)
+	cmpi.b	#4,GrabberFlags_2(a0)
 	blo.s	+
 	move.b	#$A,routine_secondary(a0)
 	clr.w	y_vel(a0)
 	clr.b	collision_flags(a0)
-	movea.w	objoff_36(a0),a2 ; a2=object
+	movea.w	Grabber_RespawnAddr_customCharacterAddr(a0),a2 ; a2=object
 	move.b	#0,obj_control(a2)
 	bset	#1,status(a2)
 	move.b	#AniIDSonAni_Walk,anim(a2)
-	clr.w	objoff_36(a0)
+	clr.w	Grabber_RespawnAddr_customCharacterAddr(a0)
 +
-	move.b	#$20,objoff_3B(a0)
-	clr.b	objoff_35(a0)
-	clr.b	objoff_3C(a0)
+	move.b	#$20,ButtonMashValue(a0)
+	clr.b	Unk_Controlerflag(a0)
+	clr.b	GrabberFlags_2(a0)
 	rts
 ; End of subroutine loc_390BC
 
@@ -74133,10 +74154,10 @@ loc_390FA:
 
 ; loc_3913A:
 ObjA7_CheckExplode:
-	subq.b	#1,objoff_2E(a0)
+	subq.b	#1,Grabber_Timer(a0)
 	bne.s	+
-	move.b	objoff_2F(a0),objoff_2E(a0)
-	subq.b	#1,objoff_2F(a0)
+	move.b	Grabber_Timer_lowbyte(a0),Grabber_Timer(a0)
+	subq.b	#1,Grabber_Timer_lowbyte(a0)
 	beq.s	ObjA7_Poof
 	bchg	#palette_bit_0,art_tile(a0)
 +
@@ -74147,10 +74168,10 @@ ObjA7_Poof:
 	move.l	#Obj27,(a0) ; load 0bj27 (transform into explosion)
 	move.b	#2,routine(a0)
 	bset	#palette_bit_0,art_tile(a0)
-	move.w	objoff_36(a0),d0
+	move.w	Grabber_RespawnAddr_customCharacterAddr(a0),d0
 	beq.s	+
 	movea.w	d0,a2 ; a2=object
-	move.b	#0,objoff_2E(a2)
+	move.b	#0,Grabber_Timer(a2)
 	bset	#1,status(a2)
 	move.b	#$B,collision_flags(a0)
 +
@@ -74164,32 +74185,34 @@ ObjA7_Poof:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-loc_39182:
+GrabberMarkObjGone:
 	tst.w	(Two_player_mode).w
-	beq.s	+
+	beq.s	.not2Pmode
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ---------------------------------------------------------------------------
-+	move.w	x_pos(a0),d0
+ .not2Pmode:
+	move.w	x_pos(a0),d0
 	andi.w	#$FF80,d0
 	sub.w	(Camera_X_pos_coarse).w,d0
 	cmpi.w	#$280,d0
-	bhi.w	+
+	bhi.w	.NotWithingScreen
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ---------------------------------------------------------------------------
-+	lea	(Object_Respawn_Table).w,a3
+ .NotWithingScreen:
+	lea	(Object_Respawn_Table).w,a3
 	moveq	#0,d0
 	move.b	respawn_index(a0),d0
-	beq.s	+
+	beq.s	.RememberStateFlagIsOff
 	bclr	#7,2(a3,d0.w)
-+
-	tst.b	objoff_34(a0)
+ .RememberStateFlagIsOff:
+	tst.b	Grabber_UnkFlags(a0)
 	beq.s	+
-	movea.w	objoff_36(a0),a3
-	move.b	#0,$2A(a3)
-	bset	#1,$22(a3)
+	movea.w	Grabber_RespawnAddr_customCharacterAddr(a0),a3
+	move.b	#0,Grabber_Timer(a3)
+	bset	#1,status(a3)
 +
 	moveq	#0,d6
-	move.b	objoff_31(a0),d6
+	move.b	Grabber_SonicGrabFlag(a0),d6
 
 -	movea.w	(a2)+,a1
 	jsrto	(DeleteObject2).l, JmpTo6_DeleteObject2
@@ -74199,19 +74222,22 @@ loc_39182:
 ; End of subroutine loc_39182
 
 ; ===========================================================================
-         even
+
 word_391E0:
-	dc.w objoff_42
+	dc.w parent
 	dc.l ObjA9
 	dc.b $3A
+	even
 word_391E4:
-	dc.w objoff_40
+	dc.w GrabberParent
 	dc.l ObjA8
 	dc.b $38
+	even
 word_391E8:
-	dc.w objoff_3E
+	dc.w GrabberStringRefrence
 	dc.l ObjAA
 	dc.b $3C
+	even
 ; off_391EC:
 ObjA7_SubObjData:
 	subObjData ObjA7_ObjA8_ObjA9_Obj98_MapUnc_3921A,make_art_tile(ArtTile_ArtNem_Grabber,1,1),4,4,$10,$B
@@ -74570,7 +74596,7 @@ ObjAD_Obj98_MapUnc_395B4:	BINCLUDE "mappings/sprite/objAE.bin"
 ; (also handles Eggman's remote-control window)
 ; ----------------------------------------------------------------------------
 ; Sprite_3972C:
-ObjAF:      rts
+ObjAF:
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	ObjAF_Index(pc,d0.w),d1
@@ -74604,15 +74630,15 @@ ObjAF_Init:
 	move.b	#$10,x_radius(a0)
 	move.b	#0,collision_flags(a0)
 	move.b	#8,collision_property(a0)
-	;lea	(word_39DC2).l,a2
-	;bsr.w	LoadChildObject
-	;move.b	#$E,routine(a1)
-	;lea	(word_39DC6).l,a2
-	;bsr.w	LoadChildObject
-	;move.b	#$14,routine(a1)
-	;lea	(word_39DCA).l,a2
-	;bsr.w	LoadChildObject
-	;move.b	#$1A,routine(a1)
+	lea	(word_39DC2).l,a2
+	bsr.w	LoadChildObject
+	move.b	#$E,routine(a1)
+	lea	(word_39DC6).l,a2
+	bsr.w	LoadChildObject
+	move.b	#$14,routine(a1)
+	lea	(word_39DCA).l,a2
+	bsr.w	LoadChildObject
+	move.b	#$1A,routine(a1)
 	rts
 ; ===========================================================================
 
@@ -75230,18 +75256,22 @@ byte_39D92:
 	dc.b   0,$E8,  0,$FD, $F,  0,$F0,$F0,$FE,$FE,$10,  0,$E8,  0,$FD,  0
 	dc.b $11,  0,$F0,$10,$FE,  2,$12,  0,  0,$18,  0,  3,$13,  0,$10,$10; 16
 	dc.b   2,  2,$14,  0,$18,  0,  3,  0,$15,  0,$10,$F0,  2,$FE,$16,  0; 32
+	even
 word_39DC2:
 	dc.w objoff_42
 	dc.l ObjAF
 	dc.b $48
+	even
 word_39DC6:
 	dc.w objoff_40
 	dc.l ObjAF
 	dc.b $48
+	even
 word_39DCA:
 	dc.w objoff_3E
 	dc.l ObjAF
 	dc.b $A4
+	even
 ; off_39DCE:
 ObjAF_SubObjData2:
 	subObjData ObjAF_Obj98_MapUnc_39E68,make_art_tile(ArtTile_ArtNem_SilverSonic,1,0),4,4,$10,$1A
@@ -78220,7 +78250,7 @@ SecondRoutine_WFZBoss = $3C  ;  ; byte  its routine sec varable that gets called
 WFZFlickerVarable = $13  ;   ; byte ; used to interupt displaying giving a flickery look
 WFZBoss_ShootOut = $2D    ; byte
 WFZ_BossParent =  $2E    ;word
-WFZCountDown =   $2E   ;word   ; timer for events 
+WFZCountDown =   $2E   ;word   ; timer for events
 Child_Refrence_WFZ = $30 ; word ; main things for the parents (mother object)
 HitCount_WFZ =    $34 ;word
 Max_LeftVarable =  $36   ;word
@@ -81950,17 +81980,21 @@ JmpTo65_Adjust2PArtPointer ; JmpTo
 
 
 
-CapsuleRoutine = $45
-CapsuleTimer = $46
-CapsuleParent = $3C
-CapsuleFlag1 = $12
-AnotherWordedFlag = $42
+CapsuleRoutine = $3C
+CapsuleTimer = $2E;$46
+CapsuleParent = $30 ;$42
+CapsuleFlag1 = $32 ;$12
+AnotherWordedFlag = $34;$44
+SavedYcapsule = $36 ;$30
+ThingyRefrence = $46 ;$2E
+MakeThingFlag  = $48 ;$36
+CapsuleChild_ThingRefrence = $40 ; the thing you step on to open it
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 3E - Egg prison
 ; ----------------------------------------------------------------------------
 ; Sprite_3F1E4:
-Obj3E:            rts
+Obj3E:
 	moveq	#0,d0
 	move.b	routine(a0),d0
 	move.w	Obj3E_Index(pc,d0.w),d1
@@ -81985,7 +82019,7 @@ Obj3E_ObjLoadData:
 
 loc_3F212:
 	movea.l	a0,a1
-	lea	objoff_3C-$4(a0),a3
+	lea	CapsuleChild_ThingRefrence(a0),a3
 	lea	Obj3E_ObjLoadData(pc),a2
 	moveq	#3,d1
 	bra.s	loc_3F228
@@ -82000,14 +82034,14 @@ loc_3F228:
 	move.l	(a0),(a1) ; load obj
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
-	move.w	y_pos(a0),objoff_34-$4(a1)
+	move.w	y_pos(a0),SavedYcapsule(a1)
 	move.l	#Obj3E_MapUnc_3F436,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Capsule,1,0),art_tile(a1)
 	move.b	#$84,render_flags(a1)
 	moveq	#0,d0
 	move.b	(a2)+,d0
 	sub.w	d0,y_pos(a1)
-	move.w	y_pos(a1),objoff_34-$4(a1)
+	move.w	y_pos(a1),SavedYcapsule(a1)
 	move.b	(a2)+,routine(a1)
 	move.b	(a2)+,width_pixels(a1)
 	move.b	(a2)+,priority(a1)
@@ -82039,13 +82073,13 @@ off_3F2AE:	offsetTable
 ; ===========================================================================
 
 loc_3F2B4:
-	movea.w	objoff_3C-$4(a0),a1 ; a1=object
-	tst.w	objoff_36-$4(a1)
+	movea.w	CapsuleChild_ThingRefrence(a0),a1 ; a1=object
+	tst.w	MakeThingFlag(a1)
 	beq.s	++	; rts
-	movea.w	objoff_3E-$4(a0),a2 ; a2=object
+	movea.w	ThingyRefrence(a0),a2 ; a2=object
 	jsr	(SingleObjLoad).l
 	bne.s	+
-	move.l	#Obj58,(a1) ; load obj
+	move.l	#Obj27,(a1) ; load obj
 	addq.b	#2,routine(a1)
 	move.w	x_pos(a2),x_pos(a1)
 	move.w	y_pos(a2),y_pos(a1)
@@ -82094,13 +82128,13 @@ loc_3F354:
 	move.w	#8,d3
 	move.w	x_pos(a0),d4
 	jsr	(SolidObject).l
-	move.w	objoff_34-$4(a0),y_pos(a0)
+	move.w	SavedYcapsule(a0),y_pos(a0)
 	move.b	status(a0),d0
 	andi.b	#standing_mask,d0
 	beq.s	+
 	addq.w	#8,y_pos(a0)
 	clr.b	(Update_HUD_timer).w
-	move.w	#1,objoff_36-$4(a0)
+	move.w	#1,MakeThingFlag(a0)
 +
 	jmp	(MarkObjGone).l
 ; ===========================================================================
