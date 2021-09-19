@@ -42894,6 +42894,11 @@ Obj27_Index:	offsetTable
 		offsetTableEntry.w Obj27_Main		; 4
 ; ===========================================================================
 ; loc_2109C: Obj27_Init:
+Exploation_High_Priority:
+	move.l	#Obj27_Main,(a0) ;
+	move.l	#Obj27_MapUnc_21120,mappings(a0)
+	move.w	#make_art_tile(ArtTile_ArtNem_Explosion,0,0),art_tile(a0)
+	bra.w   Exploation_Settings
 Obj27_InitWithAnimal:
 	addq.b	#2,routine(a0) ; => Obj27_Init
 	jsrto	(SingleObjLoad).l, JmpTo2_SingleObjLoad
@@ -42908,15 +42913,15 @@ Obj27_Init:
 	addq.b	#2,routine(a0) ; => Obj27_Main
 	move.l	#Obj27_MapUnc_21120,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Explosion,0,0),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo12_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#1,priority(a0)
+Exploation_Settings:	
 	move.b	#0,collision_flags(a0)
 	move.b	#$C,width_pixels(a0)
 	move.b	#3,anim_frame_duration(a0)
 	move.b	#0,mapping_frame(a0)
 	move.w	#SndID_Explosion,d0
-	jsr	(PlaySound).l
+	jmp	(PlaySound).l
 
 ; loc_21102:
 Obj27_Main:
@@ -50129,7 +50134,7 @@ spikearoundblock_initial_x_pos =	objoff_34
 spikearoundblock_initial_y_pos =	objoff_36
 spikearoundblock_offset =		objoff_38 ; offset from the center
 spikearoundblock_position =		objoff_3A ; 0 = retracted or expanding, 1 = expanded or retracting
-spikearoundblock_waiting =		objoff_3C ; 0 = moving, 1 = waiting
+spikearoundblock_waiting =		objoff_30 ; 0 = moving, 1 = waiting
 ; Sprite_27594:
 Obj68:
 	moveq	#0,d0
@@ -61956,7 +61961,8 @@ JmpTo35_DisplaySprite ; JmpTo
 
 HTZBOSS_VaunruableTime = $47
 HTZBOSS_SecondaryRoutine = $46
-HTZBOSSHitcount = $44
+HTZBOSSHitcount = $42
+Timer_HTZBOSS = $43
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 52 - HTZ boss
@@ -61999,8 +62005,6 @@ Obj52_Init:
 	move.w	x_pos(a0),sub2_x_pos(a0)
 	move.w	y_pos(a0),sub2_y_pos(a0)
 	move.b	#2,sub2_mapframe(a0)
-	bsr.w	loc_2FCEA
-	rts
 ; ===========================================================================
 
 loc_2FCEA:
@@ -62046,7 +62050,7 @@ loc_2FD3A:
 	move.w	#0,(Boss_Y_vel).w
 	move.b	#4,mapping_frame(a0)
 	addq.b	#2,angle(a0)
-	move.b	#$3C,objoff_42(a0)
+	move.b	#$3C,Timer_HTZBOSS(a0)
 
 loc_2FD50:
 	move.w	(Boss_Y_pos).w,y_pos(a0)
@@ -62061,11 +62065,11 @@ JmpTo36_DisplaySprite ; JmpTo
 
 ; loc_2FD5E:
 Obj52_Mobile_Flamethrower:
-	subi.b	#1,objoff_42(a0)
+	subi.b	#1,Timer_HTZBOSS(a0)
 	bpl.s	Obj52_Mobile_Hover
 	move.b	#1,(Boss_CollisionRoutine).w
 	move.b	#1,mainspr_childsprites(a0)
-	cmpi.b	#-$18,objoff_42(a0)
+	cmpi.b	#-$18,Timer_HTZBOSS(a0)
 	bne.s	Obj52_Mobile_Hover
 	jsrto	(SingleObjLoad).l, JmpTo13_SingleObjLoad
 	bne.s	loc_2FDAA
@@ -62075,7 +62079,7 @@ Obj52_Mobile_Flamethrower:
 	andi.b	#1,render_flags(a1)
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
-	move.b	#$2F,objoff_42(a0)
+	move.b	#$2F,Timer_HTZBOSS(a0)
 
 loc_2FDAA:
 	bsr.w	loc_300A4
@@ -62102,7 +62106,7 @@ Obj52_Mobile_BeginLower:
 	move.b	#0,mainspr_childsprites(a0)
 	move.b	#$10,(Boss_AnimationArray+2).w
 	move.b	#0,(Boss_AnimationArray+3).w
-	subi.b	#1,objoff_42(a0)
+	subi.b	#1,Timer_HTZBOSS(a0)
 	bne.w	Obj52_Mobile_Hover
 	move.w	#$E0,(Boss_Y_vel).w
 	addq.b	#2,angle(a0)
@@ -71802,8 +71806,8 @@ Obj98_TurtloidShotMove:
 ; loc_37728:
 Obj98_CoconutFall:
 	addi.w	#$20,y_vel(a0) ; apply gravity (less than normal)
-	jsrto	(ObjectMove).l, JmpTo26_ObjectMove
-	rts
+	jmp	(ObjectMove).l
+
 
 ; ===========================================================================
 ; for objAE
@@ -73468,17 +73472,17 @@ loc_38A2C:
 ; ===========================================================================
 
 loc_38A44:
-	move.l	#Obj27,(a0) ; load 0bj27
-	move.b	#2,routine(a0)
+        move.l	#Exploation_High_Priority,(a0) ; DeleteMain
+	move.b	#0,routine(a0)  ; no points and animal
 	bsr.w	loc_38A58
-	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
+	jmp	(MarkObjGone).l
 ; ===========================================================================
 
 loc_38A58:
 	move.b	#$30,d2
 	moveq	#4,d6
 	lea	(word_38A68).l,a2
-	bra.w	Obj_CreateProjectiles
+	jmp	Obj_CreateProjectiles
 ; ===========================================================================
 word_38A68:
 	dc.w $F8
@@ -73496,6 +73500,7 @@ word_38A68:
 	dc.w $F8FC
 	dc.w $FDFF
 	dc.w $300
+	even
 ; off_38A86:
 ObjA4_SubObjData:
 	subObjData ObjA4_Obj98_MapUnc_38A96,make_art_tile(ArtTile_ArtNem_MtzSupernova,0,1),4,4,$10,$B
