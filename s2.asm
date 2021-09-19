@@ -72776,7 +72776,7 @@ byte_381A4:
 
 loc_381AC:
 	movea.w	objoff_30(a0),a1 ; a1=object
-	cmpi.l	#ObjA0,(a1)
+	cmpi.l	#Obj9F,(a1)
 	bne.s	loc_381D0
 	moveq	#0,d0
 	move.b	routine_secondary(a0),d0
@@ -73077,7 +73077,7 @@ ObjA2_Main:
 	subq.w	#1,objoff_2E(a0)
 	bmi.s	loc_3851A
 	movea.w	objoff_30(a0),a1 ; a1=object
-	cmpi.l	#ObjA2,(a1)
+	cmpi.l	#ObjA1,(a1)
 	bne.s	loc_3851A
 	moveq	#0,d0
 	move.b	routine_secondary(a0),d0
@@ -73468,7 +73468,7 @@ loc_38A2C:
 ; ===========================================================================
 
 loc_38A44:
-	move.l	#Obj27,(a1) ; load 0bj27
+	move.l	#Obj27,(a0) ; load 0bj27
 	move.b	#2,routine(a0)
 	bsr.w	loc_38A58
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
