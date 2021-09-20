@@ -201,7 +201,7 @@ objoff_2C =		$2C ; overlaps subtype, but a few objects use it for other things a
 
  enum objoff_34=$34,objoff_35=$35,objoff_36=$36,objoff_37=$37,objoff_38=$38,objoff_39=$39,objoff_3A=$3A,objoff_3B=$3B
 
- enum objoff_3C=$3C,objoff_3D=$3D,objoff_3E=$3E,objoff_3F=$3F,objoff_40=$40,objoff_41,objoff_42=$42,objoff_43=$43
+ enum objoff_3C=$3C,objoff_3D=$3D,objoff_3E=$3E,objoff_3F=$3F,objoff_40=$40,objoff_41,objoff_42=$42,objoff_43=$43,objoff_44=$44
 
 ; ---------------------------------------------------------------------------
 ; Special Stage object properties:

@@ -57683,7 +57683,7 @@ JmpTo48_DeleteObject ; JmpTo
 ; Object 4B - Buzzer (Buzz bomber) from EHZ
 ; ----------------------------------------------------------------------------
 ; OST Variables:
-Obj4B_parent		= objoff_2E	; long
+Obj4B_parent		= objoff_2E	; word
 Obj4B_move_timer	= objoff_32	; word
 Obj4B_turn_delay	= objoff_34	; word
 Obj4B_shooting_flag	= objoff_36	; byte
@@ -57712,14 +57712,18 @@ Obj4B_Projectile:
 ; ===========================================================================
 ; loc_2D090:
 Obj4B_Flame:
-	movea.l	Obj4B_parent(a0),a1 ; a1=object
+	movea.w	Obj4B_parent(a0),a1 ; a1=object
 	tst.l	(a1)
 	beq.w	JmpTo49_DeleteObject	; branch, if object slot is empty. This check is incomplete and very unreliable; check Obj50_Wing to see how it should be done
-	tst.w	Obj4B_turn_delay(a1)
-	bmi.s	+		; branch, if parent isn't currently turning around
-	rts
-; ---------------------------------------------------------------------------
-+	; follow parent object
+	cmpi.l  #Obj27,(a1)       ; is the parent an exploation ?
+        beq.w   JmpTo49_DeleteObject     ; mark child object destroyed
+        cmpi.l  #Obj58,(a1)       ; is the parent an exploation ? (if this routine is used in a boss)
+        beq.w   JmpTo49_DeleteObject     ; mark child object destroyed
+       	tst.w	Obj4B_turn_delay(a1)
+	bmi.w	Follow_Parent_Buzz		; branch, if parent isn't currently turning around
+        bra.w  fail_Ignore_buzzer
+Follow_Parent_Buzz: ; unsafe way
+	; follow parent object
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
 	move.b	status(a1),status(a0)
@@ -57732,7 +57736,7 @@ Obj4B_Flame:
 Obj4B_Init:
 	move.l	#Obj4B_MapUnc_2D2EA,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Buzzer,0,0),art_tile(a0)
-	jsrto	(Adjust2PArtPointer).l, JmpTo57_Adjust2PArtPointer
+
 	ori.b	#4,render_flags(a0)
 	move.b	#$A,collision_flags(a0)
 	move.b	#4,priority(a0)
@@ -57744,27 +57748,27 @@ Obj4B_Init:
 
 	; load exhaust flame object
 	jsrto	(SingleObjLoad2).l, JmpTo20_SingleObjLoad2
-	bne.s	+	; rts
+	bne.w	fail_Ignore_buzzer	; rts
 
 	move.l	#Obj4B,(a1) ; load obj4B
 	move.b	#4,routine(a1)	; => Obj4B_Flame
 	move.l	#Obj4B_MapUnc_2D2EA,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Buzzer,0,0),art_tile(a1)
-	jsrto	(Adjust2PArtPointer2).l, JmpTo7_Adjust2PArtPointer2
+
 	move.b	#4,priority(a1)
 	move.b	#$10,width_pixels(a1)
 	move.b	status(a0),status(a1)
 	move.b	render_flags(a0),render_flags(a1)
 	move.b	#1,anim(a1)
-	move.l	a0,Obj4B_parent(a1)
+	move.w	a0,Obj4B_parent(a1)
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	move.w	#$100,Obj4B_move_timer(a0)
 	move.w	#-$100,x_vel(a0)
 	btst	#0,render_flags(a0)
-	beq.s	+	; rts
+	beq.s	fail_Ignore_buzzer	; rts
 	neg.w	x_vel(a0)
-+
+ fail_Ignore_buzzer:
 	rts
 ; ===========================================================================
 ; loc_2D174:
@@ -71981,6 +71985,7 @@ Obj9A_Init:
 	move.w	#-$80,x_vel(a0)
 	bsr.w	loc_37A4A
 	lea	(Ani_obj9A).l,a1
+	movea.l	a1,objoff_32(a0)
 	bsr.w	MakeChildJetThing
 	move.b  #1,objoff_12(a1)
 	rts
@@ -72113,6 +72118,7 @@ return_37A80:
 ; Object 9C - Balkiry's jet from Sky Chase Zone
 ; ----------------------------------------------------------------------------
 ; Sprite_37A82:
+Flicker_Set = status+1
 Obj9C:
 	bsr.w	LoadSubObject
 	move.l  #Obj9C_Main,(a0)
@@ -72126,28 +72132,22 @@ Obj9C_Main:
         beq.s   DeleteChildS2     ; mark child object destroyed
         cmpi.l  #Obj58,(a1)       ; is the parent an exploation ? (if this routine is used in a boss)
         beq.s   DeleteChildS2     ; mark child object destroyed
-	tst.b   objoff_12(a0)
-	bne.s   Turtle_Enemy
 	move.w	x_pos(a1),x_pos(a0)
-	subi.w  #$4,x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
-	subi.w  #$B,y_pos(a0)
-Flicker_Obj_SCZ:	
-	bchg	#0,status+1(a0)
-	beq.s   loc_37ABE
-	bra.w	Obj_DeleteBehindScreen
+Flicker_Obj_SCZ:
+        tst.b   objoff_12(a0)
+	bne.s   Turtle_Enemy
+	bchg	#0,Flicker_Set(a0)
+	beq.w   +
 Turtle_Enemy:
-       	move.w	x_pos(a1),x_pos(a0)
-	subi.w  #$4,x_pos(a0)
-	move.w	y_pos(a1),y_pos(a0)
-	bra.s   Flicker_Obj_SCZ
+	movea.l	objoff_32(a0),a1
+	jsr	(AnimateSprite).l
+	bra.w	Obj_DeleteBehindScreen
 DeleteChildS2:
 	jmp   DeleteObject
 ; ===========================================================================
-loc_37ABE: ; still used in 1 badnick
-      rts
 
-; ===========================================================================
+
 ; this code is for Obj9A
 
 loc_37AF2:
@@ -72200,7 +72200,7 @@ Ani_obj9C:	offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj9A_Obj98_MapUnc_37B62:	BINCLUDE "mappings/sprite/obj9C.bin"
-
+                even
 
 
 
@@ -74376,7 +74376,10 @@ ObjAC_Init:
 	move.w	#-$500,x_vel(a0)
 +
 	lea_	Ani_obj9C,a1
-	bra.w	MakeChildJetThing
+	movea.l	a1,objoff_32(a0)
+	bsr.w	MakeChildJetThing
+	move.b  #0,objoff_12(a1)
+	rts
 ; ===========================================================================
 ; loc_393B6:
 ObjAC_Main:
@@ -74402,7 +74405,6 @@ MakeChildJetThing:
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	move.l	objoff_32(a0),objoff_32(a1)
-	move.l	(a0),objoff_36(a1)
 +
 	rts
 
