@@ -1070,7 +1070,7 @@ Reserved_object_3		ds.b object_size	; during a level, an object whose sole purpo
 
 Dynamic_object_RAM:
 Dynamic_Object_RAM:	        ds.b object_size*90	; $1A04 bytes ; 90 objects
-Dynamic_Object_RAM_End =	*
+Dynamic_Object_RAM_End =	*    
 Level_object_RAM:             = Dynamic_Object_RAM_End	; $4EA bytes ; various fixed in-level objects
 ;--------------------------------------------------------------------------------------------
 ;RamVarables that were not reserved in s3k but their slots still exists
@@ -1122,7 +1122,7 @@ Tails_InvincibilityStars:
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
-Object_RAM_End:
+Object_RAM_End:            
 Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff
 Sprite_Table_2:                = Kos_decomp_buffer+$800 ; bc KosM doesnt get used in 2p mode
 Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
@@ -1133,7 +1133,10 @@ Kos_decomp_bookmark		ds.l 1
 Kos_decomp_queue_count:         ds.w  1
 Kos_decomp_destination =	Kos_decomp_queue+4
 Kos_description_field		ds.w 1
-                                ds.b	$A	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
+Kos_last_module_size:           ds.w    1
+Kos_module_destination:         ds.w  1
+Kos_modules_left:               ds.b 1
+                                ds.b	$5	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
 VDP_Command_Buffer:		ds.w	7*$12	; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.l	1	; stores the address of the next open slot for a queued VDP command
 
@@ -1804,8 +1807,8 @@ SS_Sprite_Table_Input_End:
 
 	phase	Object_RAM	; Move back to the object RAM
 SS_Object_RAM:
-				ds.b	object_size
-				ds.b	object_size
+SS_Sonic:			ds.b	object_size
+SS_Tails:			ds.b	object_size
 SpecialStageHUD:		; HUD in the special stage
 				ds.b	object_size
 SpecialStageStartBanner:
@@ -1829,13 +1832,14 @@ SpecialStageResults2:
 SS_Dynamic_Object_RAM_End:
 				ds.b	object_size-$16
 SS_Object_RAM_End:
-
 				; The special stage mode also uses the rest of the RAM for
 				; different purposes.
+
 SS_Misc_Variables:
 PNT_Buffer:			ds.b	$700
 PNT_Buffer_End:
-SS_Horiz_Scroll_Buf_2:		ds.b	$400
+SS_Horiz_Scroll_Buf_2:		ds.b	$380
+                                ds.b $80
 
 SSTrack_mappings_bitflags:				ds.l	1
 SSTrack_mappings_uncompressed:			ds.l	1

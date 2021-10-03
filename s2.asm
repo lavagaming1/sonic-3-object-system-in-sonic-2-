@@ -646,10 +646,12 @@ loc_748:
 	movem.l	d0-d3,(Scroll_flags_copy).w
 	move.l	(Vscroll_Factor_P2).w,(Vscroll_Factor_P2_HInt).w
 	cmpi.b	#$5C,(Hint_counter_reserve+1).w
-	bhs.s	Do_Updates
+	bhs.s	+
 	move.b	#1,(Do_Updates_in_H_int).w
-	rts
-
+	jmp	(Set_Kos_Bookmark).l
++
+        bsr.s	Do_Updates
+        jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
 ; Subroutine to run a demo for an amount of time
 ; ---------------------------------------------------------------------------
@@ -1482,6 +1484,7 @@ PlaneMapToVRAM_H80_SpecialStage:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_144E: DMA_68KtoVRAM: QueueCopyToVRAM: QueueVDPCommand: Add_To_DMA_Queue:
+Add_To_DMA_Queue:
 QueueDMATransfer:
 	movea.l	(VDP_Command_Buffer_Slot).w,a1
 	cmpa.w	#VDP_Command_Buffer_Slot,a1
@@ -4389,10 +4392,12 @@ Level_PlayBgm:
 ; loc_40DA:
 Level_TtlCard:
 	move.b	#VintID_TitleCard,(Vint_routine).w
+	jsr	(Process_Kos_Queue).l
 	bsr.w	WaitForVint
 	jsr	(RunObjects).l
 	jsr	(BuildSprites).l
 	bsr.w	RunPLC_RAM
+	jsr     (Process_Kos_Module_Queue).l
 	move.w	(TitleCard_ZoneName+x_pos).w,d0
 	cmp.w	(TitleCard_ZoneName+titlecard_x_target).w,d0 ; has title card sequence finished?
 	bne.s	Level_TtlCard		; if not, branch
@@ -5960,9 +5965,9 @@ SpecialStage:
 ; | of our data structures.                                                |
 ; \------------------------------------------------------------------------/
 	; Bug: These '+4's shouldn't be here; clearRAM accidentally clears an additional 4 bytes
-	clearRAM SS_Sprite_Table,SS_Sprite_Table_End+4
-	clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1_End+4
-	clearRAM SS_Misc_Variables,SS_Misc_Variables_End+4
+	clearRAM SS_Sprite_Table,SS_Sprite_Table_End
+	clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1_End
+	clearRAM SS_Misc_Variables,SS_Misc_Variables_End
 	clearRAM SS_Sprite_Table_Input,SS_Sprite_Table_Input_End
 	clearRAM SS_Object_RAM,SS_Object_RAM_End
 
@@ -9007,8 +9012,8 @@ loc_710A:
 	moveq	#0,d0
 	move.b	angle(a0),d0
 	bsr.w	CalcSine
-	muls.w	objoff_14(a0),d0
-	muls.w	objoff_14(a0),d1
+	muls.w	objoff_42(a0),d0
+	muls.w	objoff_42(a0),d1
 	asr.w	#8,d0
 	asr.w	#8,d1
 	add.w	d1,x_pos(a0)
@@ -9067,7 +9072,7 @@ loc_71B4:
 word_728C_user: lea	(Obj5F_MapUnc_7240+$4C).l,a2 ; word_728C
 
 	moveq	#2,d3
-	move.w	#8,objoff_14(a0)
+	move.w	#8,objoff_42(a0)
 	move.b	#6,routine(a0)
 
 -	bsr.w	SSSingleObjLoad
@@ -29146,6 +29151,8 @@ JmpTo_BuildHUD_P2 ; JmpTo
 
 
 Set_Kos_Bookmark:
+                ;tst.w   (Two_player_mode).w
+                ;beq.s   +
 		tst.w	(Kos_decomp_queue_count).w
 		bpl.s	+	; branch if a decompression wasn't in progress
 		move.l	$42(sp),d0	; check address V-int is supposed to rte to
@@ -29159,6 +29166,8 @@ Set_Kos_Bookmark:
 		rts
 ; End of function Set_Kos_Bookmark
 Process_Kos_Queue:
+                ;tst.w   (Two_player_mode).w
+                ;beq.s   Process_Kos_Queue_Done
 		tst.w	(Kos_decomp_queue_count).w
 		beq.w	Process_Kos_Queue_Done
 		bmi.w	Restore_Kos_Bookmark	; branch if a decompression was interrupted by V-int
@@ -29286,6 +29295,8 @@ Backup_Kos_Registers:
 		rts
 ; End of function Process_Kos_Queue
 Process_Kos_Module_Queue:
+                 ;tst.w   (Two_player_mode).w
+                ;beq.s   KosM_Done
 		tst.b	(Kos_modules_left).w
 		bne.s	KosM_Procceing
 
@@ -32957,7 +32968,7 @@ Obj01_Init:
 	move.b	#9,x_radius(a0)
 	move.l	#Mapunc_Sonic,mappings(a0)
 	move.b	#2,priority(a0)
-	move.b	#$18,width_pixels(a0) 
+	move.b	#$18,width_pixels(a0)
 	move.b	#4,render_flags(a0)
 	move.b	#0,character_id(a0)
 	move.w	#$600,(Sonic_top_speed).w	; set Sonic's top speed
@@ -35561,6 +35572,7 @@ Obj02_Init:
 	move.b	#2,priority(a0)
 	move.b	#$18,width_pixels(a0)
 	move.b	#$84,render_flags(a0) ; render_flags(Tails) = $80 | initial render_flags(Sonic)
+	move.b	#1,character_id(a0)
 	move.w	#$600,(Tails_top_speed).w	; set Tails' top speed
 	move.w	#$C,(Tails_acceleration).w	; set Tails' acceleration
 	move.w	#$80,(Tails_deceleration).w	; set Tails' deceleration
@@ -69339,7 +69351,7 @@ Obj5A_TextFlyoutInit:
 	cmpi.b	#$13,mapping_frame(a0)		; Is this the hand or wings?
 	bgt.w	JmpTo63_DeleteObject		; If yes, branch
 	move.b	#8,routine(a0)			; Obj5A_TextFlyout
-	move.w	#8,objoff_14(a0)
+	move.w	#8,objoff_42(a0)
 	move.w	x_pos(a0),d1
 	subi.w	#$80,d1
 	move.w	y_pos(a0),d2
@@ -69354,8 +69366,8 @@ Obj5A_TextFlyout:
 	moveq	#0,d0
 	move.b	angle(a0),d0
 	jsrto	(CalcSine).l, JmpTo14_CalcSine
-	muls.w	objoff_14(a0),d0
-	muls.w	objoff_14(a0),d1
+	muls.w	objoff_42(a0),d0
+	muls.w	objoff_42(a0),d1
 	asr.w	#8,d0
 	asr.w	#8,d1
 	add.w	d1,x_pos(a0)
