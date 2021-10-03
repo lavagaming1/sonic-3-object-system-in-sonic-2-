@@ -1034,11 +1034,15 @@ palette_line_size =	$10*2	; 16 word entries
 ; ---------------------------------------------------------------------------
 ; I run the main 68k RAM addresses through this function
 ; to let them work in both 16-bit and 32-bit addressing modes.
-ramaddr function x,-(-x)&$FFFFFFFF
+ramaddr function x,(-(x&$80000000)<<1)|x
 
+Sprite_table_buffer_2: =		ramaddr(   $FF7880 ) ; $280 bytes ; alternate sprite table for player 1 in competition mode
+Sprite_table_buffer_P2: =	ramaddr(   $FF7B00 ) ; $280 bytes ; sprite table for player 2 in competition mode
+Sprite_table_buffer_P2_2: =	ramaddr(   $FF7D80 ) ; $280 bytes ; alternate sprite table for player 2 in competition mode
 ; ---------------------------------------------------------------------------
 ; RAM variables - General
-	phase	ramaddr($FFFF0000)	; Pretend we're in the RAM       
+	phase	ramaddr($FFFF0000)	; Pretend we're in the RAM
+
 RAM_start:
 RAM_Start:
 
@@ -1119,25 +1123,28 @@ Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
 Object_RAM_End:
-                                ds.b    $434
-				ds.b	$200	; unused
-
-Primary_Collision:		ds.b	$300
-Secondary_Collision:		ds.b	$300
+Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff
+Sprite_Table_2:                = Kos_decomp_buffer+$800 ; bc KosM doesnt get used in 2p mode
+Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
+Kos_decomp_stored_SR		ds.w 1
+Kos_decomp_queue		ds.l 2*4		; 2 longwords per entry, first is source location and second is decompression location
+Kos_module_queue		ds.w 3*4		; 6 bytes per entry, first longword is source location and next word is VRAM destination
+Kos_decomp_bookmark		ds.l 1
+Kos_decomp_queue_count:         ds.w  1
+Kos_decomp_destination =	Kos_decomp_queue+4
+Kos_description_field		ds.w 1
+                                ds.b	$A	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
 VDP_Command_Buffer:		ds.w	7*$12	; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.l	1	; stores the address of the next open slot for a queued VDP command
 
-Sprite_Table_2:			ds.b	$280	; Sprite attribute table buffer for the bottom split screen in 2-player mode
-				ds.b	$80	; unused, but SAT buffer can spill over into this area when there are too many sprites on-screen
 
-Horiz_Scroll_Buf:		ds.b	$400
+Horiz_Scroll_Buf:		ds.b	$380
 Horiz_Scroll_Buf_End:
 Sonic_Stat_Record_Buf:		ds.b	$100
 Sonic_Pos_Record_Buf:		ds.b	$100
 Tails_Pos_Record_Buf:		ds.b	$100
 CNZ_saucer_data:		ds.b	$40	; the number of saucer bumpers in a group which have been destroyed. Used to decide when to give 500 points instead of 10
 CNZ_saucer_data_End:
-				ds.b	$C0	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
 Ring_Positions:			ds.b	$600
 Ring_Positions_End:
 
@@ -1249,7 +1256,7 @@ Underwater_palette_line2:	ds.b palette_line_size
 Underwater_palette_line3:	ds.b palette_line_size
 Underwater_palette_line4:	ds.b palette_line_size
 
-				ds.b	$500	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
+             			ds.b	$500	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
 
 Game_Mode:			ds.w	1	; 1 byte ; see GameModesArray (master level trigger, Mstr_Lvl_Trigger)
 Ctrl_1_Logical:					; 2 bytes
