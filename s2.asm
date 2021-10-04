@@ -3614,6 +3614,7 @@ RandomNumber:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_33B6:
+GetSineCosine:
 CalcSine:
 	andi.w	#$FF,d0
 	add.w	d0,d0
@@ -19943,9 +19944,7 @@ LoadPLC_AnimalExplosion:
 	lea	(Animal_PLCTable).l,a2
 	move.b	(a2,d0.w),d0
 	jsrto	(LoadPLC).l, JmpTo2_LoadPLC
-	moveq	#PLCID_Explosion,d0
-	jsrto	(LoadPLC).l, JmpTo2_LoadPLC
-	rts
+	jmp    	(LoadEnemyArt).l
 ; ===========================================================================
 
     if gameRevision<2
@@ -23495,32 +23494,20 @@ Obj26_Init:
 	move.b	#9,anim(a0)		; use '?' icon
 ;obj_26_sub_2:
 Obj26_Main:
-	move.b	routine_secondary(a0),d0
-	beq.s	SolidObject_Monitor
-	; only when secondary routine isn't 0
-	; make monitor fall
-	bsr.w	ObjectMoveAndFall
-	jsr	(ObjCheckFloorDist).l
-	tst.w	d1			; is monitor in the ground?
-	bpl.w	SolidObject_Monitor	; if not, branch
-	add.w	d1,y_pos(a0)		; move monitor out of the ground
-	clr.w	y_vel(a0)
-	clr.b	routine_secondary(a0)	; stop monitor from falling
-; loc_1271C:
-SolidObject_Monitor:
-	move.w	#$1A,d1	; monitor's width
-	move.w	#$F,d2
-	move.w	d2,d3
-	addq.w	#1,d3
-	move.w	x_pos(a0),d4
-	lea	(MainCharacter).w,a1 ; a1=character
-	moveq	#p1_standing_bit,d6
-	movem.l	d1-d4,-(sp)
-	bsr.w	SolidObject_Monitor_Sonic
-	movem.l	(sp)+,d1-d4
-	lea	(Sidekick).w,a1 ; a1=character
-	moveq	#p2_standing_bit,d6
-	bsr.w	SolidObject_Monitor_Tails
+                bsr.s   Obj_MonitorFall
+         	move.w	#$19,d1			; Monitor's width
+		move.w	#$10,d2
+		move.w	d2,d3
+		addq.w	#1,d3
+		move.w	x_pos(a0),d4
+		lea	(Player_1).w,a1
+		moveq	#p1_standing_bit,d6
+		movem.l	d1-d4,-(sp)
+		bsr.w	SolidObject_Monitor_Sonic
+		movem.l	(sp)+,d1-d4
+		lea	(Player_2).w,a1
+		moveq	#p2_standing_bit,d6
+		bsr.w	SolidObject_Monitor_Tails
 
 Obj26_Animate:
 	lea	(Ani_obj26).l,a1
@@ -23531,25 +23518,71 @@ BranchTo2_MarkObjGone
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; sub_12756:
+SolidObject_Monitor_SonicKnux:
 SolidObject_Monitor_Sonic:
-	btst	d6,status(a0)			; is Sonic standing on the monitor?
-	bne.s	Obj26_ChkOverEdge		; if yes, branch
-	cmpi.b	#AniIDSonAni_Roll,anim(a1)		; is Sonic spinning?
-	bne.w	SolidObject_cont		; if not, branch
-	rts
+                 btst	d6,status(a0)		; Is Sonic/Knux standing on the monitor?
+		bne.w	Monitor_ChkOverEdge	; If so, branch
+		cmpi.b	#2,anim(a1)		; Is Sonic/Knux in their rolling animation?
+		beq.s	locret_1D6BC		; If so, return
+		cmpi.b	#2,character_id(a1)	; Is character Knuckles?
+		bne.s	loc_1D6BE		; If not, branch
+		cmpi.b	#1,double_jump_flag(a1)	; Is Knuckles gliding?
+		beq.s	locret_1D6BC		; If so, return
+		cmpi.b	#3,double_jump_flag(a1)	; Is Knuckles sliding after gliding?
+		bne.s	loc_1D6BE		; If not, branch
+
+locret_1D6BC:
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1D6BE:
+		jmp	SolidObject_cont
 ; End of function SolidObject_Monitor_Sonic
+Obj_MonitorFall:
+		move.b	routine_secondary(a0),d0
+		beq.s	locret_1D694
+		btst	#1,render_flags(a0)	; Is monitor upside down?
+		bne.s	Obj_MonitorFallUpsideDown ; If so, branch
+		bsr.w	MoveSprite
+		tst.w	y_vel(a0)		; Is monitor moving up?
+		bmi.s	locret_1D694		; If so, return
+		jsr	(ObjCheckFloorDist).l
+		tst.w	d1			; Is monitor in the ground?
+		beq.s	.inground		; If so, branch
+		bpl.s	locret_1D694		; if not, return
 
+	.inground:
+		add.w	d1,y_pos(a0)		; Move monitor out of the ground
+		clr.w	y_vel(a0)
+		clr.b	routine_secondary(a0)	; Stop monitor from falling
+		rts
+Obj_MonitorFallUpsideDown:
+		bsr.w	MoveSprite2
+		subi.w	#$38,y_vel(a0)
+		tst.w	y_vel(a0)		; Is monitor moving down?
+		bpl.s	locret_1D694		; If so, return
+		jsr	(ObjCheckCeilingDist).l
+		tst.w	d1			; Is monitor in the ground (ceiling)?
+		beq.s	.inground		; If so, branch
+		bpl.s	locret_1D694		; if not, return
 
+	.inground:
+		sub.w	d1,y_pos(a0)		; Move monitor out of the ground
+		clr.w	y_vel(a0)
+		clr.b	routine_secondary(a0)	; Stop monitor from falling
+
+locret_1D694:
+		rts
+; End of function Obj_MonitorFall
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; sub_12768:
 SolidObject_Monitor_Tails:
-	btst	d6,status(a0)			; is Tails standing on the monitor?
-	bne.s	Obj26_ChkOverEdge		; if yes, branch
-	tst.w	(Two_player_mode).w		; is it two player mode?
-	beq.w	SolidObject_cont		; if not, branch
-	; in one player mode monitors always behave as solid for Tails
-	cmpi.b	#AniIDTailsAni_Roll,anim(a1)	; is Tails spinning?
-	bne.w	SolidObject_cont		; if not, branch
+                btst	d6,status(a0)		; Is Tails standing on the monitor?
+		bne.s	Monitor_ChkOverEdge	; If so, branch
+		tst.w	(Two_player_mode).w	; Are we in competition mode?
+		beq.w	SolidObject_cont	; If not, branch
+		cmpi.b	#2,anim(a1)		; Is Tails in his rolling animation?
+		bne.w	SolidObject_cont	; If not, branch
 	rts
 ; End of function SolidObject_Monitor_Tails
 
@@ -23557,60 +23590,66 @@ SolidObject_Monitor_Tails:
 ; Checks if the player has walked over the edge of the monitor.
 ; ---------------------------------------------------------------------------
 ;loc_12782:
+Monitor_ChkOverEdge:
 Obj26_ChkOverEdge:
-	move.w	d1,d2
-	add.w	d2,d2
-	btst	#1,status(a1)	; is the character in the air?
-	bne.s	+		; if yes, branch
-	; check, if character is standing on
-	move.w	x_pos(a1),d0
-	sub.w	x_pos(a0),d0
-	add.w	d1,d0
-	bmi.s	+	; branch, if character is behind the left edge of the monitor
-	cmp.w	d2,d0
-	blo.s	Obj26_CharStandOn	; branch, if character is not beyond the right edge of the monitor
-+
-	; if the character isn't standing on the monitor
-	bclr	#3,status(a1)	; clear 'on object' bit
-	bset	#1,status(a1)	; set 'in air' bit
-	bclr	d6,status(a0)	; clear 'standing on' bit for the current character
-	moveq	#0,d4
-	rts
+                move.w	d1,d2
+		add.w	d2,d2
+		btst	#1,status(a1)		; Is the character in the air?
+		bne.s	.notonmonitor		; If so, branch
+		; Check if character is standing on
+		move.w	x_pos(a1),d0
+		sub.w	x_pos(a0),d0
+		add.w	d1,d0
+		bmi.s	.notonmonitor		; Branch, if character is behind the left edge of the monitor
+		cmp.w	d2,d0
+		blo.s	Monitor_CharStandOn	; Branch, if character is not beyond the right edge of the monitor
+
+	.notonmonitor:
+		; if the character isn't standing on the monitor
+		bclr	#3,status(a1)		; Clear 'on object' bit
+		bset	#1,status(a1)		; Set 'in air' bit
+		bclr	d6,status(a0)		; Clear 'standing on' bit for the current character
+		moveq	#0,d4
+		rts
 ; ---------------------------------------------------------------------------
-;loc_127B2:
-Obj26_CharStandOn:
-	move.w	d4,d2
-	bsr.w	MvSonicOnPtfm
-	moveq	#0,d4
-	rts
+
+Monitor_CharStandOn:
+		move.w	d4,d2
+		bsr.w	MvSonicOnPtfm
+		moveq	#0,d4
+		rts
+; End of function SolidObject_Monitor_Tails
 ; ===========================================================================
 ;obj_26_sub_4:
 Obj26_Break:
-	move.b	status(a0),d0
-	andi.b	#standing_mask|pushing_mask,d0	; is someone touching the monitor?
-	beq.s	Obj26_SpawnIcon	; if not, branch
-	move.b	d0,d1
-	andi.b	#p1_standing|p1_pushing,d1	; is it the main character?
-	beq.s	+		; if not, branch
-	andi.b	#$D7,(MainCharacter+status).w
-	ori.b	#2,(MainCharacter+status).w	; prevent Sonic from walking in the air
-+
-	andi.b	#p2_standing|p2_pushing,d0	; is it the sidekick?
-	beq.s	Obj26_SpawnIcon	; if not, branch
-	andi.b	#$D7,(Sidekick+status).w
-	ori.b	#2,(Sidekick+status).w	; prevent Tails from walking in the air
+		move.b	status(a0),d0
+		andi.b	#standing_mask|pushing_mask,d0	; Is someone touching the monitor?
+		beq.s	Obj26_SpawnIcon		; If not, branch
+		move.b	d0,d1
+		andi.b	#p1_standing|p1_pushing,d1	; Is it the main character?
+		beq.s	.notmainchar			; If not, branch
+		andi.b	#$D7,(Player_1+status).w
+		ori.b	#2,(Player_1+status).w		; Prevent main character from walking in the air
+
+	.notmainchar:
+		andi.b	#p2_standing|p2_pushing,d0	; Is it the sidekick?
+		beq.s	Obj26_SpawnIcon		; If not, branch
+		andi.b	#$D7,(Player_2+status).w
+		ori.b	#2,(Player_2+status).w		; Prevent sidekick from walking in the air
 ;loc_127EC:
 Obj26_SpawnIcon:
-	clr.b	status(a0)
+	andi.b	#3,status(a0)
 	addq.b	#2,routine(a0)
 	move.b	#0,collision_flags(a0)
 	bsr.w	SingleObjLoad
 	bne.s	Obj26_SpawnSmoke
 	move.L	#Obj2E,(a1) ; load obj2E
-	move.w	x_pos(a0),x_pos(a1)	; set icon's position
+	move.w	x_pos(a0),x_pos(a1)		; Set icon's position
 	move.w	y_pos(a0),y_pos(a1)
 	move.b	anim(a0),anim(a1)
-	move.w	parent(a0),parent(a1)	; parent gets the item
+	move.b	render_flags(a0),render_flags(a1)
+	move.b	status(a0),status(a1)
+	move.w	parent(a0),parent(a1)
 ;loc_1281E:
 Obj26_SpawnSmoke:
 	bsr.w	SingleObjLoad
@@ -25356,6 +25395,7 @@ Obj34_LoadStandardWaterAndAnimalArt:
 	bne.s	+			; if not, just delete the title card
 	moveq	#PLCID_StdWtr,d0	; load the standard water graphics
 	jsrto	(LoadPLC).l, JmpTo3_LoadPLC
+	jsr    	(LoadEnemyArt).l
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
 	move.b	Animal_PLCTable(pc,d0.w),d0 ; load the animal graphics for the current zone
@@ -27680,20 +27720,17 @@ ObjNull: ;;
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_16380: ObjectFall:
+MoveSprite:
 ObjectMoveAndFall:
-	move.l	x_pos(a0),d2	; load x position
-	move.l	y_pos(a0),d3	; load y position
-	move.w	x_vel(a0),d0	; load x speed
-	ext.l	d0
-	asl.l	#8,d0	; shift velocity to line up with the middle 16 bits of the 32-bit position
-	add.l	d0,d2	; add x speed to x position	; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
-	move.w	y_vel(a0),d0	; load y speed
-	addi.w	#$38,y_vel(a0)	; increase vertical speed (apply gravity)
-	ext.l	d0
-	asl.l	#8,d0	; shift velocity to line up with the middle 16 bits of the 32-bit position
-	add.l	d0,d3	; add old y speed to y position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
-	move.l	d2,x_pos(a0)	; store new x position
-	move.l	d3,y_pos(a0)	; store new y position
+            	move.w	x_vel(a0),d0	; load x speed
+		ext.l	d0
+		lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,x_pos(a0)	; add x speed to x position	; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+		move.w	y_vel(a0),d0	; load y speed
+		addi.w	#$38,y_vel(a0)	; increase vertical speed (apply gravity)
+		ext.l	d0
+		lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
+		add.l	d0,y_pos(a0)	; add old y speed to y position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 	rts
 ; End of function ObjectMoveAndFall
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -27707,19 +27744,16 @@ ObjectMoveAndFall:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_163AC: SpeedToPos:
+MoveSprite2:
 ObjectMove:
-	move.l	x_pos(a0),d2	; load x position
-	move.l	y_pos(a0),d3	; load y position
 	move.w	x_vel(a0),d0	; load horizontal speed
 	ext.l	d0
-	asl.l	#8,d0	; shift velocity to line up with the middle 16 bits of the 32-bit position
-	add.l	d0,d2	; add to x-axis position	; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
+	lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
+	add.l	d0,x_pos(a0)	; add to x-axis position	; note this affects the subpixel position x_sub(a0) = 2+x_pos(a0)
 	move.w	y_vel(a0),d0	; load vertical speed
 	ext.l	d0
-	asl.l	#8,d0	; shift velocity to line up with the middle 16 bits of the 32-bit position
-	add.l	d0,d3	; add to y-axis position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
-	move.l	d2,x_pos(a0)	; update x-axis position
-	move.l	d3,y_pos(a0)	; update y-axis position
+	lsl.l	#8,d0		; shift velocity to line up with the middle 16 bits of the 32-bit position
+	add.l	d0,y_pos(a0)	; add to y-axis position	; note this affects the subpixel position y_sub(a0) = 2+y_pos(a0)
 	rts
 ; End of function ObjectMove
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -30896,8 +30930,8 @@ Obj41_Init_Common:
 	bset	#palette_bit_0,art_tile(a0)
 	move.l	#Obj41_MapUnc_19032,mappings(a0)
 +
-	bsr.w	Adjust2PArtPointer
-	rts
+	bra.w	Adjust2PArtPointer
+
 ; ===========================================================================
 ; word_1897C:
 Obj41_Strengths:
@@ -30987,10 +31021,11 @@ Obj41_Horizontal:
 	move.w	#$F,d3
 	move.w	x_pos(a0),d4
 	lea	(MainCharacter).w,a1 ; a1=character
-	moveq	#p1_standing_bit,d6
+	moveq	#3,d6
 	movem.l	d1-d4,-(sp)
 	bsr.w	SolidObject_Always_SingleCharacter
-	btst	#p1_pushing_bit,status(a0)
+	swap	d6
+	andi.w	#1,d6
 	beq.s	loc_18AB0
 	move.b	status(a0),d1
 	move.w	x_pos(a0),d0
@@ -31006,9 +31041,10 @@ loc_18AA8:
 loc_18AB0:
 	movem.l	(sp)+,d1-d4
 	lea	(Sidekick).w,a1 ; a1=character
-	moveq	#p2_standing_bit,d6
+	moveq	#4,d6
 	bsr.w	SolidObject_Always_SingleCharacter
-	btst	#p2_pushing_bit,status(a0)
+	swap	d6
+	andi.w	#2,d6
 	beq.s	loc_18AE0
 	move.b	status(a0),d1
 	move.w	x_pos(a0),d0
@@ -32966,6 +33002,8 @@ Obj01_Init:
 	addq.b	#2,routine(a0)	; => Obj01_Control
 	move.b	#$13,y_radius(a0) ; this sets Sonic's collision height (2*pixels)
 	move.b	#9,x_radius(a0)
+	move.b	#$13,default_y_radius(a0)
+	move.b	#9,default_x_radius(a0)
 	move.l	#Mapunc_Sonic,mappings(a0)
 	move.b	#2,priority(a0)
 	move.b	#$18,width_pixels(a0)
@@ -34797,43 +34835,116 @@ return_1B09E:
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
+
 ; loc_1B0A0:
 Sonic_ResetOnFloor:
-	tst.b	pinball_mode(a0)
-	bne.s	Sonic_ResetOnFloor_Part3
-	move.b	#AniIDSonAni_Walk,anim(a0)
-; loc_1B0AC:
+Player_TouchFloor_Check_Spindash:
+		tst.b	spin_dash_flag(a0)
+		bne.s	loc_121D8
+		move.b	#AniIDSonAni_Walk,anim(a0)
+; End of function Player_TouchFloor_Check_Spindash
+
+
+; =============== S U B R O U T I N E =======================================
+
 Sonic_ResetOnFloor_Part2:
-	; some routines outside of Tails' code can call Sonic_ResetOnFloor_Part2
-	; when they mean to call Tails_ResetOnFloor_Part2, so fix that here
-	cmpi.b	#0,character_id(a0)	; is this object ID Sonic (obj01)?
-	bne.w	Tails_ResetOnFloor_Part2	; if not, branch to the Tails version of this code
+Player_TouchFloor:
+		cmpi.b	#1,character_id(a0)
+		beq.w	Tails_ResetOnFloor_Part2
+	;	cmpi.b	#2,$38(a0)
+	;	beq.w	Tails_ResetOnFloor_Part2
 
-	btst	#2,status(a0)
-	beq.s	Sonic_ResetOnFloor_Part3
-	bclr	#2,status(a0)
-	move.b	#$13,y_radius(a0) ; this increases Sonic's collision height to standing
-	move.b	#9,x_radius(a0)
-	move.b	#AniIDSonAni_Walk,anim(a0)	; use running/walking/standing animation
-	subq.w	#5,y_pos(a0)	; move Sonic up 5 pixels so the increased height doesn't push him into the ground
-; loc_1B0DA:
-Sonic_ResetOnFloor_Part3:
-	bclr	#1,status(a0)
-	bclr	#5,status(a0)
-	bclr	#4,status(a0)
-	move.b	#0,jumping(a0)
-	move.w	#0,(Chain_Bonus_counter).w
-	move.b	#0,flip_angle(a0)
-	move.b	#0,flip_turned(a0)
-	move.b	#0,flips_remaining(a0)
-	move.w	#0,(Sonic_Look_delay_counter).w
-	cmpi.b	#AniIDSonAni_Hang2,anim(a0)
-	bne.s	return_1B11E
-	move.b	#AniIDSonAni_Walk,anim(a0)
+        	move.b	y_radius(a0),d0
+		move.b	default_y_radius(a0),y_radius(a0)
+		move.b	default_x_radius(a0),x_radius(a0)
+		btst	#2,status(a0)
+		beq.s	loc_121D8
+		bclr	#2,status(a0)
+		move.b	#AniIDSonAni_Walk,anim(a0)
+		sub.b	default_y_radius(a0),d0
+		ext.w	d0
+	;	tst.b	(Reverse_gravity_flag).w
+	;	beq.s	loc_121C4
+	;	neg.w	d0
 
-return_1B11E:
-	rts
+loc_121C4:
+		move.w	d0,-(sp)
+		move.b	angle(a0),d0
+		addi.b	#$40,d0
+		bpl.s	loc_121D2
+		neg.w	(sp)
 
+loc_121D2:
+		move.w	(sp)+,d0
+		add.w	d0,y_pos(a0)
+
+loc_121D8:
+		bclr	#1,status(a0)
+		bclr	#5,status(a0)
+		bclr	#4,status(a0)
+		move.b	#0,jumping(a0)
+		move.w	#0,(Chain_Bonus_counter).w
+		move.b	#0,flip_angle(a0)
+	        move.b	#0,flip_turned(a0)
+	        move.b	#0,flips_remaining(a0)
+           	move.w	#0,(Sonic_Look_delay_counter).w
+		tst.b	double_jump_flag(a0)
+		beq.s	locret_12230
+		tst.b	character_id(a0)
+		bne.s	loc_1222A
+		tst.b	(Super_Sonic_flag).w
+		bne.s	loc_1222A
+		btst	#6,status_secondary(a0)
+		beq.s	loc_1222A
+		bsr.s	BubbleShield_Bounce
+
+loc_1222A:
+		move.b	#0,double_jump_flag(a0)
+
+locret_12230:
+		rts
+; End of function Player_TouchFloor
+
+BubbleShield_Bounce:
+		movem.l	d1-d2,-(sp)
+		move.w	#$780,d2
+		btst	#6,status(a0)
+		beq.s	loc_12246
+		move.w	#$400,d2
+
+loc_12246:
+		moveq	#0,d0
+		move.b	angle(a0),d0
+		subi.b	#$40,d0
+		jsr	(GetSineCosine).l
+		muls.w	d2,d1
+		asr.l	#8,d1
+		add.w	d1,x_vel(a0)
+		muls.w	d2,d0
+		asr.l	#8,d0
+		add.w	d0,y_vel(a0)
+		movem.l	(sp)+,d1-d2
+		bset	#1,status(a0)
+		bclr	#5,status(a0)
+		move.b	#1,jumping(a0)
+		clr.b	stick_to_convex(a0)
+		move.b	#$E,y_radius(a0)
+		move.b	#7,x_radius(a0)
+		move.b	#2,anim(a0)
+		bset	#2,status(a0)
+		move.b	y_radius(a0),d0
+		sub.b	default_y_radius(a0),d0
+		ext.w	d0
+	;	tst.b	(Reverse_gravity_flag).w
+	;	beq.s	loc_122AA
+	;	neg.w	d0
+
+loc_122AA:
+		sub.w	d0,y_pos(a0)
+		move.b	#2,(Shield+anim).w
+		move.w	#$FF,d0
+		jmp	(PlaySound).l
+; End of function BubbleShield_Bounce
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Sonic when he gets hurt
@@ -38846,25 +38957,17 @@ byte_1D8EB:	dc.b  $E,  1,  2,  3,  4,$FC
 ; ----------------------------------------------------------------------------
 ; Sprite_1D8F2:
 Obj38:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj38_Index(pc,d0.w),d1
-	jmp	Obj38_Index(pc,d1.w)
-; ===========================================================================
-; off_1D900:
-Obj38_Index:	offsetTable
-		offsetTableEntry.w Obj38_Main	; 0
-		offsetTableEntry.w Obj38_Shield	; 2
-; ===========================================================================
-; loc_1D904:
-Obj38_Main:
-	addq.b	#2,routine(a0)
+	move.l	#Obj38_Shield,(a0)
 	move.l	#Obj38_MapUnc_1DBE4,mappings(a0)
 	move.b	#4,render_flags(a0)
 	move.b	#1,priority(a0)
 	move.b	#$18,width_pixels(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_Shield,0,0),art_tile(a0)
+	move.w	#make_art_tile(ArtTile_ArtUnc_Shield,0,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
+	move.l	#ArtUnc_Shield,d1
+	move.w	#tiles_to_bytes(ArtTile_ArtUnc_Shield),d2
+	move.w	#$320,d3
+	jmp	(Add_To_DMA_Queue).l
 ; loc_1D92C:
 Obj38_Shield:
 	movea.w	parent(a0),a2 ; a2=character
@@ -38919,6 +39022,10 @@ off_1D992:
 ; ===========================================================================
 
 loc_1D9A4:
+        move.l	#ArtUnc_Invincible_stars,d1
+	move.w	#tiles_to_bytes(ArtTile_ArtUnc_Invincible_stars),d2
+	move.w	#$340,d3
+	jsr	(Add_To_DMA_Queue).l
 	moveq	#0,d2
 	lea	off_1D992-6(pc),a2
 	lea	(a0),a1
@@ -38927,7 +39034,7 @@ loc_1D9A4:
 -	move.l	(a0),(a1) ; load obj35
 	move.b	#4,objoff_12(a1)		; => loc_1DA80
 	move.l	#Obj35_MapUnc_1DCBC,mappings(a1)
-	move.w	#make_art_tile(ArtTile_ArtNem_Invincible_stars,0,0),art_tile(a1)
+	move.w	#make_art_tile(ArtTile_ArtUnc_Invincible_stars,0,0),art_tile(a1)
 	bsr.w	Adjust2PArtPointer2
 	move.b	#4,render_flags(a1)
 	bset	#6,render_flags(a1)
@@ -40562,31 +40669,33 @@ loc_1ECFE:
 ; ===========================================================================
 ; loc_1ED56:
 ChkFloorEdge:
-	move.w	x_pos(a0),d3
-; loc_1ED5A:
+         	move.w	x_pos(a0),d3
+
 ChkFloorEdge_Part2:
-	move.w	y_pos(a0),d2
-	moveq	#0,d0
-	move.b	y_radius(a0),d0
-	ext.w	d0
-	add.w	d0,d2
-        jsr LoadCollisionData
-        move.l	d4,(Collision_addr).w
-	cmpi.b	#$C,top_solid_bit(a0)
-	beq.s	+
-	move.l	d5,(Collision_addr).w
+		move.w	y_pos(a0),d2
+		moveq	#0,d0
+		move.b	y_radius(a0),d0
+		ext.w	d0
+		add.w	d0,d2
+                jsr LoadCollisionData
+                move.l	d4,(Collision_addr).w
+           	cmpi.b	#$C,top_solid_bit(a0)
+           	beq.s	+
+            	move.l	d5,(Collision_addr).w
 
 +
-	lea	(Primary_Angle).w,a4
-	move.b	#0,(a4)
-	movea.w	#$10,a3
-	move.w	#0,d6
-	move.b	top_solid_bit(a0),d5
-	bsr.w	FindFloor
-	move.b	(Primary_Angle).w,d3
-	btst	#0,d3
-	beq.s	+
-	move.b	#0,d3
+		lea	(Primary_Angle).w,a4
+		move.b	#0,(a4)
+		movea.w	#$10,a3
+		move.w	#0,d6
+		move.b	top_solid_bit(a0),d5
+		movem.l	a4-a6,-(sp)
+		bsr.w	FindFloor
+		movem.l	(sp)+,a4-a6
+		move.b	(Primary_Angle).w,d3
+		btst	#0,d3
+		beq.s	+
+		move.b	#0,d3
 +
 	rts
 ; ===========================================================================
@@ -43138,7 +43247,7 @@ Obj27_Index:	offsetTable
 Exploation_High_Priority:
 	move.l	#Obj27_Main,(a0) ;
 	move.l	#Obj27_MapUnc_21120,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_Explosion,0,0),art_tile(a0)
+	move.w	#make_art_tile(ArtTile_ArtKosM_Explosion,0,0),art_tile(a0)
 	bra.w   Exploation_Settings
 Obj27_InitWithAnimal:
 	addq.b	#2,routine(a0) ; => Obj27_Init
@@ -43153,7 +43262,7 @@ Obj27_InitWithAnimal:
 Obj27_Init:
 	addq.b	#2,routine(a0) ; => Obj27_Main
 	move.l	#Obj27_MapUnc_21120,mappings(a0)
-	move.w	#make_art_tile(ArtTile_ArtNem_Explosion,0,0),art_tile(a0)
+	move.w	#make_art_tile(ArtTile_ArtKosM_Explosion,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
 	move.b	#1,priority(a0)
 Exploation_Settings:	
@@ -78496,7 +78605,7 @@ ObjC3_Main:
 ; ===========================================================================
 ; off_3C438:
 ObjC3_SubObjData:
-	subObjData Obj27_MapUnc_21120,make_art_tile(ArtTile_ArtNem_Explosion,0,0),4,5,$C,0
+	subObjData Obj27_MapUnc_21120,make_art_tile(ArtTile_ArtKosM_Explosion,0,0),4,5,$C,0
 ; ===========================================================================
 SecondRoutine_WFZBoss = $3C  ;  ; byte  its routine sec varable that gets called by ani script
 WFZFlickerVarable = $13  ;   ; byte ; used to interupt displaying giving a flickery look
@@ -86282,6 +86391,74 @@ LevelArtPointers:
 ; END Art_Ptrs_Array[17]
 
 
+LoadEnemyArt:
+           	lea	off_2F7BE(pc),a6
+		;move.w	#$D00,d0
+		;cmpi.b	#$16,(Current_zone).w
+		;beq.s	loc_2F798
+		;move.w	#$E00,d0
+		;cmpi.w	#$1700,(Current_zone_and_act).w
+		;bne.s	loc_2F79E
+
+;loc_2F798:
+;		move.b	(Current_Act).w,d0
+;		bra.s	loc_2F7A2
+; ---------------------------------------------------------------------------
+
+loc_2F79E:
+		move.w	(Current_ZoneAndAct).w,d0
+
+loc_2F7A2:
+		ror.b	#1,d0
+		lsr.w	#6,d0
+		adda.w	(a6,d0.w),a6
+		move.w	(a6)+,d6
+		bmi.s	locret_2F7BC
+
+loc_2F7AE:
+		movea.l	(a6)+,a1
+		move.w	(a6)+,d2
+		jsr	(Queue_Kos_Module).l
+		dbf	d6,loc_2F7AE
+
+locret_2F7BC:
+		rts
+; End of function LoadEnemyArt
+off_2F7BE:	dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE
+; ===========================================================================
+PLCKosM_Standard:	dc.w 0
+		dc.l ArtKosM_Explosion
+		dc.w $B480
+                even
 
 
 ; ---------------------------------------------------------------------------
@@ -86381,8 +86558,7 @@ PLCptr_SpecStageBombs:	offsetTableEntry.w PlrList_SpecStageBombs	; 61
 PLCptr_WfzBoss:		offsetTableEntry.w PlrList_WfzBoss		; 62
 PLCptr_Tornado:		offsetTableEntry.w PlrList_Tornado		; 63
 PLCptr_Capsule:		offsetTableEntry.w PlrList_Capsule		; 64
-PLCptr_Explosion:	offsetTableEntry.w PlrList_Explosion		; 65
-PLCptr_ResultsTails:	offsetTableEntry.w PlrList_ResultsTails		; 66
+PLCptr_ResultsTails:	offsetTableEntry.w PlrList_ResultsTails		; 65
 
 ; macro for a pattern load request list header
 ; must be on the same line as a label that has a corresponding _End label later
@@ -86415,15 +86591,12 @@ PlrList_Std1_End
 PlrList_Std2: plrlistheader
 	plreq ArtTile_ArtNem_Checkpoint, ArtNem_Checkpoint
 	plreq ArtTile_ArtNem_Powerups, ArtNem_Powerups
-	plreq ArtTile_ArtNem_Shield, ArtNem_Shield
-	plreq ArtTile_ArtNem_Invincible_stars, ArtNem_Invincible_stars
 PlrList_Std2_End
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Aquatic level standard
 ;---------------------------------------------------------------------------------------
 PlrList_StdWtr:	plrlistheader
-	plreq ArtTile_ArtNem_Explosion, ArtNem_Explosion
 	plreq ArtTile_ArtNem_SuperSonic_stars, ArtNem_SuperSonic_stars
 	plreq ArtTile_ArtNem_Bubbles, ArtNem_Bubbles
 PlrList_StdWtr_End
@@ -87007,13 +87180,7 @@ PlrList_Tornado_End
 PlrList_Capsule: plrlistheader
 	plreq ArtTile_ArtNem_Capsule, ArtNem_Capsule
 PlrList_Capsule_End
-;---------------------------------------------------------------------------------------
-; Pattern load queue
-; Normal explosion
-;---------------------------------------------------------------------------------------
-PlrList_Explosion: plrlistheader
-	plreq ArtTile_ArtNem_Explosion, ArtNem_Explosion
-PlrList_Explosion_End
+
 ;---------------------------------------------------------------------------------------
 ; Pattern load queue
 ; Tails end of level results screen
@@ -87309,13 +87476,7 @@ PlrList_Tornado_Dup_End
 PlrList_Capsule_Dup: plrlistheader
 	plreq ArtTile_ArtNem_Capsule, ArtNem_Capsule
 PlrList_Capsule_Dup_End
-;---------------------------------------------------------------------------------------
-; Pattern load queue (duplicate)
-; Normal explosion
-;---------------------------------------------------------------------------------------
-PlrList_Explosion_Dup: plrlistheader
-	plreq ArtTile_ArtNem_Explosion, ArtNem_Explosion
-PlrList_Explosion_Dup_End
+
 ;---------------------------------------------------------------------------------------
 ; Pattern load queue (duplicate)
 ; Tails end of level results screen
@@ -87688,7 +87849,7 @@ MapRUnc_Sonic:	BINCLUDE	"mappings/spriteDPLC/Sonic.bin"
 ;--------------------------------------------------------------------------------------
 ; Nemesis compressed art (32 blocks)
 ; Shield			; ArtNem_71D8E:
-ArtNem_Shield:	BINCLUDE	"art/nemesis/Shield.bin"
+ArtUnc_Shield:	BINCLUDE	"art/uncompressed/Shield.unc"
 	even
 Map_FirewormSegments: BINCLUDE "mappings/Map - Fireworm Segments.bin"
        even
@@ -87701,7 +87862,7 @@ DPLC_Fireworm: BINCLUDE "art/dplc/DPLC - Fireworm.asm"
 ;--------------------------------------------------------------------------------------
 ; Nemesis compressed art (34 blocks)
 ; Invincibility stars		; ArtNem_71F14:
-ArtNem_Invincible_stars:	BINCLUDE	"art/nemesis/Invincibility stars.bin"
+ArtUnc_Invincible_stars:	BINCLUDE	"art/uncompressed/Invincibility stars.unc"
 	even
 ;--------------------------------------------------------------------------------------
 ; Uncompressed art
@@ -87867,7 +88028,7 @@ ArtNem_Game_Over:	BINCLUDE	"art/nemesis/Game and Time Over text.bin"
 ; Nemesis compressed art (68 blocks)
 ; Explosion			7B592:
 	even
-ArtNem_Explosion:	BINCLUDE	"art/nemesis/Explosion.bin"
+ArtKosM_Explosion:	BINCLUDE	"art/nemesis/Explosion.kosm"
 ;---------------------------------------------------------------------------------------
 ; Nemesis compressed art (12 blocks)
 ; Miles life counter	; ArtNem_7B946:

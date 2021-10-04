@@ -107,7 +107,6 @@ lrb_solid_bit =		$47 ; byte ; the bit to check for left/right/bottom solidity (e
 ;=============================================================================
 ;ground_vel =		inertia
 obj_control  =          $2E
-Player_1 =   MainCharacter
 Sprite_table_buffer = Sprite_Table
 Sprite_table_input =  Sprite_Table_Input
 Current_zone =  Current_Zone
@@ -550,7 +549,6 @@ PLCID_SpecStageBombs =	id(PLCptr_SpecStageBombs) ; 3D
 PLCID_WfzBoss =		id(PLCptr_WfzBoss) ; 3E
 PLCID_Tornado =		id(PLCptr_Tornado) ; 3F
 PLCID_Capsule =		id(PLCptr_Capsule) ; 40
-PLCID_Explosion =	id(PLCptr_Explosion) ; 41
 PLCID_ResultsTails =	id(PLCptr_ResultsTails) ; 42
 
 ; Object IDs
@@ -1061,8 +1059,10 @@ Sprite_Table_Input:		ds.b	$400	; in custom format before being converted and sto
 Sprite_Table_Input_End:
 
 Object_RAM:
+Player_1:
 MainCharacter:			; first object (usually Sonic except in a Tails Alone game)
 				ds.b	object_size
+Player_2:
 Sidekick:			; second object (Tails in a Sonic and Tails game)
 				ds.b	object_size
 Reserved_object_3		ds.b object_size	; during a level, an object whose sole purpose is to clear the collision response list is stored here
@@ -1105,6 +1105,7 @@ Sonic_Dust:			; Sonic's spin dash dust
 				ds.b	object_size
 Tails_Dust:			; Tails' spin dash dust
 				ds.b	object_size
+Shield:				
 Sonic_Shield:
 				ds.b	object_size
 Tails_Shield:
@@ -2432,7 +2433,7 @@ ArtTile_ArtNem_Tornado                = $0500
 ArtTile_ArtNem_TornadoThruster        = $0561
 
 ; Some common objects; these are loaded on all aquatic levels.
-ArtTile_ArtNem_Explosion              = $05A4
+ArtTile_ArtKosM_Explosion              = $05A4
 ArtTile_ArtNem_Bubbles                = $05E8
 ArtTile_ArtNem_SuperSonic_stars       = $05F2
 
@@ -2441,8 +2442,8 @@ ArtTile_ArtNem_Checkpoint             = $047C
 ArtTile_ArtNem_TailsDust              = $048C
 ArtTile_ArtNem_SonicDust              = $049C
 ArtTile_ArtNem_Numbers                = $04AC
-ArtTile_ArtNem_Shield                 = $04BE
-ArtTile_ArtNem_Invincible_stars       = $04DE
+ArtTile_ArtUnc_Shield                 = $04BE
+ArtTile_ArtUnc_Invincible_stars       = ArtTile_ArtUnc_Shield
 ArtTile_ArtNem_Powerups               = $0680
 ArtTile_ArtNem_Ring                   = $06BC
 ArtTile_ArtNem_HUD                    = ArtTile_ArtNem_Powerups + $4A
