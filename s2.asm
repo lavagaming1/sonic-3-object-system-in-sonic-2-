@@ -4245,6 +4245,13 @@ Level:
 	move.b	#MusID_FadeOut,d0
 	bsr.w	PlaySound	; fade out music
 +
+       	clr.w	(Kos_decomp_queue_count).w
+	lea	(Kos_decomp_stored_registers).w,a1
+	moveq	#0,d0
+	move.w	#$1A,d1
+loc_5FD6:
+	move.l	d0,(a1)+				; Clear the KosM bytes
+	dbf	d1,loc_5FD6
 	bsr.w	ClearPLC
 	bsr.w	Pal_FadeToBlack
 	tst.w	(Demo_mode_flag).w
@@ -43265,7 +43272,7 @@ Obj27_Init:
 	move.w	#make_art_tile(ArtTile_ArtKosM_Explosion,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
 	move.b	#1,priority(a0)
-Exploation_Settings:	
+Exploation_Settings:
 	move.b	#0,collision_flags(a0)
 	move.b	#$C,width_pixels(a0)
 	move.b	#3,anim_frame_duration(a0)
