@@ -20499,8 +20499,8 @@ JmpTo_CalcSine ; JmpTo
     endif
 
 
-
-
+ARZSwingingPLatformTimer = objoff_3A
+ARZSwingStartCountdownFlag = objoff_41
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 15 - Swinging platform from Aquatic Ruin Zone
@@ -20526,10 +20526,10 @@ Obj15_Index:	offsetTable
 ; ===========================================================================
 ; loc_FCCA:
 Obj15_Init:
-	addq.b	#2,routine(a0)
+	addq.b	#2,routine(a0)  ;Obj15_State2
 	move.l	#Obj15_MapUnc_101E8,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_OOZSwingPlat,2,0),art_tile(a0)
-	move.b	#4,render_flags(a0)
+	move.b	#4,render_flags(a0) ; set normal sprites
 	move.b	#3,priority(a0)
 	move.b	#$20,width_pixels(a0)
 	move.b	#$10,y_radius(a0)
@@ -20551,25 +20551,25 @@ Obj15_Init:
  .IfNotAquaticRuins:
 
 	moveq	#0,d1
-	move.b	subtype(a0),d1
+	move.b	subtype(a0),d1 ; dump subtype ram to data reg
 	bpl.s	.IfSubtypeIs0
-	addq.b	#4,routine(a0)
+	addq.b	#4,routine(a0) ; this leads to Obj15_State4 ; after the init start already incressed to 2 results to routine 6
  .IfSubtypeIs0:
-	move.b	d1,d4
-	andi.b	#$70,d4
-	andi.w	#$F,d1
-	move.w	x_pos(a0),d2
-	move.w	y_pos(a0),d3
-	jsrto	(SingleObjLoad2).l, JmpTo2_SingleObjLoad2
-	bne.w	.MoveInit_Swing
-	move.l	#DisplaySprite,(a1) ; load obj15
-	move.l	mappings(a0),mappings(a1)
-	move.w	art_tile(a0),art_tile(a1)
+	move.b	d1,d4  ; get substype values
+	andi.b	#$70,d4     ;  $70 to it
+	andi.w	#$F,d1   ; H what
+	move.w	x_pos(a0),d2  ; get x
+	move.w	y_pos(a0),d3  ; get y
+	jsrto	(SingleObjLoad2).l, JmpTo2_SingleObjLoad2 ; get a1 location
+	bne.w	.MoveInit_Swing   ; if failed go branch
+	move.l	#DisplaySprite,(a1) ; load obj15  ; go to display sprite (Works as DisplaySprite3) Here because s3k object manager and priority
+	move.l	mappings(a0),mappings(a1)   ; copy a0 maps to a1 (chains)
+	move.w	art_tile(a0),art_tile(a1)   ; same with art tile
 	move.b	#3,priority(a1) ; chains priority
 	move.b	#4,render_flags(a1)
-	cmpi.b	#$20,d4
-	bne.s	.IfNotSubtype20
-	move.b	#4,priority(a1)
+	cmpi.b	#$20,d4     ; if the distance i assume is 20
+	bne.s	.IfNotSubtype20  ; branch
+	move.b	#4,priority(a1)     ; init the platform
 	move.b	#$10,width_pixels(a1)
 	move.b	#$50,y_radius(a1)
 	bset	#4,render_flags(a1)
@@ -20579,14 +20579,14 @@ Obj15_Init:
 	move.w	d3,y_pos(a1)
 	addi.w	#$48,d3
 	move.w	d3,y_pos(a0)
-	bra.s	.Unk_init_Addresses
+	bra.s	.Unk_init_Addresses ; sets a1 (child) to $34 sst
 ; ===========================================================================
  .IfNotSubtype20:
-	bset	#6,render_flags(a1)
-	move.b	#$48,mainspr_width(a1)
-	move.b	d1,mainspr_childsprites(a1)
-	subq.b	#1,d1
-	lea	sub2_x_pos(a1),a2
+	bset	#6,render_flags(a1)  ; set subsprites
+	move.b	#$48,mainspr_width(a1)  ; set each subsrptie wdth
+	move.b	d1,mainspr_childsprites(a1)      ; d1 is substype aka chain links size
+	subq.b	#1,d1            ; subtranct 1
+	lea	sub2_x_pos(a1),a2  ; a1 subsprite x  to a2
 
  .Loop_SwinignDistance:
 	move.w	d2,(a2)+	; sub?_x_pos
@@ -20595,18 +20595,18 @@ Obj15_Init:
 	addi.w	#$10,d3
 	dbf	d1,.Loop_SwinignDistance
 
-	move.b	#2,sub2_mapframe(a1)
-	move.w	sub6_x_pos(a1),x_pos(a1)
+	move.b	#2,sub2_mapframe(a1)  ; set a subsprite mapping frame
+	move.w	sub6_x_pos(a1),x_pos(a1) ; get subrite number 6 to our actual x and y
 	move.w	sub6_y_pos(a1),y_pos(a1)
-	move.w	d2,sub6_x_pos(a1)
+	move.w	d2,sub6_x_pos(a1)   ; if d2 is x and d3 is y (i assume)then make the subsprite frame copy that a0 x and y location
 	move.w	d3,sub6_y_pos(a1)
-	move.b	#1,mainspr_mapframe(a1)
-	addi.w	#8,d3
-	move.w	d3,y_pos(a0)
-	move.b	#$50,mainspr_height(a1)
-	bset	#4,render_flags(a1)
+	move.b	#1,mainspr_mapframe(a1)   ; set a main map frame (wich one idk)
+	addi.w	#8,d3                   ; add 8 to a0 y
+	move.w	d3,y_pos(a0)            ; dump that to y for a0
+	move.b	#$50,mainspr_height(a1)  ; its height
+	bset	#4,render_flags(a1)   ; wtf not a subsprite
  .Unk_init_Addresses:
-	move.l	a1,objoff_34(a0)
+	move.l	a1,objoff_34(a0)    ; get whatever a1 is to $34 sst
 .MoveInit_Swing
 	move.w	#$8000,angle(a0)
 	move.w	#0,objoff_42(a0)
@@ -20619,7 +20619,7 @@ Obj15_Init:
 	move.b	#$A7,collision_flags(a0)
 
 ; loc_FE50:
-Obj15_State2:
+Obj15_State2:                ; platform data
 	move.w	x_pos(a0),-(sp)
 	bsr.w	sub_FE70
 	moveq	#0,d1
@@ -20629,7 +20629,7 @@ Obj15_State2:
 	addq.b	#1,d3
 	move.w	(sp)+,d4
 	jsrto	(PlatformObject2).l, JmpTo_PlatformObject2
-	bra.w	loc_1000C
+	bra.w	OnScreenTestSwingingPLatform
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -20638,35 +20638,35 @@ sub_FE70:
 
 	moveq	#0,d0
 	moveq	#0,d1
-	move.b	(Oscillating_Data+$18).w,d0
+	move.b	(Oscillating_Data+$18).w,d0 ; swinging movement
 	move.b	subtype(a0),d1
 	beq.s	loc_FEC2
 	cmpi.b	#$10,d1
-	bne.s	++
+	bne.s	.SwingSineUnk1
 	cmpi.b	#$3F,d0
-	beq.s	+
+	beq.s	.CheckSubstypesSwinginPlatforms
 	bhs.s	loc_FEC2
 	moveq	#$40,d0
 	bra.s	loc_FEC2
 ; ===========================================================================
-/
+;/                dummied out code
 	move.w	#SndID_PlatformKnock,d0
 	jsr	(PlaySoundLocal).l
 	moveq	#$40,d0
 	bra.s	loc_FEC2
 ; ===========================================================================
-+
+  .CheckSubstypesSwinginPlatforms:
 	cmpi.b	#$20,d1
-	beq.w	+++	; rts
+	beq.w	ReturnDoNothing	; rts
 	cmpi.b	#$30,d1
-	bne.s	+
+	bne.s	.SwingSineUnk1
 	cmpi.b	#$41,d0
-	beq.s	-
+	beq.s	SwingPlatofmrOT_SetSubSprs ;-
 	blo.s	loc_FEC2
 	moveq	#$40,d0
 	bra.s	loc_FEC2
 ; ===========================================================================
-+
+.SwingSineUnk1:
 	cmpi.b	#$40,d1
 	bne.s	loc_FEC2
 	bsr.w	loc_FF6E
@@ -20674,14 +20674,14 @@ sub_FE70:
 loc_FEC2:
 	move.b	objoff_32(a0),d1
 	cmp.b	d0,d1
-	beq.w	++	; rts
+	beq.w	ReturnDoNothing	; rts
 	move.b	d0,objoff_32(a0)
 	move.w	#$80,d1
 	btst	#0,status(a0)
-	beq.s	+
+	beq.s	TestToNegateSwing
 	neg.w	d0
 	add.w	d1,d0
-+
+ TestToNegateSwing:
 	jsrto	(CalcSine).l, JmpTo2_CalcSine
 	move.w	objoff_3C(a0),d2
 	move.w	objoff_3E(a0),d3
@@ -20689,7 +20689,7 @@ loc_FEC2:
 	movea.l	objoff_34(a0),a1
 	move.b	mainspr_childsprites(a1),d6
 	subq.w	#1,d6
-	bcs.s	+	; rts
+	bcs.s	ReturnDoNothing	; rts
 	swap	d0
 	swap	d1
 	asr.l	#4,d0
@@ -20698,7 +20698,8 @@ loc_FEC2:
 	moveq	#0,d5
 	lea	sub2_x_pos(a1),a2
 
--	movem.l	d4-d5,-(sp)
+SwingPlatofmrOT_SetSubSprs:
+	movem.l	d4-d5,-(sp)
 	swap	d4
 	swap	d5
 	add.w	d2,d4
@@ -20709,7 +20710,7 @@ loc_FEC2:
 	add.l	d0,d4
 	add.l	d1,d5
 	addq.w	#next_subspr-4,a2
-	dbf	d6,-
+	dbf	d6,SwingPlatofmrOT_SetSubSprs
 
 	movem.l	d4-d5,-(sp)
 	swap	d4
@@ -20733,21 +20734,23 @@ loc_FEC2:
 	add.w	objoff_3E(a0),d5
 	move.w	d4,y_pos(a0)
 	move.w	d5,x_pos(a0)
-+
+ ReturnDoNothing:
 	rts
 ; End of function sub_FE70
 
 ; ===========================================================================
 
 loc_FF6E:
-	tst.w	objoff_3A(a0)
-	beq.s	+
-	subq.w	#1,objoff_3A(a0)
+;	tst.w	ARZSwingingPLatformTimer(a0)
+;	beq.s	+
+;	subq.w	#1,ARZSwingingPLatformTimer(a0)
+        subq.w	#1,ARZSwingingPLatformTimer(a0)
+        beq.s   .keepswinging
 	bra.w	loc_10006
 ; ===========================================================================
-+
+ .keepswinging:
 	tst.b	objoff_38(a0)
-	bne.s	+
+	bne.s	.TestForFlag
 	move.w	(MainCharacter+x_pos).w,d0
 	sub.w	objoff_3E(a0),d0
 	addi.w	#$20,d0
@@ -20756,9 +20759,9 @@ loc_FF6E:
 	tst.w	(Debug_placement_mode).w
 	bne.w	loc_10006
 	move.b	#1,objoff_38(a0)
-+
-	tst.b	objoff_41(a0)
-	beq.s	+
+ .TestForFlag:
+	tst.b	ARZSwingStartCountdownFlag(a0)
+	beq.s	.IgnoreAfterSimpleSettinng
 	move.w	objoff_42(a0),d0
 	addi.w	#8,d0
 	move.w	d0,objoff_42(a0)
@@ -20767,11 +20770,11 @@ loc_FF6E:
 	bne.s	loc_10006
 	move.w	#0,objoff_42(a0)
 	move.w	#$8000,angle(a0)
-	move.b	#0,objoff_41(a0)
-	move.w	#$3C,objoff_3A(a0)
+	move.b	#0,ARZSwingStartCountdownFlag(a0)
+	move.w	#$3C,ARZSwingingPLatformTimer(a0)
 	bra.s	loc_10006
 ; ===========================================================================
-+
+ .IgnoreAfterSimpleSettinng:
 	move.w	objoff_42(a0),d0
 	subi.w	#8,d0
 	move.w	d0,objoff_42(a0)
@@ -20780,32 +20783,32 @@ loc_FF6E:
 	bne.s	loc_10006
 	move.w	#0,objoff_42(a0)
 	move.w	#$4000,angle(a0)
-	move.b	#1,objoff_41(a0)
+	move.b	#1,ARZSwingStartCountdownFlag(a0)
 ; loc_10000:
-	move.w	#$3C,objoff_3A(a0)
+	move.w	#$3C,ARZSwingingPLatformTimer(a0)
 
 loc_10006:
 	move.b	angle(a0),d0
 	rts
 ; ===========================================================================
-
-loc_1000C:
+;loc_1000C
+OnScreenTestSwingingPLatform:
 	tst.w	(Two_player_mode).w
-	beq.s	+
+	beq.s	.If1PMode
 	bra.w	DisplaySprite
 ; ===========================================================================
-+
+ .If1PMode:
 	move.w	objoff_3E(a0),d0
 	andi.w	#$FF80,d0
 	sub.w	(Camera_X_pos_coarse).w,d0
 	cmpi.w	#$280,d0
-	bhi.w	+
+	bhi.w	.IfNotWithinScreenRange
 	bra.w	DisplaySprite
 ; ===========================================================================
-+
-	movea.l	objoff_34(a0),a1
-	bsr.w	DeleteObject2
-	bra.w	DeleteObject
+.IfNotWithinScreenRange:
+	movea.l	objoff_34(a0),a1 ; get the ram address (.Unk_init_Addresses)
+	bsr.w	DeleteObject2 ; delete a1
+	bra.w	DeleteObject  ; delete a1 and a0 alltogther
 ; ===========================================================================
 
 Obj15_Display: ;;
@@ -20825,31 +20828,31 @@ Obj15_State4:
 	jsrto	(PlatformObject2).l, JmpTo_PlatformObject2
 	move.b	status(a0),d0
 	andi.b	#standing_mask,d0
-	beq.w	BranchTo_loc_1000C
+	beq.w	BranchTo_OnScreenTestSwingingPLatform
 	tst.b	(Oscillating_Data+$18).w
-	bne.w	BranchTo_loc_1000C
+	bne.w	BranchTo_OnScreenTestSwingingPLatform
 	jsrto	(SingleObjLoad2).l, JmpTo2_SingleObjLoad2
 	bne.w	loc_100E4
 	moveq	#0,d0
 
 	move.w	#bytesToLcnt(object_size),d1
--	move.l	(a0,d0.w),(a1,d0.w)
+.loop:	move.l	(a0,d0.w),(a1,d0.w)
 	addq.w	#4,d0
-	dbf	d1,-
+	dbf	d1,.loop
     if object_size&3
 	move.w	(a0,d0.w),(a1,d0.w)
     endif
 
 	move.b	#$A,routine(a1)
 	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w
-	bne.s	+
+	bne.s	.notARZ
 	addq.b	#2,routine(a1)
-+
+ .notARZ:
 	move.w	#$200,x_vel(a1)
 	btst	#0,status(a0)
-	beq.s	+
+	beq.s	.ifNotLeftFacing
 	neg.w	x_vel(a1)
-+
+ .ifNotLeftFacing:
 	bset	#1,status(a1)
 	move.w	a0,d0
 	subi.w	#Object_RAM,d0
@@ -20868,9 +20871,9 @@ Obj15_State4:
 	andi.w	#$7F,d1
 	lea     (MainCharacter).w,a2
 	cmp.w	interact(a2),a0
-	bne.s	+
+	bne.s	.NotSonicINteraction
 	move.w	a1,interact(a2)
-+
+ .NotSonicINteraction:
         lea     (Sidekick).w,a2
 	cmp.w	interact(a2),a0
 	bne.s	loc_100E4
@@ -20881,10 +20884,10 @@ loc_100E4:
 	addq.b	#2,routine(a0)
 	andi.b	#$E7,status(a0)
 
-BranchTo_loc_1000C ; BranchTo
-	bra.w	loc_1000C
+BranchTo_OnScreenTestSwingingPLatform ; BranchTo
+	bra.w	OnScreenTestSwingingPLatform
 Fail_Divisiton:
-          rts   
+          rts
 Dvisiton_4a:	dc.b -1
 .a :=	1		; .a is the object slot we are currently processing
 .b :=	1		; .b is used to calculate when there will be a conversion error due to object_size being > $40
@@ -20904,32 +20907,32 @@ Dvisiton_4a:	dc.b -1
 ; loc_100F8:
 Obj15_State5:
 	bsr.w	sub_FE70
-	bra.w	loc_1000C
+	bra.w	OnScreenTestSwingingPLatform
 
 ; ===========================================================================
 ; loc_10100:
 Obj15_State6:
 	move.w	x_pos(a0),-(sp)
 	btst	#1,status(a0)
-	beq.s	+
+	beq.s	.IgnoreSwingBreakDownIFnotbit1
 	bsr.w	ObjectMove
 	addi.w	#$18,y_vel(a0)
 	cmpi.w	#$720,y_pos(a0)
-	blo.s	++
+	blo.s   .IfNotReachingYBound
 	move.w	#$720,y_pos(a0)
 	bclr	#1,status(a0)
 	move.w	#0,x_vel(a0)
 	move.w	#0,y_vel(a0)
 	move.w	y_pos(a0),objoff_3C(a0)
-	bra.s	++
+	bra.s	.IfNotReachingYBound
 ; ===========================================================================
-+
+.IgnoreSwingBreakDownIFnotbit1
 	moveq	#0,d0
 	move.b	(Oscillating_Data+$14).w,d0
 	lsr.w	#1,d0
 	add.w	objoff_3C(a0),d0
 	move.w	d0,y_pos(a0)
-+
+ .IfNotReachingYBound:
 	moveq	#0,d1
 	move.b	width_pixels(a0),d1
 	moveq	#0,d3
@@ -20945,34 +20948,34 @@ Obj15_State7:
 	move.w	x_pos(a0),-(sp)
 	bsr.w	ObjectMove
 	btst	#1,status(a0)
-	beq.s	+
+	beq.s	.KeepFallingMidAir
 	addi.w	#$18,y_vel(a0)
 	move.w	(Water_Level_2).w,d0
 	cmp.w	y_pos(a0),d0
-	bhi.s	++
+	bhi.s	.BranchToPlatformSolids
 	move.w	d0,y_pos(a0)
 	move.w	d0,objoff_3C(a0)
 	bclr	#1,status(a0)
 	move.w	#$100,x_vel(a0)
 	move.w	#0,y_vel(a0)
-	bra.s	++
+	bra.s	.BranchToPlatformSolids
 ; ===========================================================================
-+
+.KeepFallingMidAir
 	moveq	#0,d0
 	move.b	(Oscillating_Data+$14).w,d0
 	lsr.w	#1,d0
 	add.w	objoff_3C(a0),d0
 	move.w	d0,y_pos(a0)
 	tst.w	x_vel(a0)
-	beq.s	+
+	beq.s	.BranchToPlatformSolids
 	moveq	#0,d3
 	move.b	width_pixels(a0),d3
 	jsrto	(ObjCheckRightWallDist).l, JmpTo_ObjCheckRightWallDist
 	tst.w	d1
-	bpl.s	+
+	bpl.s	.BranchToPlatformSolids
 	add.w	d1,x_pos(a0)
 	move.w	#0,x_vel(a0)
-+
+ .BranchToPlatformSolids:
 	moveq	#0,d1
 	move.b	width_pixels(a0),d1
 	moveq	#0,d3
@@ -20986,12 +20989,12 @@ Obj15_State7:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj15_MapUnc_101E8:	BINCLUDE "mappings/sprite/obj15_a.bin"
-
+                         even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj15_Obj83_MapUnc_1021E:	BINCLUDE "mappings/sprite/obj83.bin"
-
+                              even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
