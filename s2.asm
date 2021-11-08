@@ -82369,15 +82369,7 @@ JmpTo65_Adjust2PArtPointer ; JmpTo
 
 
 
-CapsuleRoutine = $3C;$3C
-CapsuleTimer = $2C ;$2E;$46
-CapsuleParent = $2E ;$30 ;$42
-CapsuleFlag1 = $12 ;$30 ;$32 ;$12
-AnotherWordedFlag = $16;$34;$44
-SavedYcapsule = $30;$36 ;$30
-ThingyRefrence = $34 ;$46 ;$2E
-MakeThingFlag  = $38;$48 ;$36
-CapsuleChild_ThingRefrence = $3E ;$40 ; the thing you step on to open it
+
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 3E - Egg prison
@@ -82388,12 +82380,13 @@ Obj3E:
 	move.b	routine(a0),d0
 	move.w	Obj3E_Index(pc,d0.w),d1
 	jmp	Obj3E_Index(pc,d1.w)
+
 ; ===========================================================================
 ; off_3F1F2:
 Obj3E_Index:	offsetTable
 		offsetTableEntry.w loc_3F212	;  0
 		offsetTableEntry.w loc_3F278	;  2
-		offsetTableEntry.w loc_3F354	;  4
+		offsetTableEntry.w ObjCapsuleButton	;  4
 		offsetTableEntry.w loc_3F38E	;  6
 		offsetTableEntry.w loc_3F3A8	;  8
 		offsetTableEntry.w loc_3F406	; $A
@@ -82408,7 +82401,7 @@ Obj3E_ObjLoadData:
 
 loc_3F212:
 	movea.l	a0,a1
-	lea	CapsuleChild_ThingRefrence(a0),a3
+	lea	objoff_42(a0),a3 ; then objoff_44 is a parent and parent 3 is a child and then parent 2 is a child then you hit $4A then death
 	lea	Obj3E_ObjLoadData(pc),a2
 	moveq	#3,d1
 	bra.s	loc_3F228
@@ -82423,14 +82416,14 @@ loc_3F228:
 	move.l	(a0),(a1) ; load obj
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
-	move.w	y_pos(a0),SavedYcapsule(a1)
+	move.w	y_pos(a0),objoff_30(a1)
 	move.l	#Obj3E_MapUnc_3F436,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Capsule,1,0),art_tile(a1)
 	move.b	#$84,render_flags(a1)
 	moveq	#0,d0
 	move.b	(a2)+,d0
 	sub.w	d0,y_pos(a1)
-	move.w	y_pos(a1),SavedYcapsule(a1)
+	move.w	y_pos(a1),objoff_30(a1)
 	move.b	(a2)+,routine(a1)
 	move.b	(a2)+,width_pixels(a1)
 	move.b	(a2)+,priority(a1)
@@ -82443,7 +82436,7 @@ loc_3F272:
 
 loc_3F278:
 	moveq	#0,d0
-	move.b	CapsuleRoutine(a0),d0
+	move.b	routine_secondary(a0),d0
 	move.w	off_3F2AE(pc,d0.w),d1
 	jsr	off_3F2AE(pc,d1.w)
 	move.w	#$2B,d1
@@ -82451,7 +82444,7 @@ loc_3F278:
 	move.w	#$18,d3
 	move.w	x_pos(a0),d4
 	jsr	(SolidObject).l
-	lea	(Ani_obj3E).l,a1
+	lea	(Ani_Obj_EggPrison).l,a1
 	jsr	(AnimateSprite).l
 	jmp	(MarkObjGone).l
 ; ===========================================================================
@@ -82462,28 +82455,28 @@ off_3F2AE:	offsetTable
 ; ===========================================================================
 
 loc_3F2B4:
-	movea.w	CapsuleChild_ThingRefrence(a0),a1 ; a1=object
-	tst.w	MakeThingFlag(a1)
+	movea.w	objoff_42(a0),a1 ; a1=object
+	tst.b	objoff_32(a1)
 	beq.s	++	; rts
-	movea.w	ThingyRefrence(a0),a2 ; a2=object
+	movea.w	objoff_44(a0),a2 ; a2=object
 	jsr	(SingleObjLoad).l
 	bne.s	+
 	move.l	#Obj27,(a1) ; load obj
-	move.b	#0,routine(a1)
+	addq.b	#2,routine(a1)
 	move.w	x_pos(a2),x_pos(a1)
 	move.w	y_pos(a2),y_pos(a1)
 +
 	move.w	#-$400,y_vel(a2)
 	move.w	#$800,x_vel(a2)
-	addq.b	#2,CapsuleRoutine(a2)
-	move.w	#$1D,CapsuleTimer(a0)
-	addq.b	#2,CapsuleRoutine(a0)
+	addq.b	#2,routine_secondary(a2) ; go to return_3F352
+	move.b	#$1D,objoff_34(a0)
+	addq.b	#2,routine_secondary(a0) ; go to loc_3F2FC
 +
 	rts
 ; ===========================================================================
 
 loc_3F2FC:
-	subq.w	#1,CapsuleTimer(a0)
+	subq.b	#1,objoff_34(a0)
 	bpl.s	return_3F352
 	move.b	#1,anim(a0)
 	moveq	#7,d6
@@ -82492,44 +82485,46 @@ loc_3F2FC:
 
 -	jsr	(SingleObjLoad).l
 	bne.s	+
-	move.L	#Obj28,(a1) ; load obj
+	move.l	#Obj28,(a1) ; load obj
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	add.w	d4,x_pos(a1)
-	move.b	#1,CapsuleFlag1(a1)
+	move.b	#1,objoff_38(a1)
 	addq.w	#7,d4
-	move.w	d5,AnotherWordedFlag(a1)
+	move.w	d5,objoff_36(a1)
 	subq.w	#8,d5
 	dbf	d6,-
 +
-	movea.w	CapsuleParent(a0),a2 ; a2=object
-	move.w	#$B4,anim_frame_duration(a2)
-	addq.b	#2,CapsuleRoutine(a2)
-	addq.b	#2,CapsuleRoutine(a0)
+	movea.w	parent3(a0),a2 ; a2=object
+;	move.l  #DeleteObject,(a2)
+;	move.l  #DeleteObject,(a1)
+	move.b	#$B4,anim_frame_duration(a2)
+	addq.b	#2,routine_secondary(a2)
+	addq.b	#2,routine_secondary(a0)
 
 return_3F352:
 	rts
 ; ===========================================================================
-
-loc_3F354:
+         ; object that displays and sets a flag when standing on it
+ObjCapsuleButton:
 	move.w	#$1B,d1
 	move.w	#8,d2
 	move.w	#8,d3
 	move.w	x_pos(a0),d4
 	jsr	(SolidObject).l
-	move.w	SavedYcapsule(a0),y_pos(a0)
+	move.w	objoff_30(a0),y_pos(a0)
 	move.b	status(a0),d0
 	andi.b	#standing_mask,d0
 	beq.s	+
 	addq.w	#8,y_pos(a0)
 	clr.b	(Update_HUD_timer).w
-	move.w	#1,MakeThingFlag(a0)
+	move.b	#1,objoff_32(a0)
 +
 	jmp	(MarkObjGone).l
 ; ===========================================================================
-
+        ; small object partical that falls
 loc_3F38E:
-	tst.b	CapsuleRoutine(a0)
+	tst.b	routine_secondary(a0)
 	beq.s	+
 	tst.b	render_flags(a0)
 	bpl.w	JmpTo66_DeleteObject
@@ -82544,14 +82539,15 @@ JmpTo66_DeleteObject ; JmpTo
 ; ===========================================================================
 
 loc_3F3A8:
-	tst.b	CapsuleRoutine(a0)
-	beq.s	return_3F404
+
+	tst.b	routine_secondary(a0) ; was the anim reset ?
+	beq.s	return_3F404           ; if not do nothing if it is then start spawning animals
 	move.b	(Vint_runcount+3).w,d0
 	andi.b	#7,d0
 	bne.s	loc_3F3F4
 	jsr	(SingleObjLoad).l
 	bne.s	loc_3F3F4
-	move.L	#Obj28,(a1) ; load obj
+	move.l	#Obj28,(a1) ; load obj
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	jsr	(RandomNumber).l
@@ -82562,14 +82558,14 @@ loc_3F3A8:
 	neg.w	d0
 +
 	add.w	d0,x_pos(a1)
-	move.b	#1,CapsuleFlag1(a1)
-	move.w	#$C,AnotherWordedFlag(a1)
+	move.b	#1,objoff_38(a1)
+	move.w	#$C,objoff_36(a1)
 
 loc_3F3F4:
-	subq.w	#1,anim_frame_duration(a0)
+	subq.b	#1,anim_frame_duration(a0)
 	bne.s	return_3F404
-	addq.b	#2,routine(a0)
-	move.w	#$B4,anim_frame_duration(a0)
+	addq.b	#2,routine(a0) ; go to loc_3F406
+	move.b	#$B4,anim_frame_duration(a0)
 
 return_3F404:
 	rts
@@ -82592,7 +82588,7 @@ loc_3F406:
 ; ===========================================================================
 ; animation script
 ; off_3F428:
-Ani_obj3E:	offsetTable
+Ani_Obj_EggPrison:	offsetTable
 		offsetTableEntry.w byte_3F42C	; 0
 		offsetTableEntry.w byte_3F42F	; 1
 byte_3F42C:	dc.b  $F,  0,$FF
@@ -82603,6 +82599,7 @@ byte_3F42F:	dc.b   3,  0,  1,  2,  3,$FE,  1
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj3E_MapUnc_3F436:	BINCLUDE "mappings/sprite/obj3E.bin"
+        even
 ; ===========================================================================
 
     if gameRevision<2
@@ -86297,6 +86294,7 @@ DbgObjList_Test: dbglistheader
 DbgObjList_Test_End
 
 DbgObjList_MCZ: dbglistheader
+        dbglistobj Obj3E,		Obj25_MapUnc_12382,   0,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0) ; obj25 = ring
 	dbglistobj Obj25,		Obj25_MapUnc_12382,   0,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0) ; obj25 = ring
 	dbglistobj Obj26,         	Obj26_MapUnc_12D36,   8,   0, make_art_tile(ArtTile_ArtNem_Powerups,0,0) ; obj26 = monitor
 	dbglistobj Obj79,	Obj79_MapUnc_1F424,   1,   0, make_art_tile(ArtTile_ArtNem_Checkpoint,0,0)
