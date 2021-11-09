@@ -82387,16 +82387,17 @@ Obj3E_Index:	offsetTable
 		offsetTableEntry.w loc_3F212	;  0
 		offsetTableEntry.w loc_3F278	;  2
 		offsetTableEntry.w ObjCapsuleButton	;  4
-		offsetTableEntry.w loc_3F38E	;  6
+		offsetTableEntry.w Obj_CapsuleFlyingPartical	;  6
 		offsetTableEntry.w loc_3F3A8	;  8
 		offsetTableEntry.w loc_3F406	; $A
 ; ----------------------------------------------------------------------------
 ; byte_3F1FE:
 Obj3E_ObjLoadData:
+        ; child_dy,routine,width,prio,frame
 	dc.b   0,  2,$20,  4,  0
 	dc.b $28,  4,$10,  5,  4	; 5
-	dc.b $18,  6,  8,  3,  5	; 10
-	dc.b   0,  8,$20,  4,  0	; 15
+	dc.b $18,  6,  8,  3,  5	; 10  ; flying partical object ( when you hit the button)
+	dc.b   0,  8,$20,  4,  0	; 15  ; unused ? 
 ; ===========================================================================
 
 loc_3F212:
@@ -82469,14 +82470,14 @@ loc_3F2B4:
 	move.w	#-$400,y_vel(a2)
 	move.w	#$800,x_vel(a2)
 	addq.b	#2,routine_secondary(a2) ; go to return_3F352
-	move.b	#$1D,objoff_34(a0)
+	move.w	#$1D,objoff_34(a0)
 	addq.b	#2,routine_secondary(a0) ; go to loc_3F2FC
 +
 	rts
 ; ===========================================================================
 
 loc_3F2FC:
-	subq.b	#1,objoff_34(a0)
+	subq.w	#1,objoff_34(a0)
 	bpl.s	return_3F352
 	move.b	#1,anim(a0)
 	moveq	#7,d6
@@ -82489,9 +82490,9 @@ loc_3F2FC:
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	add.w	d4,x_pos(a1)
-	move.b	#1,objoff_38(a1)
+	move.b	#1,animal_ground_x_vel(a1) ; 38
 	addq.w	#7,d4
-	move.w	d5,objoff_36(a1)
+	move.w	d5,animal_ground_y_vel(a1) ;36
 	subq.w	#8,d5
 	dbf	d6,-
 +
@@ -82522,8 +82523,8 @@ ObjCapsuleButton:
 +
 	jmp	(MarkObjGone).l
 ; ===========================================================================
-        ; small object partical that falls
-loc_3F38E:
+        ; small object partical that falls   and uhh gets an y and x speed from parent
+Obj_CapsuleFlyingPartical:
 	tst.b	routine_secondary(a0)
 	beq.s	+
 	tst.b	render_flags(a0)
@@ -82537,7 +82538,7 @@ JmpTo66_DeleteObject ; JmpTo
 	jmp	(DeleteObject).l
     endif
 ; ===========================================================================
-
+     ; idk object
 loc_3F3A8:
 
 	tst.b	routine_secondary(a0) ; was the anim reset ?
@@ -82558,8 +82559,8 @@ loc_3F3A8:
 	neg.w	d0
 +
 	add.w	d0,x_pos(a1)
-	move.b	#1,objoff_38(a1)
-	move.w	#$C,objoff_36(a1)
+	move.b	#1,animal_ground_x_vel(a1)  ; 38
+	move.w	#$C,animal_ground_y_vel(a1) ; 36
 
 loc_3F3F4:
 	subq.b	#1,anim_frame_duration(a0)
