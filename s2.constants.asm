@@ -157,6 +157,7 @@ mainspr_mapframe	= $16 ;$12 ; also these varables also work but i decided to use
 mainspr_width		= width_pixels ;$13
 mainspr_height		= height_pixels ;$16
 mainspr_childsprites 	= $17	; amount of child sprites
+mainspr_childsprites_S3K = $16
 ;------------------------------------------------------------------------------
 sub2_x_pos		= $18	;x_vel
 sub2_y_pos		= $1A	;y_vel
@@ -413,6 +414,7 @@ VintID_PCM =		id(Vint_PCM_ptr) ; 14
 VintID_Menu =		id(Vint_Menu_ptr) ; 16
 VintID_Ending =		id(Vint_Ending_ptr) ; 18
 VintID_CtrlDMA =	id(Vint_CtrlDMA_ptr) ; 1A
+VintID_Savescreen =	id(Vint_Save_Screen)
 
 ; Game modes
 offset :=	GameModesArray
@@ -430,6 +432,7 @@ GameModeID_2PLevelSelect =	id(GameMode_2PLevelSelect) ; 1C
 GameModeID_EndingSequence =	id(GameMode_EndingSequence) ; 20
 GameModeID_OptionsMenu =	id(GameMode_OptionsMenu) ; 24
 GameModeID_LevelSelect =	id(GameMode_LevelSelect) ; 28
+GameModeID_save_screen =	id(GameMode_save_screen)
 GameModeFlag_TitleCard =	7 ; flag bit
 GameModeID_TitleCard =		1<<GameModeFlag_TitleCard ; flag mask
 
@@ -823,7 +826,13 @@ MusID__End =		id(zMusIDPtr__End)	; A0
 		fatal "You have too many SndPtrs. MusID__End ($\{MusID__End}) can't exceed SndID__First ($\{SndID__First})."
 	endif
     endif
-
+mus_DataSelect = $20
+sfx_Switch = $50
+sfx_Starpost = $40
+sfx_Perfect = $30
+sfx_EnterSS = $60
+sfx_SmallBumpers = $70
+sfx_SlotMachine = $71
 ; Sound IDs
 offset :=	SoundIndex
 ptrsize :=	2
@@ -1055,6 +1064,7 @@ Block_Table_End:
 
 TempArray_LayerDef:		ds.b	$200	; used by some layer deformation routines
 Decomp_Buffer:			ds.b	$200
+
 Sprite_Table_Input:		ds.b	$400	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
 Sprite_Table_Input_End:
 
@@ -1070,7 +1080,7 @@ Reserved_object_3		ds.b object_size	; during a level, an object whose sole purpo
 
 Dynamic_object_RAM:
 Dynamic_Object_RAM:	        ds.b object_size*90	; $1A04 bytes ; 90 objects
-Dynamic_Object_RAM_End =	*    
+Dynamic_Object_RAM_End =	*
 Level_object_RAM:             = Dynamic_Object_RAM_End	; $4EA bytes ; various fixed in-level objects
 ;--------------------------------------------------------------------------------------------
 ;RamVarables that were not reserved in s3k but their slots still exists
@@ -1105,7 +1115,7 @@ Sonic_Dust:			; Sonic's spin dash dust
 				ds.b	object_size
 Tails_Dust:			; Tails' spin dash dust
 				ds.b	object_size
-Shield:				
+Shield:
 Sonic_Shield:
 				ds.b	object_size
 Tails_Shield:
@@ -1123,7 +1133,7 @@ Tails_InvincibilityStars:
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
-Object_RAM_End:            
+Object_RAM_End:
 Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff
 Sprite_Table_2:                = Kos_decomp_buffer+$800 ; bc KosM doesnt get used in 2p mode
 Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
@@ -1137,16 +1147,20 @@ Kos_description_field		ds.w 1
 Kos_last_module_size:           ds.w    1
 Kos_module_destination:         ds.w  1
 Kos_modules_left:               ds.b 1
-                                ds.b	$5	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
+Kos_decomp_buffer_END:
+                                ds.b  1  ; unused odd
+                      ds.w   1
+                                ds.b	$2	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
+DMA_queue:
 VDP_Command_Buffer:		ds.w	7*$12	; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.l	1	; stores the address of the next open slot for a queued VDP command
-
+DMA_queue_slot:            = VDP_Command_Buffer_Slot
 
 Horiz_Scroll_Buf:		ds.b	$380
 Horiz_Scroll_Buf_End:
 Sonic_Stat_Record_Buf:		ds.b	$100
 Sonic_Pos_Record_Buf:		ds.b	$100
-Tails_Pos_Record_Buf:		ds.b	$100
+Tails_Pos_Record_Buf:		ds.b	$100  
 CNZ_saucer_data:		ds.b	$40	; the number of saucer bumpers in a group which have been destroyed. Used to decide when to give 500 points instead of 10
 CNZ_saucer_data_End:
 Ring_Positions:			ds.b	$600
@@ -1260,8 +1274,10 @@ Underwater_palette_line2:	ds.b palette_line_size
 Underwater_palette_line3:	ds.b palette_line_size
 Underwater_palette_line4:	ds.b palette_line_size
 
-             			ds.b	$500	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
-
+             			ds.b	$458	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
+Competition_saved_data:         ds.b    $54     ; whatever you wanna use in compition mode
+Saved_data                      ds.b    $54     ;data select
+Game_mode:
 Game_Mode:			ds.w	1	; 1 byte ; see GameModesArray (master level trigger, Mstr_Lvl_Trigger)
 Ctrl_1_Logical:					; 2 bytes
 Ctrl_1_Held_Logical:		ds.b	1	; 1 byte
@@ -1272,9 +1288,17 @@ Ctrl_1_Press:			ds.b	1	; 1 byte
 Ctrl_2:						; 2 bytes
 Ctrl_2_Held:			ds.b	1	; 1 byte
 Ctrl_2_Press:			ds.b	1	; 1 byte
+Ctrl_1_logical =		Ctrl_1_Logical;*			; both held and pressed
+Ctrl_1_held_logical =		Ctrl_1_Held_Logical
+Ctrl_1_pressed_logical =	Ctrl_1_Press_Logical		; both held and pressed
+Ctrl_1_held =			Ctrl_1_Held			; all held buttons
+Ctrl_1_pressed =		Ctrl_1_Press			; buttons being pressed newly this frame			; both held and pressed
+Ctrl_2_held =			Ctrl_2_Held
+Ctrl_2_pressed =		Ctrl_2_Press
 				ds.b	4	; $FFFFF608-$FFFFF60B ; seems unused
 VDP_Reg1_val:			ds.w	1	; normal value of VDP register #1 when display is disabled
-				ds.b	4	; $FFFFF60E-$FFFFF613 ; seems unused
+VDP_reg_1_command:              = VDP_Reg1_val
+_unkEF44_1:				ds.l	1	; $FFFFF60E-$FFFFF613 ; seems unused
 Slotted_object_bits:		ds.b    2
 Demo_Time_left:			ds.w	1	; 2 bytes
 
@@ -1295,15 +1319,19 @@ Palette_fade_length:		ds.b	1	; Number of entries to change in the palette fading
 MiscLevelVariables:
 VIntSubE_RunCount:		ds.b	1
 				ds.b	1	; $FFFFF629 ; seems unused
+V_int_routine:
 Vint_routine:			ds.b	1	; was "Delay_Time" ; routine counter for V-int
 				ds.b	1	; $FFFFF62B ; seems unused
+Sprites_drawn:
 Sprite_count:			ds.b	1	; the number of sprites drawn in the current frame
-				ds.b	5	; $FFFFF62D-$FFFFF631 ; seems unused
+                                ds.b    1
+Spritemask_flag:                                ds.w    1
+				ds.b	2	; $FFFFF62D-$FFFFF631 ; seems unused
 PalCycle_Frame:			ds.w	1	; ColorID loaded in PalCycle
 PalCycle_Timer:			ds.w	1	; number of frames until next PalCycle call
 RNG_seed:			ds.l	1	; used for random number generation
 Game_paused:			ds.w	1
-				ds.b	4	; $FFFFF63C-$FFFFF63F ; seems unused
+Use_normal_sprite_table:	ds.l	1	; $FFFFF63C-$FFFFF63F ; seems unused
 DMA_data_thunk:			ds.w	1	; Used as a RAM holder for the final DMA command word. Data will NOT be preserved across V-INTs, so consider this space reserved.
 				ds.w	1	; $FFFFF642-$FFFFF643 ; seems unused
 Hint_flag:			ds.w	1	; unless this is 1, H-int won't run
@@ -1400,9 +1428,8 @@ Demo_button_index_2P:		ds.w	1	; index into button press demo data, for player 2
 Demo_press_counter_2P:		ds.w	1	; frames remaining until next button press, for player 2
 Tornado_Velocity_X:		ds.w	1	; speed of tails' plane in scz ($FFFFF736)
 Tornado_Velocity_Y:		ds.w	1
+Save_pointer:			ds.l	1	; $FFFFF73A-$FFFFF73D
 ScreenShift:			ds.b	1
-
-				ds.b	4	; $FFFFF73B-$FFFFF73E
 Boss_CollisionRoutine:		ds.b	1
 Boss_AnimationArray:		ds.b	$10	; up to $10 bytes; 2 bytes per entry
 Ending_Routine:
@@ -1440,7 +1467,7 @@ Obj_respawn_index_P2:		ds.b	2	; respawn table indices of the next objects when m
 
 Demo_button_index:		ds.w	1	; index into button press demo data, for player 1
 Demo_press_counter:		ds.b	1	; frames remaining until next button press, for player 1
-				ds.b	1	; $FFFFF793 ; seems unused
+Emeralds_converted_flag:	ds.b	1
 PalChangeSpeed:			ds.w	1
 Collision_addr:			ds.l	1
 				ds.b	$4	; $FFFFF79A-$FFFFF7A6 ; seems unused
@@ -1451,7 +1478,8 @@ Obj_index_Addr_Loc:			ds.l    1
 Boss_defeated_flag:		ds.b	1
 Screen_Y_wrap_value:		ds.w	1	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
-				ds.b	5	; $FFFFF7AB-$FFFFF7AF ; seems unused
+Super_emerald_count:            ds.b    1
+Collected_special_ring_array:	ds.l	1	; $FFFFF7AB-$FFFFF7AF ; seems unused
 MTZ_Platform_Cog_X:			ds.w	1	; X position of moving MTZ platform for cog animation.
 MTZCylinder_Angle_Sonic:	ds.b	1
 MTZCylinder_Angle_Tails:	ds.b	1
@@ -1505,6 +1533,7 @@ System_Stack:
 SS_2p_Flag:				ds.w	1	; $FFFFFE00-$FFFFFE01 ; seems unused
 Level_Inactive_flag:		ds.w	1	; (2 bytes)
 Timer_frames:			ds.w	1	; (2 bytes)
+Level_frame_counter:                   = Timer_frames
 Debug_object:			ds.b	1
 				ds.b	1	; $FFFFFE07 ; seems unused
 Debug_placement_mode:		ds.b	1
@@ -1513,6 +1542,7 @@ Debug_Accel_Timer:	ds.b	1
 Debug_Speed:		ds.b	1
 Vint_runcount:			ds.l	1
 
+Current_zone_and_act:
 Current_ZoneAndAct:				; 2 bytes
 Current_Zone:			ds.b	1	; 1 byte
 Current_Act:			ds.b	1	; 1 byte
@@ -1520,6 +1550,7 @@ Life_count:			ds.b	1
 				ds.b	3	; $FFFFFE13-$FFFFFE15 ; seems unused
 
 Current_Special_StageAndAct:	; 2 bytes
+Current_special_stage:
 Current_Special_Stage:		ds.b	1
 Current_Special_Act:		ds.b	1
 Continue_count:			ds.b	1
@@ -1630,12 +1661,14 @@ Loser_Time_Left:				; 2 bytes
 Results_Screen_2P:		ds.w	1	; 0 = act, 1 = zone, 2 = game, 3 = SS, 4 = SS all
 				ds.b	$E	; $FFFFFF12-$FFFFFF1F ; seems unused
 
+Events_bg:
 Results_Data_2P:				; $18 (24) bytes
 EHZ_Results_2P:			ds.b	6	; 6 bytes
 MCZ_Results_2P:			ds.b	6	; 6 bytes
 CNZ_Results_2P:			ds.b	6	; 6 bytes
 SS_Results_2P:			ds.b	6	; 6 bytes
 Results_Data_2P_End:
+
 
 SS_Total_Won:			ds.b	2	; 2 bytes (player 1 then player 2)
 				ds.b	6	; $FFFFFF3A-$FFFFFF3F ; seems unused
@@ -1660,13 +1693,16 @@ SlotMachine_Slot2Rout:	ds.b	1
 SlotMachine_Slot3Pos:	ds.w	1
 SlotMachine_Slot3Speed:	ds.b	1
 SlotMachine_Slot3Rout:	ds.b	1
-
-				ds.b	$10	; $FFFFFF60-$FFFFFF6F ; seems unused
+Dataselect_entry:               ds.b    1
+                                ds.b    1 ; unused
+Dataselect_nosave_player:       ds.w    1
+				ds.b	$C	; $FFFFFF60-$FFFFFF6F ; seems unused
 
 Player_mode:			ds.w	1	; 0 = Sonic and Tails, 1 = Sonic, 2 = Tails
 Player_option:			ds.w	1	; 0 = Sonic and Tails, 1 = Sonic, 2 = Tails
 
 Two_player_items:		ds.w	1
+_unkEEEA:
 				ds.b	$A	; $FFFFFF76-$FFFFFF7F ; seems unused
 
 LevSel_HoldTimer:		ds.w	1
@@ -1680,10 +1716,11 @@ Two_player_mode_copy:		ds.w	1
 Options_menu_box:		ds.b	1
 				ds.b	1	; $FFFFFF8D ; unused
 Total_Bonus_Countdown:		ds.w	1
-				
+
 Level_Music:			ds.w	1
 Bonus_Countdown_3:		ds.w	1
-				ds.b	4	; $FFFFFF94-$FFFFFF97 ; seems unused
+Emerald_flicker_flag:		ds.w	1
+SRAM_mask_interrupts_flag:      ds.w    1
 Game_Over_2P:			ds.w	1
 
 				ds.b	6	; $FFFFFF9A-$FFFFFF9F ; seems unused
@@ -1693,7 +1730,8 @@ SS2p_RingBuffer:		ds.w	6
 Got_Emerald:			ds.b	1
 Emerald_count:			ds.b	1
 Got_Emeralds_array:		ds.b	7	; 7 bytes
-				ds.b	7	; $FFFFFFB9-$FFFFFFBF ; filler
+Collected_emeralds_array =      Got_Emeralds_array
+				ds.b	7	; $FFFFFFB9-$FFFFFFBF ; filler  (appearently super emeralds lmao)
 Next_Extra_life_score:		ds.l	1
 Next_Extra_life_score_2P:	ds.l	1
 Level_Has_Signpost:		ds.w	1	; 1 = signpost, 0 = boss or nothing
@@ -1709,6 +1747,7 @@ S1_hidden_credits_flag:		ds.b	1	; Leftover from Sonic 1. This NEEDs to be after 
 Correct_cheat_entries:		ds.w	1
 Correct_cheat_entries_2:	ds.w	1	; for 14 continues or 7 emeralds codes
 
+Competition_mode:
 Two_player_mode:		ds.w	1	; flag (0 for main game)
 unk_FFDA:			ds.w	1	; Written to once at title screen, never read from
 unk_FFDC:			ds.b	1	; Written to near loc_175EA, never read from
@@ -1988,6 +2027,7 @@ Z80_Bus_Request =		$A11100
 Z80_Reset =			$A11200
 
 Security_Addr =			$A14000
+SRAM_access_flag =		$A130F1 ; 1 for saving something in s ram 0 is for no saving simple ?
 
 ; ---------------------------------------------------------------------------
 ; I/O Area 
@@ -2144,7 +2184,10 @@ ArtTile_ArtNem_ContinueText_2         = ArtTile_ArtNem_ContinueText + $24
 ArtTile_ArtNem_MiniContinue           = $0524
 ArtTile_ContinueScreen_Additional     = $0590
 ArtTile_ContinueCountdown             = $06FC
-
+; Save screen.
+ArtTile_ArtKos_Save_Misc              = $029F
+ArtTile_ArtKos_Save_Extra             = $0454
+ArtTile_ArtKos_S3MenuBG               = $0001
 ; ---------------------------------------------------------------------------
 ; Level art stuff.
 ArtTile_ArtKos_LevelArt               = $0000

@@ -108,9 +108,11 @@ ROMEndLoc:
 	dc.l EndOfRom-1		; End address of ROM
 	dc.l RAM_Start&$FFFFFF		; Start address of RAM
 	dc.l (RAM_End-1)&$FFFFFF		; End address of RAM
-	dc.b "    "		; Backup RAM ID
-	dc.l $20202020		; Backup RAM start address
-	dc.l $20202020		; Backup RAM end address
+ExternalRam:       dc.b  "RA"
+RamType:        dc.b  $F8
+Space        dc.b  " "
+RamStartLocation  dc.l  $200001
+RamEndingLocation  dc.l  $2003FF
 	dc.b "            "	; Modem support
 	dc.b "                                        "	; Notes (unused, anything can be put in this space, but it has to be 52 bytes.)
 	dc.b "JUE             " ; Country code (region)
@@ -353,27 +355,30 @@ GameClrRAM:
 	bsr.w	VDPSetupGame
 	bsr.w	JmpTo_SoundDriverLoad
 	bsr.w	JoypadInit
+	jsr     (SRAM_Load).l ; s ram wont even work without this lol
 	move.b	#GameModeID_SegaScreen,(Game_Mode).w ; set Game Mode to Sega Screen
 ; loc_394:
 MainGameLoop:
-	move.b	(Game_Mode).w,d0 ; load Game Mode
-	andi.w	#$3C,d0	; limit Game Mode value to $3C max (change to a maximum of 7C to add more game modes)
-	jsr	GameModesArray(pc,d0.w)	; jump to apt location in ROM
+	move.b	(Game_mode).w,d0
+	andi.w	#$7C,d0
+	movea.l	GameModesArray(pc,d0.w),a0
+	jsr	(a0)
 	bra.s	MainGameLoop	; loop indefinitely
 ; ===========================================================================
 ; loc_3A2:
 GameModesArray: ;;
-GameMode_SegaScreen:	bra.w	SegaScreen		; SEGA screen mode
-GameMode_TitleScreen:	bra.w	TitleScreen		; Title screen mode
-GameMode_Demo:		bra.w	Level			; Demo mode
-GameMode_Level:		bra.w	Level			; Zone play mode
-GameMode_SpecialStage:	bra.w	SpecialStage		; Special stage play mode
-GameMode_ContinueScreen:bra.w	ContinueScreen		; Continue mode
-GameMode_2PResults:	bra.w	TwoPlayerResults	; 2P results mode
-GameMode_2PLevelSelect:	bra.w	LevelSelectMenu2P	; 2P level select mode
-GameMode_EndingSequence:bra.w	JmpTo_EndingSequence	; End sequence mode
-GameMode_OptionsMenu:	bra.w	OptionsMenu		; Options mode
-GameMode_LevelSelect:	bra.w	LevelSelectMenu		; Level select mode
+GameMode_SegaScreen:	dc.l	SegaScreen		; SEGA screen mode
+GameMode_TitleScreen:	dc.l	TitleScreen		; Title screen mode
+GameMode_Demo:		dc.l	Level			; Demo mode
+GameMode_Level:		dc.l	Level			; Zone play mode
+GameMode_SpecialStage:	dc.l	SpecialStage		; Special stage play mode
+GameMode_ContinueScreen:dc.l	ContinueScreen		; Continue mode
+GameMode_2PResults:	dc.l	TwoPlayerResults	; 2P results mode
+GameMode_2PLevelSelect:	dc.l	LevelSelectMenu2P	; 2P level select mode
+GameMode_EndingSequence:dc.l	JmpTo_EndingSequence	; End sequence mode
+GameMode_OptionsMenu:	dc.l	OptionsMenu		; Options mode
+GameMode_LevelSelect:	dc.l	LevelSelectMenu		; Level select mode
+GameMode_save_screen:	dc.l	s3_save_screen
 ; ===========================================================================
     if skipChecksumCheck=0	; checksum error code
 ; loc_3CE:
@@ -456,6 +461,7 @@ Vint_PCM_ptr:		offsetTableEntry.w Vint_PCM			; $14
 Vint_Menu_ptr:		offsetTableEntry.w Vint_Menu		; $16
 Vint_Ending_ptr:	offsetTableEntry.w Vint_Ending		; $18
 Vint_CtrlDMA_ptr:	offsetTableEntry.w Vint_CtrlDMA		; $1A
+Vint_Save_Screen:       offsetTableEntry.w VInt_1E                     ;1C
 ; ===========================================================================
 ;VintSub0
 Vint_Lag:
@@ -856,6 +862,14 @@ Vint_CtrlDMA:
 	jsr	(ProcessDMAQueue).l
 	startZ80
 	rts
+VInt_1E:
+		bsr.w	Do_ControllerPal
+		jsr     ProcessDMAQueue
+		movea.l	(_unkEF44_1).w,a0
+		jsr	(a0)
+		jsr	ProcessDPLC2 ;Process_Nem_Queue_2
+
+		jmp	(Set_Kos_Bookmark).l
 ; ===========================================================================
 ;VintSubC
 Vint_TitleCard:
@@ -1252,6 +1266,7 @@ VDPSetupArray_End:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_1208:
+Clear_DisplayData:
 ClearScreen:
 	stopZ80
 
@@ -1323,6 +1338,8 @@ PlayMusic:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_1370
+Play_Sound:
+Play_Sound_2:
 PlaySound:
 	move.b	d0,(SFX_to_play).w
 	rts
@@ -1441,6 +1458,7 @@ Pause_SlowMo:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; sub_140E: ShowVDPGraphics: PlaneMapToVRAM:
+Plane_Map_To_VRAM:
 PlaneMapToVRAM_H40:
 	lea	(VDP_data_port).l,a6
 	move.l	#vdpCommDelta(planeLocH40(0,1)),d4	; $800000
@@ -1452,6 +1470,20 @@ PlaneMapToVRAM_H40:
 	dbf	d2,--		; next line
 	rts
 ; End of function PlaneMapToVRAM_H40
+Plane_Map_To_VRAM_2:
+		lea	(VDP_data_port).l,a6
+		move.l	#$1000000,d4	; row increment value
+-
+		move.l	d0,VDP_control_port-VDP_data_port(a6)
+		move.w	d1,d3
+-
+		move.w	(a1)+,(a6)
+		dbf	d3,-	; copy one row
+		add.l	d4,d0	; move onto next row
+		dbf	d2,--	; and copy it
+		rts
+; End of function Plane_Map_To_VRAM_2
+
 
 ; ---------------------------------------------------------------------------
 ; Alternate subroutine to transfer a plane map to VRAM
@@ -1578,6 +1610,7 @@ ProcessDMAQueue_Done:
 
 ; Nemesis decompression to VRAM
 ; sub_14DE: NemDecA:
+Nem_Decomp:
 NemDec:
 	movem.l	d0-a1/a3-a5,-(sp)
 	lea	(NemDec_WriteAndStay).l,a3 ; write all data to the same location
@@ -2024,6 +2057,7 @@ RunPLC_ROM:
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
 ; EniDec_17BC:
+Eni_Decomp:
 EniDec:
 	movem.l	d0-d7/a1-a5,-(sp)
 	movea.w	d0,a3		; store starting art tile
@@ -2253,6 +2287,7 @@ EniDec_ChkGetNextByte:
 ; For format explanation see http://info.sonicretro.org/Kosinski_compression
 ; ---------------------------------------------------------------------------
 ; KozDec_193A:
+Kos_Decomp:
 KosDec:
 	subq.l	#2,sp
 	move.b	(a0)+,1(sp)
@@ -3559,7 +3594,9 @@ Pal_Result:palette Special Stage Results Screen.bin ; Special Stage Results Scre
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
-; sub_3384: DelayProgram:
+; sub_3384: 
+DelayProgram:
+Wait_VSync:
 WaitForVint:
 	move	#$2300,sr
 
@@ -4003,7 +4040,7 @@ TitleScreen_Loop:
 	or.b	(Ctrl_2_Press).w,d0
 	andi.b	#button_start_mask,d0
 	beq.w	TitleScreen_Loop ; loop until Start is pressed
-	move.b	#GameModeID_Level,(Game_Mode).w ; => Level (Zone play mode)
+	move.b	#GameModeID_save_screen,(Game_Mode).w ; => Level (Zone play mode)
 	move.b	#3,(Life_count).w
 	move.b	#3,(Life_count_2P).w
 	moveq	#0,d0
@@ -4065,6 +4102,20 @@ TitleScreen_ChoseOptions:
 	move.b	#GameModeID_OptionsMenu,(Game_Mode).w ; => OptionsMenu
 	move.b	#0,(Options_menu_box).w
 	rts
+Set_Lives_and_Continues:	
+        move.b	#3,(Life_count).w
+	move.b	#3,(Life_count_2P).w
+	moveq	#0,d0
+	move.w	d0,(Ring_count).w
+	move.l	d0,(Timer).w
+	move.l	d0,(Score).w
+	move.w	d0,(Ring_count_2P).w
+	move.l	d0,(Timer_2P).w
+	move.l	d0,(Score_2P).w
+	move.b	d0,(Continue_count).w
+	move.l	#5000,(Next_Extra_life_score).w
+	move.l	#5000,(Next_Extra_life_score_2P).w
+        rts
 ; ===========================================================================
 ; loc_3D2E:
 TitleScreen_Demo:
@@ -4260,6 +4311,8 @@ loc_5FD6:
 	bsr.w	ClearScreen
 	jsr	(LoadTitleCard).l ; load title card patterns
 	move	#$2300,sr
+	moveq	#PLCID_Std1,d0
+       	jsr	LoadPLC2
 	moveq	#0,d0
 	move.w	d0,(Timer_frames).w
 	move.b	(Current_Zone).w,d0
@@ -4320,6 +4373,7 @@ Level_InitWater:
 	move.w	#$8400|(VRAM_Plane_B_Name_Table/$2000),(a6)	; PNT B base: $E000
 	move.w	#$8500|(VRAM_Sprite_Attribute_Table/$200),(a6)	; Sprite attribute table base: $F800
 	move.w	#$9001,(a6)		; Scroll table size: 64x32
+	move.w	#$9200,(a6)		; Disable window
 	move.w	#$8004,(a6)		; H-INT disabled
 	move.w	#$8720,(a6)		; Background palette/color: 2/0
 	move.w	#$8C81,(a6)		; H res 40 cells, no interlace
@@ -11091,7 +11145,7 @@ MenuScreen:
 	move.w	#$8700,(a6)		; Background palette/color: 0/0
 	move.w	#$8C81,(a6)		; H res 40 cells, no interlace, S/H disabled
 	move.w	#$9001,(a6)		; Scroll table size: 64x32
-
+        move.w	#$9200,(a6)		; Disable window
 	clearRAM Sprite_Table_Input,Sprite_Table_Input_End
 	clearRAM Menus_Object_RAM,Menus_Object_RAM_End
 
@@ -21099,7 +21153,7 @@ Obj17_Init:
 	moveq	#0,d6
 ; loc_10372:
 Obj17_MakeHelix:
-	bsr.w	SingleObjLoad2
+	jsr	SingleObjLoad2
 	bne.s	Obj17_Main
 	addq.b	#1,subtype(a0)
 	move.w	a1,d5
@@ -27340,7 +27394,7 @@ BreakObjectToPieces:	; splits up one object into its current mapping frame piece
 ; ===========================================================================
 ; loc_15E3E:
 BreakObjectToPieces_Loop:
-	bsr.w	SingleObjLoad2
+	jsr	SingleObjLoad2
 	bne.s	loc_15E82
 	addq.w	#8,a3	; next mapping piece
 ; loc_15E46:
@@ -28108,7 +28162,641 @@ Anim_End:
 	rts
 ; End of function AnimateSprite
 
+Render_Sprites:
+           ; 	tst.w	(Competition_mode).w
+	;	bne.w	Render_Sprites_CompetitionMode
+		moveq	#$4F,d7
+		moveq	#0,d6
+		lea	(Sprite_Table_Input).w,a5
+		lea	(Camera_X_pos_copy).w,a3
+		lea	(Sprite_Table).w,a6
+	;	tst.b	(Level_started_flag).w
+	;	beq.s	loc_1AD4A
+	;	jsr	(BuildHUD).l
+	;	jsr	(BuildRings).l
 
+loc_1AD4A:
+		tst.w	(a5)
+		beq.w	Render_Sprites_NextLevel
+		lea	2(a5),a4
+
+loc_1AD54:
+		movea.w	(a4)+,a0 ; a0=object
+		andi.b	#$7F,render_flags(a0)	; clear on-screen flag
+		move.b	render_flags(a0),d6
+		move.w	x_pos(a0),d0
+		move.w	y_pos(a0),d1
+		btst	#6,d6		; is the multi-draw flag set?
+		bne.w	loc_1AE58	; if it is, branch
+		btst	#2,d6		; is this to be positioned by screen coordinates?
+		beq.s	loc_1ADB2	; if it is, branch
+		;cmpi.b  #$9A,d6  ; is it an object that doesnt need rendering ?
+		;beq.w   BuildS2FragmentSprite
+		tst.b   width_pixels(a0) ; is there a wdth ?
+		bne.s   use_wdth          ; no then use collsion size data
+		move.b	x_radius(a0),width_pixels(a0)
+use_wdth:
+		moveq	#0,d2
+		move.b	width_pixels(a0),d2
+Render_x_Object:
+		sub.w	(a3),d0
+		move.w	d0,d3
+		add.w	d2,d3		; is the object right edge to the left of the screen?
+		bmi.s	Render_Sprites_NextObj	; if it is, branch
+		move.w	d0,d3
+		sub.w	d2,d3
+		cmpi.w	#320,d3		; is the object left edge to the right of the screen?
+		bge.s	Render_Sprites_NextObj	; if it is, branch
+		addi.w	#128,d0
+		sub.w	4(a3),d1
+		tst.b   height_pixels(a0) ; has rendering sprite been filled up aka no more free ssts flag
+		bne.s   use_Height
+               	move.b	y_radius(a0),height_pixels(a0)
+use_Height
+		move.b	height_pixels(a0),d2
+DoNormal_Render:
+		add.w	d2,d1
+		and.w	(Screen_Y_wrap_value).w,d1
+		move.w	d2,d3
+		add.w	d2,d2
+		addi.w	#224,d2
+		cmp.w	d2,d1
+		bhs.s	Render_Sprites_NextObj	; if the object is below the screen
+		addi.w	#128,d1
+		sub.w	d3,d1
+
+loc_1ADB2:
+		ori.b	#$80,render_flags(a0)	; set on-screen flag
+		tst.w	d7
+		bmi.s	Render_Sprites_NextObj
+		movea.l	mappings(a0),a1
+		moveq	#0,d4
+		btst	#5,d6		; is the static mappings flag set?
+		bne.s	loc_1ADD8	; if it is, branch
+		move.b	mapping_frame(a0),d4
+		add.w	d4,d4
+		adda.w	(a1,d4.w),a1
+		move.w	(a1)+,d4
+		subq.w	#1,d4		; get number of pieces
+		bmi.s	Render_Sprites_NextObj	; if there are 0 pieces, branch
+
+loc_1ADD8:
+		move.w	art_tile(a0),d5
+		jsr	sub_1AF6C(pc)
+
+Render_Sprites_NextObj:
+		subq.w	#2,(a5)		; decrement object count
+		bne.w	loc_1AD54	; if there are objects left, repeat
+
+Render_Sprites_NextLevel:
+;		cmpa.l	#Sprite_Table_Input,a5
+;		bne.s	+
+;		jsr	(sub_1CB68).l
+
+;+
+		lea	$80(a5),a5	; load next priority level
+		cmpa.l	#Player_1,a5
+		blo.w	loc_1AD4A
+		move.w	d7,d6
+		bmi.s	loc_1AE18
+		moveq	#0,d0
+
+loc_1AE10:
+		move.w	d0,(a6)
+		addq.w	#8,a6
+		dbf	d7,loc_1AE10
+
+loc_1AE18:
+		subi.w	#$4F,d6
+		neg.w	d6
+		move.b	d6,(Sprites_drawn).w
+		tst.w	(Spritemask_flag).w
+		beq.s	locret_1AE56
+		cmpi.b	#6,(Player_1+routine).w
+		bhs.s	loc_1AE34
+		clr.w	(Spritemask_flag).w
+
+loc_1AE34:
+		lea	(Sprite_Table-4).w,a0
+		move.w	#$7C0,d0
+		moveq	#$4E,d1
+
+loc_1AE3E:
+		addq.w	#8,a0
+		cmp.w	(a0),d0
+		dbeq	d1,loc_1AE3E
+		bne.s	locret_1AE56
+		move.w	#1,2(a0)
+		clr.w	art_tile(a0)
+		subq.w	#1,d1
+		bpl.s	loc_1AE3E
+
+locret_1AE56:
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1AE58:
+		btst	#2,d6		; is this to be positioned by screen coordinates?
+		bne.s	loc_1AEA2	; if it is, branch
+		moveq	#0,d2
+
+		; check if object is within X bounds
+		move.b	width_pixels(a0),d2
+		subi.w	#128,d0
+		move.w	d0,d3
+		add.w	d2,d3
+		bmi.w	Render_Sprites_NextObj
+		move.w	d0,d3
+		sub.w	d2,d3
+		cmpi.w	#320,d3
+		bge.w	Render_Sprites_NextObj
+		addi.w	#128,d0
+
+		; check if object is within Y bounds
+		move.b	height_pixels(a0),d2
+		subi.w	#128,d1
+		move.w	d1,d3
+		add.w	d2,d3
+		bmi.w	Render_Sprites_NextObj
+		move.w	d1,d3
+		sub.w	d2,d3
+		cmpi.w	#224,d3
+		bge.w	Render_Sprites_NextObj
+		addi.w	#128,d1
+		bra.s	loc_1AEE4
+; ---------------------------------------------------------------------------
+
+loc_1AEA2:
+		moveq	#0,d2
+		move.b	width_pixels(a0),d2
+		sub.w	(a3),d0
+		move.w	d0,d3
+		add.w	d2,d3
+		bmi.w	Render_Sprites_NextObj
+		move.w	d0,d3
+		sub.w	d2,d3
+		cmpi.w	#$140,d3
+		bge.w	Render_Sprites_NextObj
+		addi.w	#$80,d0
+		sub.w	4(a3),d1 ;???????
+		move.b	height_pixels(a0),d2
+		add.w	d2,d1
+		and.w	(Screen_Y_wrap_value).w,d1
+		move.w	d2,d3
+		add.w	d2,d2
+		addi.w	#$E0,d2
+		cmp.w	d2,d1
+		bhs.w	Render_Sprites_NextObj
+		addi.w	#$80,d1
+		sub.w	d3,d1
+
+loc_1AEE4:
+		ori.b	#$80,4(a0)
+		tst.w	d7
+		bmi.w	Render_Sprites_NextObj
+		move.w	$A(a0),d5
+		movea.l	$C(a0),a2
+		moveq	#0,d4
+		move.b	$22(a0),d4
+		beq.s	loc_1AF1C
+		add.w	d4,d4
+		lea	(a2),a1
+		adda.w	(a1,d4.w),a1
+		move.w	(a1)+,d4
+		subq.w	#1,d4
+		bmi.s	loc_1AF1C
+		move.w	d6,d3
+		jsr	sub_1B070(pc)
+		move.w	d3,d6
+		tst.w	d7
+		bmi.w	Render_Sprites_NextObj
+
+loc_1AF1C:
+		move.w	mainspr_childsprites_S3K(a0),d3
+		subq.w	#1,d3
+		bcs.w	Render_Sprites_NextObj
+		lea	$18(a0),a0
+
+loc_1AF2A:
+		move.w	(a0)+,d0
+		move.w	(a0)+,d1
+		btst	#2,d6
+		beq.s	loc_1AF46
+		sub.w	(a3),d0
+		addi.w	#$80,d0
+		sub.w	4(a3),d1
+		addi.w	#$80,d1
+		and.w	(Screen_Y_wrap_value).w,d1
+
+loc_1AF46:
+		addq.w	#1,a0
+		moveq	#0,d4
+		move.b	(a0)+,d4
+		add.w	d4,d4
+		lea	(a2),a1
+		adda.w	(a1,d4.w),a1
+		move.w	(a1)+,d4
+		subq.w	#1,d4
+		bmi.s	loc_1AF62
+		move.w	d6,-(sp)
+		jsr	sub_1B070(pc)
+		move.w	(sp)+,d6
+
+loc_1AF62:
+     ;           cmpi.l  #Obj15,(a0)
+    ;            beq.s   +
+   ;             swap	d0
+  ;       	dbf	d0,loc_1AF2A
+ ;        	rts
+;+
+		tst.w	d7
+		dbmi	d3,loc_1AF2A
+		bra.w	Render_Sprites_NextObj
+; End of function Render_Sprites
+
+
+; =============== S U B R O U T I N E =======================================
+
+
+sub_1AF6C:
+		lsr.b	#1,d6
+		bcs.s	loc_1AF9E
+		lsr.b	#1,d6
+		bcs.w	loc_1B038
+
+loc_1AF76:
+		move.b	(a1)+,d2
+		ext.w	d2
+		add.w	d1,d2
+		move.w	d2,(a6)+
+		move.b	(a1)+,(a6)+
+		addq.w	#1,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		add.w	d0,d2
+		andi.w	#$1FF,d2
+		bne.s	loc_1AF94
+		addq.w	#1,d2
+
+loc_1AF94:
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1AF76
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1AF9E:
+		lsr.b	#1,d6
+		bcs.s	loc_1AFE8
+
+loc_1AFA2:
+		move.b	(a1)+,d2
+		ext.w	d2
+		add.w	d1,d2
+		move.w	d2,(a6)+
+		move.b	(a1)+,d6
+		move.b	d6,(a6)+
+		addq.w	#1,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		eori.w	#$800,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		neg.w	d2
+		move.b	byte_1AFD8(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d0,d2
+		andi.w	#$1FF,d2
+		bne.s	loc_1AFCE
+		addq.w	#1,d2
+
+loc_1AFCE:
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1AFA2
+		rts
+; ---------------------------------------------------------------------------
+byte_1AFD8:	dc.b 8
+		dc.b 8
+		dc.b 8
+		dc.b 8
+		dc.b $10
+		dc.b $10
+		dc.b $10
+		dc.b $10
+		dc.b $18
+		dc.b $18
+		dc.b $18
+		dc.b $18
+		dc.b $20
+		dc.b $20
+		dc.b $20
+		dc.b $20
+; ---------------------------------------------------------------------------
+
+loc_1AFE8:
+		move.b	(a1)+,d2
+		ext.w	d2
+		neg.w	d2
+		move.b	(a1),d6
+		move.b	byte_1B028(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d1,d2
+		move.w	d2,(a6)+
+		move.b	(a1)+,d6
+		move.b	d6,(a6)+
+		addq.w	#1,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		eori.w	#$1800,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		neg.w	d2
+		move.b	byte_1AFD8(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d0,d2
+		andi.w	#$1FF,d2
+		bne.s	loc_1B01E
+		addq.w	#1,d2
+
+loc_1B01E:
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1AFE8
+		rts
+; ---------------------------------------------------------------------------
+byte_1B028:	dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+		dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+		dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+		dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+; ---------------------------------------------------------------------------
+
+loc_1B038:
+		move.b	(a1)+,d2
+		ext.w	d2
+		neg.w	d2
+		move.b	(a1)+,d6
+		move.b	d6,2(a6)
+		move.b	byte_1B028(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d1,d2
+		move.w	d2,(a6)+
+		addq.w	#2,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		eori.w	#$1000,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		add.w	d0,d2
+		andi.w	#$1FF,d2
+		bne.s	loc_1B066
+		addq.w	#1,d2
+
+loc_1B066:
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1B038
+		rts
+; End of function sub_1AF6C
+
+
+; =============== S U B R O U T I N E =======================================
+
+
+sub_1B070:
+		lsr.b	#1,d6
+		bcs.s	loc_1B0C2
+		lsr.b	#1,d6
+		bcs.w	loc_1B19C
+
+loc_1B07A:
+		move.b	(a1)+,d2
+		ext.w	d2
+		add.w	d1,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B0BA
+		cmpi.w	#$160,d2
+		bhs.s	loc_1B0BA
+		move.w	d2,(a6)+
+		move.b	(a1)+,(a6)+
+		addq.w	#1,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		add.w	d0,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B0B2
+		cmpi.w	#$1C0,d2
+		bhs.s	loc_1B0B2
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1B07A
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B0B2:
+		subq.w	#6,a6
+		dbf	d4,loc_1B07A
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B0BA:
+		addq.w	#5,a1
+		dbf	d4,loc_1B07A
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B0C2:
+		lsr.b	#1,d6
+		bcs.s	loc_1B12C
+
+loc_1B0C6:
+		move.b	(a1)+,d2
+		ext.w	d2
+		add.w	d1,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B114
+		cmpi.w	#$160,d2
+		bhs.s	loc_1B114
+		move.w	d2,(a6)+
+		move.b	(a1)+,d6
+		move.b	d6,(a6)+
+		addq.w	#1,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		eori.w	#$800,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		neg.w	d2
+		move.b	byte_1B11C(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d0,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B10C
+		cmpi.w	#$1C0,d2
+		bhs.s	loc_1B10C
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1B0C6
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B10C:
+		subq.w	#6,a6
+		dbf	d4,loc_1B0C6
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B114:
+		addq.w	#5,a1
+		dbf	d4,loc_1B0C6
+		rts
+; ---------------------------------------------------------------------------
+byte_1B11C:	dc.b 8
+		dc.b 8
+		dc.b 8
+		dc.b 8
+		dc.b $10
+		dc.b $10
+		dc.b $10
+		dc.b $10
+		dc.b $18
+		dc.b $18
+		dc.b $18
+		dc.b $18
+		dc.b $20
+		dc.b $20
+		dc.b $20
+		dc.b $20
+; ---------------------------------------------------------------------------
+
+loc_1B12C:
+		move.b	(a1)+,d2
+		ext.w	d2
+		neg.w	d2
+		move.b	(a1),d6
+		move.b	byte_1B18C(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d1,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B184
+		cmpi.w	#$160,d2
+		bhs.s	loc_1B184
+		move.w	d2,(a6)+
+		move.b	(a1)+,d6
+		move.b	d6,(a6)+
+		addq.w	#1,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		eori.w	#$1800,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		neg.w	d2
+		move.b	byte_1B11C(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d0,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B17C
+		cmpi.w	#$1C0,d2
+		bhs.s	loc_1B17C
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1B12C
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B17C:
+		subq.w	#6,a6
+		dbf	d4,loc_1B12C
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B184:
+		addq.w	#5,a1
+		dbf	d4,loc_1B12C
+		rts
+; ---------------------------------------------------------------------------
+byte_1B18C:	dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+		dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+		dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+		dc.b 8
+		dc.b $10
+		dc.b $18
+		dc.b $20
+; ---------------------------------------------------------------------------
+
+loc_1B19C:
+		move.b	(a1)+,d2
+		ext.w	d2
+		neg.w	d2
+		move.b	(a1)+,d6
+		move.b	d6,2(a6)
+		move.b	byte_1B18C(pc,d6.w),d6
+		sub.w	d6,d2
+		add.w	d1,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B1EC
+		cmpi.w	#$160,d2
+		bhs.s	loc_1B1EC
+		move.w	d2,(a6)+
+		addq.w	#2,a6
+		move.w	(a1)+,d2
+		add.w	d5,d2
+		eori.w	#$1000,d2
+		move.w	d2,(a6)+
+		move.w	(a1)+,d2
+		add.w	d0,d2
+		cmpi.w	#$60,d2
+		bls.s	loc_1B1E4
+		cmpi.w	#$1C0,d2
+		bhs.s	loc_1B1E4
+		move.w	d2,(a6)+
+		subq.w	#1,d7
+		dbmi	d4,loc_1B19C
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B1E4:
+		subq.w	#6,a6
+		dbf	d4,loc_1B19C
+		rts
+; ---------------------------------------------------------------------------
+
+loc_1B1EC:
+		addq.w	#4,a1
+		dbf	d4,loc_1B19C
+		rts
+; End of function sub_1B070
+
+; ---------------------------------------------------------------------------
+
+
+Render_Sprites_CompetitionMode:
+      rts
 ; ---------------------------------------------------------------------------
 ; Subroutine to convert mappings (etc) to proper Megadrive sprites
 ; ---------------------------------------------------------------------------
@@ -75551,7 +76239,7 @@ return_39CEE:
 
 loc_39CF0:
 	moveq	#100,d0
-	bsr.w	AddPoints
+	jsr	AddPoints
 	move.w	#$FF,objoff_36(a0)
 	move.b	#$C,routine(a0)
 	clr.b	collision_flags(a0)
@@ -79469,7 +80157,7 @@ return_3CC3A:
 
 ObjC5_NoHitPointsLeft:	; when the boss is defeated this tells it what to do
 	moveq	#100,d0
-	bsr.w	AddPoints
+	jsr	AddPoints
 	clr.b	collision_flags(a0)
 	move.w	#$EF,HitCount_WFZ(a0)
 	move.b	#$1E,SecondRoutine_WFZBoss(a0)
@@ -81265,7 +81953,7 @@ ObjC7_Flashing:
 ;loc_3E05A
 ObjC7_Beaten:
 	moveq	#100,d0
-	bsr.w	AddPoints
+	jsr	AddPoints
 	clr.b	anim_frame_duration(a0)
 	move.b	#$E,routine_secondary(a0)
 	bset	#7,status(a0)
@@ -82397,7 +83085,7 @@ Obj3E_ObjLoadData:
 	dc.b   0,  2,$20,  4,  0
 	dc.b $28,  4,$10,  5,  4	; 5
 	dc.b $18,  6,  8,  3,  5	; 10  ; flying partical object ( when you hit the button)
-	dc.b   0,  8,$20,  4,  0	; 15  ; unused ? 
+	dc.b   0,  8,$20,  4,  0	; 15  ; unused ?
 ; ===========================================================================
 
 loc_3F212:
@@ -82942,7 +83630,7 @@ loc_3F802:
 
 loc_3F81C:
 	movea.w	a0,a3
-	bsr.w	AddPoints2
+	jsr	AddPoints2
 	move.L	#Obj27,(a1) ; load obj
 	move.b	#0,routine(a1)
 	tst.w	y_vel(a0)
@@ -83512,7 +84200,7 @@ JmpTo_Touch_Rings ; JmpTo
 	align 4
     endif
 
-
+  include "_inc/GameMode_Savescreen.asm"
 
 
 ; ===========================================================================
@@ -83526,9 +84214,7 @@ AniArt_Load:
 	lea	PLC_DYNANM(pc,d1.w),a2
 	move.w	PLC_DYNANM(pc,d0.w),d0
 	jmp	PLC_DYNANM(pc,d0.w)
-; ===========================================================================
-	rts
-; ===========================================================================
+
 
 
 
@@ -88807,7 +89493,56 @@ ArtNem_EndingTails:	BINCLUDE	"art/nemesis/Final image of Tails.bin"
 ; Sonic the Hedgehog 2 image at end of credits	; ArtNem_94B28:
 	even
 ArtNem_EndingTitle:	BINCLUDE	"art/nemesis/Sonic the Hedgehog 2 image at end of credits.bin"
-
+          even
+ MapEni_S3MenuBG:
+       binclude "mappings/enigma-mappings/S3 Menu BG.bin"
+       ;binclude "General/Title/Enigma Map/S3 Menu BG.bin"
+       ;  binclude "mappings/enigma-mappings/S3 Menu BG.bin"
+        ; even
+      ;  dc.b   0,1
+        even
+MapEni_SaveScreen_Layout:
+         binclude "art/Save Menu/Enigma Map/Save Screen Layout.bin"
+         even
+MapPtrs_SaveScreenStatic:
+ 	        dc.l MapUnc_SaveScreenStatic1
+		dc.l MapUnc_SaveScreenStatic2
+		dc.l MapUnc_SaveScreenStatic3
+		dc.l MapUnc_SaveScreenStatic4
+                even
+ArtKos_S3MenuBG:
+    binclude   "art/Save Menu/Kosinski Art/Menu BG.bin"
+    even
+ArtKos_SaveScreenMisc:
+    binclude   "art/Save Menu/Kosinski Art/Misc.bin"
+    even
+ArtKos_SaveScreenS3Zone:
+      binclude  "art/Save Menu/Kosinski Art/Zone Art.bin"
+      even
+ArtKos_SaveScreen:
+          binclude  "misc/SK Extra.bin"
+          even
+ArtKos_SaveScreenSKZone:
+          binclude  "misc/SK Zone Art.bin"
+          even
+ArtKos_SaveScreenPortrait:
+           binclude  "art/Save Menu/Kosinski Art/Portraits.bin"
+           even
+MapUnc_SaveScreenStatic1:
+		binclude "art/Save Menu/Uncompressed Map/Static 1.bin"
+		even
+MapUnc_SaveScreenStatic2:
+		binclude "art/Save Menu/Uncompressed Map/Static 2.bin"
+		even
+MapUnc_SaveScreenStatic3:
+		binclude "art/Save Menu/Uncompressed Map/Static 3.bin"
+		even
+MapUnc_SaveScreenStatic4:
+		binclude "art/Save Menu/Uncompressed Map/Static 4.bin"
+		even
+MapUnc_SaveScreenNEW:
+      binclude	"art/Save Menu/Uncompressed Map/NEW.bin"
+		even
 
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; LEVEL ART AND BLOCK MAPPINGS (16x16 and 128x128)
