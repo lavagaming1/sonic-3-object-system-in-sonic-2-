@@ -1,4 +1,5 @@
 s3_save_screen:
+
 		jsr	(Pal_FadeToBlack).l
 		move	#$2700,sr
 		move.w	(VDP_reg_1_command).w,d0
@@ -159,8 +160,8 @@ loc_C7A4:
 loc_C7CC:
 		move.l	(a0)+,(a1)+
 		dbf	d0,loc_C7CC
-		moveq	#mus_DataSelect,d0
-		jsr	(Play_Sound).l
+		moveq	#$1,d0
+		jsr	(PlaySound).l
 		move.l	#loc_C890,(_unkEF44_1).w
 		move.b	#VintID_Savescreen,(V_int_routine).w
 		jsr	(Wait_VSync).l
@@ -205,7 +206,7 @@ loc_C856:
 		cmpi.b	#GameModeID_save_screen,(Game_mode).w	; are we still in the savescreen mode?
 		beq.s	SaveScreen_MainLoop	; if so, loop
 		moveq	#sfx_EnterSS,d0
-		jmp	(Play_Sound_2).l
+		jmp	(PlaySound).l
 
 ; =============== S U B R O U T I N E =======================================
 
@@ -1930,7 +1931,7 @@ Write_SaveGame:
 SaveGame_NextLevel:	dc.b    1,   1,   2,   2,   3,   3,   4,   4,   8,   8,   5,   5,   6,   6,   7,   7,   9,   9,  $A,  $A
 		dc.b   $C,  $C,  $D,  $D,  $E,  $E,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0
 		dc.b    0,   0,   0,   0,  $A,  $B,  $D,   0
-
+                  even
 ; =============== S U B R O U T I N E =======================================
 
 
@@ -1940,7 +1941,7 @@ SaveGame:
 		move.l	(Save_pointer).w,d0
 		beq.w	loc_C4CC			; If not playing on a save file, get out
 		movea.l	d0,a1
-		move.w	(Current_zone_and_act).w,d0
+		move.w	(Current_ZoneAndAct).w,d0
 		ror.b	#1,d0
 		lsr.w	#7,d0
 		move.b	SaveGame_NextLevel(pc,d0.w),d0

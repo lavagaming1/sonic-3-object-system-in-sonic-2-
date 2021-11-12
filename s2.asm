@@ -2718,75 +2718,99 @@ PalCycle_WFZ:
 ; ----------------------------------------------------------------------------
 ; word_1E5A:
 	BINCLUDE "art/palettes/Title Water.bin"; S1 Title Screen Water palette (unused)
+	even
 ; word_1E7A:
 CyclingPal_EHZ_ARZ_Water:
 	BINCLUDE "art/palettes/EHZ ARZ Water.bin"; Emerald Hill/Aquatic Ruin Rotating Water palette
+	even
 ; word_1E9A:
 CyclingPal_Lava:
 	BINCLUDE "art/palettes/Hill Top Lava.bin"; Hill Top Lava palette
+	even
 ; word_1F1A:
 CyclingPal_WoodConveyor:
 	BINCLUDE "art/palettes/Wood Conveyor.bin"; Wood Conveyor Belts palette
+	even
 ; byte_1F2A:
 CyclingPal_MTZ1:
 	BINCLUDE "art/palettes/MTZ Cycle 1.bin"; Metropolis Cycle #1 palette
+	even
 ; word_1F36:
 CyclingPal_MTZ2:
 	BINCLUDE "art/palettes/MTZ Cycle 2.bin"; Metropolis Cycle #2 palette
+	even
 ; word_1F42:
 CyclingPal_MTZ3:
 	BINCLUDE "art/palettes/MTZ Cycle 3.bin"; Metropolis Cycle #3 palette
+	even
 ; word_1F56:
 CyclingPal_HPZWater:
 	BINCLUDE "art/palettes/HPZ Water Cycle.bin"; Hidden Palace Water Cycle
+	even
 ; word_1F66:
 CyclingPal_HPZUnderwater:
 	BINCLUDE "art/palettes/HPZ Underwater Cycle.bin"; Hidden Palace Underwater Cycle
+	even
 ; word_1F76:
 CyclingPal_Oil:
 	BINCLUDE "art/palettes/OOZ Oil.bin"; Oil Ocean Oil palette
+	even
 ; word_1F86:
 CyclingPal_Lantern:
 	BINCLUDE "art/palettes/MCZ Lantern.bin"; Mystic Cave Lanterns
+	even
 ; word_1F8E:
 CyclingPal_CNZ1:
 	BINCLUDE "art/palettes/CNZ Cycle 1.bin"; Casino Night Cycles 1 & 2
+	even
 ; word_1FB2:
 CyclingPal_CNZ3:
 	BINCLUDE "art/palettes/CNZ Cycle 3.bin"; Casino Night Cycle 3
+	even
 ; word_1FC4:
 CyclingPal_CNZ4:
 	BINCLUDE "art/palettes/CNZ Cycle 4.bin"; Casino Night Cycle 4
+	even
 ; word_1FEC:
 CyclingPal_CNZ1_B:
 	BINCLUDE "art/palettes/CNZ Boss Cycle 1.bin"; Casino Night Boss Cycle 1
+	even
 ; word_1FFE:
 CyclingPal_CNZ2_B:
 	BINCLUDE "art/palettes/CNZ Boss Cycle 2.bin"; Casino Night Boss Cycle 2
+	even
 ; word_2012:
 CyclingPal_CNZ3_B:
 	BINCLUDE "art/palettes/CNZ Boss Cycle 3.bin"; Casino Night Boss Cycle 3
+	even
 ; word_2022:
 CyclingPal_CPZ1:
 	BINCLUDE "art/palettes/CPZ Cycle 1.bin"; Chemical Plant Cycle 1
+	even
 ; word_2058:
 CyclingPal_CPZ2:
 	BINCLUDE "art/palettes/CPZ Cycle 2.bin"; Chemical Plant Cycle 2
+	even
 ; word_2082:
 CyclingPal_CPZ3:
 	BINCLUDE "art/palettes/CPZ Cycle 3.bin"; Chemical Plant Cycle 3
+	even
 ; word_20A2:
 CyclingPal_WFZFire:
 	BINCLUDE "art/palettes/WFZ Fire Cycle.bin"; Wing Fortress Fire Cycle palette
+	even
 ; word_20C2:
 CyclingPal_WFZBelt:
 	BINCLUDE "art/palettes/WFZ Conveyor Cycle.bin"; Wing Fortress Conveyor Belt Cycle palette
+	even
 ; word_20E2: CyclingPal_CPZ4:
 CyclingPal_WFZ1:
 	BINCLUDE "art/palettes/WFZ Cycle 1.bin"; Wing Fortress Flashing Light Cycle 1
+	even
 ; word_2126:
 CyclingPal_WFZ2:
 	BINCLUDE "art/palettes/WFZ Cycle 2.bin"; Wing Fortress Flashing Light Cycle 2
+	even
 ; ----------------------------------------------------------------------------
 
 
@@ -2890,19 +2914,21 @@ PalCycle_SuperSonic_normal:
 ; Pal_2246:
 CyclingPal_SSTransformation:
 	BINCLUDE	"art/palettes/Super Sonic transformation.bin"
+	even
 ;----------------------------------------------------------------------------
 ;Palette for transformation to Super Sonic while underwater in CPZ
 ;----------------------------------------------------------------------------
 ; Pal_22C6:
 CyclingPal_CPZUWTransformation:
 	BINCLUDE	"art/palettes/CPZWater SS transformation.bin"
+	even
 ;----------------------------------------------------------------------------
 ;Palette for transformation to Super Sonic while underwater in ARZ
 ;----------------------------------------------------------------------------
 ; Pal_2346:
 CyclingPal_ARZUWTransformation:
 	BINCLUDE	"art/palettes/ARZWater SS transformation.bin"
-
+             even
 ; ---------------------------------------------------------------------------
 ; Subroutine to fade in from black
 ; ---------------------------------------------------------------------------
@@ -3393,12 +3419,13 @@ loc_26D2:
 ;----------------------------------------------------------------------------
 ; Pal_26D6:
 Pal_Sega1:	BINCLUDE	"art/palettes/Unused Sega logo.bin"
+ even
 ;----------------------------------------------------------------------------
 ; Unused palette for the Sega logo (fading?)
 ;----------------------------------------------------------------------------
 ; Pal_26E2:
 Pal_Sega2:	BINCLUDE	"art/palettes/Unused Sega logo 2.bin"
-
+               even
 ; end of dead code/data
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
@@ -3541,6 +3568,7 @@ __LABEL__ label *
 	BINCLUDE "art/palettes/path2"
     endif
 __LABEL___End label *
+        even
 	endm
 
 Pal_SEGA:  palette Sega screen.bin ; SEGA screen palette (Sonic and initial background)
@@ -3665,7 +3693,7 @@ CalcSine:
 ; ===========================================================================
 ; word_33CE:
 Sine_Data:	BINCLUDE	"misc/sinewave.bin"
-
+                even
 
 ; ---------------------------------------------------------------------------
 ; Subroutine to calculate arctangent of y/x
@@ -3725,7 +3753,7 @@ CalcAngle_Zero:
 ; ===========================================================================
 ; byte_36B4:
 Angle_Data:	BINCLUDE	"misc/angles.bin"
-
+                  even
 ; ===========================================================================
 
     if gameRevision<2
@@ -9049,6 +9077,7 @@ SSHUD_SonicTails:
 ; sprite mappings
 ; -----------------------------------------------------------------------------------
 Obj5E_MapUnc_7070:	BINCLUDE "mappings/sprite/obj5E.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 5F - Start banner/"Ending controller" from Special Stage
@@ -9198,10 +9227,12 @@ return_723E:
 ; WARNING: the build script needs editing if you rename this label
 ;	   or if you change the meaning of frame 2 in these mappings
 Obj5F_MapUnc_7240:	BINCLUDE "mappings/sprite/obj5F_a.bin"
+ even
 ; -----------------------------------------------------------------------------------
 ; sprite mappings
 ; -----------------------------------------------------------------------------------
 Obj5F_MapUnc_72D2:	BINCLUDE "mappings/sprite/obj5F_b.bin"
+        even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 87 - Number of rings in Special Stage
@@ -10093,7 +10124,7 @@ Ani_objDB:	offsetTable
 ; Art starts at $A000 in VRAM
 ; -------------------------------------------------------------------------------
 ObjDA_MapUnc_7CB6:	BINCLUDE	"mappings/sprite/objDA.bin"
-
+                    even
     if ~~removeJmpTos
 JmpTo_Adjust2PArtPointer2 ; JmpTo
 	jmp	(Adjust2PArtPointer2).l
@@ -10301,7 +10332,7 @@ TwoPlayerResultsDone_ZoneOrSpecialStages:
 	rts
 ; ===========================================================================
 +
-	tst.w	(Game_Over_2P).w
+	tst.b	(Game_Over_2P).w
 	beq.s	+		; if there's a Game Over, clear the results
 	lea	(Results_Data_2P).w,a1
 
@@ -10450,6 +10481,7 @@ JmpTo4_DisplaySprite ; JmpTo
 ; sprite mappings
 ; --------------------------------------------------------------------------
 Obj21_MapUnc_8146:	BINCLUDE "mappings/sprite/obj21.bin"
+           even
 ; ===========================================================================
 
 ; loc_819A:
@@ -11097,19 +11129,19 @@ VsResultsScreen_SSZone:	dc.l Map_2PSpecialStageZoneResults, Setup2PResults_Speci
 ; 2P single act results screen (enigma compressed)
 ; byte_8804:
 Map_2PActResults:	BINCLUDE "mappings/misc/2P Act Results.bin"
-
+                    even
 ; 2P zone results screen (enigma compressed)
 ; byte_88CE:
 Map_2PZoneResults:	BINCLUDE "mappings/misc/2P Zone Results.bin"
-
+                        even
 ; 2P game results screen (after all 4 zones) (enigma compressed)
 ; byte_8960:
 Map_2PGameResults:	BINCLUDE "mappings/misc/2P Game Results.bin"
-
+                      even
 ; 2P special stage act results screen (enigma compressed)
 ; byte_8AA4:
 Map_2PSpecialStageActResults:	BINCLUDE "mappings/misc/2P Special Stage Act Results.bin"
-
+                        even
 ; 2P special stage zone results screen (enigma compressed)
 ; byte_8B30:
 Map_2PSpecialStageZoneResults:	BINCLUDE "mappings/misc/2P Special Stage Zone Results.bin"
@@ -11213,7 +11245,7 @@ MenuScreen:
 	clr.w	(Results_Screen_2P).w	; VsRSID_Act
 	clr.b	(Level_started_flag).w
 	clr.w	(Anim_Counters).w
-	clr.w	(Game_Over_2P).w
+	clr.b	(Game_Over_2P).w
 	lea	(Anim_SonicMilesBG).l,a2
 	jsrto	(Dynamic_Normal).l, JmpTo2_Dynamic_Normal
 	moveq	#PalID_Menu,d0
@@ -12309,7 +12341,7 @@ TextOptScr_0:			menutxt	"      00       "	; byte_9870:
 ; level select picture palettes
 ; byte_9880:
 Pal_LevelIcons:	BINCLUDE "art/palettes/Level Select Icons.bin"
-
+           even
 ; 2-player level select screen mappings (Enigma compressed)
 ; byte_9A60:
 	even
@@ -12656,10 +12688,10 @@ byte_A0EC:
 	dc.b   5	; 15
 	dc.b   0	; 16
 	dc.b   0	; 17
-
+        even
 ; palette cycle for the end-of-game logo
 pal_A0FE:	BINCLUDE	"art/palettes/Ending Cycle.bin"
-
+             even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object CA - Cut scene at end of game
@@ -13665,32 +13697,40 @@ EndingSequence_LoadFlickyArt_Chicken:
 	jmpto	(NemDec).l, JmpTo_NemDec
 ; ===========================================================================
 Pal_AC7E:	BINCLUDE	"art/palettes/Ending Sonic.bin"
+             even
 Pal_AC9E:	BINCLUDE	"art/palettes/Ending Sonic Far.bin"
+          even
 Pal_ACDE:	BINCLUDE	"art/palettes/Ending Background.bin"
+         even
 Pal_AD1E:	BINCLUDE	"art/palettes/Ending Photos.bin"
+       even
 Pal_AD3E:	BINCLUDE	"art/palettes/Ending Super Sonic.bin"
-
+               even
 word_AD5E:
 	dc.w objoff_42
 	dc.l ObjCB
 	dc.b $00
+	even
 word_AD62:
 	dc.w objoff_42
 	dc.l ObjCC
 	dc.b $00
+	even
 word_AD66:
 	dc.w objoff_42
 	dc.l ObjCD
 	dc.b $00
+	even
 word_AD6A:
 	dc.w objoff_42
 	dc.l ObjCE
 	dc.b $00
+	even
 word_AD6E:
 	dc.w objoff_42
 	dc.l ObjCF
 	dc.b $00
-
+        even
 ; off_AD72:
 Obj28_SubObjData:
 	subObjData Obj28_MapUnc_11E1C,make_art_tile(ArtTile_ArtNem_Animal_2,0,0),4,2,8,0
@@ -13700,7 +13740,7 @@ Obj28_SubObjData:
 Ani_objCD:	offsetTable
 		offsetTableEntry.w byte_AD7E	; 0
 byte_AD7E:	dc.b   5,  0,  1,$FF
-
+                even
 ; animation script
 ; off_AD82
 Ani_objCF:	offsetTable
@@ -13715,6 +13755,7 @@ byte_AD9E:	dc.b   1,  5,  6,$FF
 ; sprite mappings
 ; -----------------------------------------------------------------------------
 ObjCF_MapUnc_ADA2:	BINCLUDE "mappings/sprite/objCF.bin"
+
 ; --------------------------------------------------------------------------------------
 ; Enigma compressed art mappings
 ; "Sonic the Hedgehog 2" mappings		; MapEng_B23A:
@@ -20527,16 +20568,17 @@ byte_FB28:
 	dc.b $19,$38,$50,$6D,$83,$9D,$B0,$C5,$D8,$E4,$F1,$F8,$FE,$FF,  0,  0; 224
 	dc.b $19,$31,$4A,$67,$7E,$93,$A7,$BD,$CD,$DB,$E7,$F3,$F9,$FE,$FF,  0; 240
 	dc.b $19,$31,$4A,$61,$78,$8E,$A2,$B5,$C5,$D4,$E1,$EC,$F4,$FB,$FE,$FF; 256
+	even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj11_MapUnc_FC28:	BINCLUDE "mappings/sprite/obj11_a.bin"
-
+              even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj11_MapUnc_FC70:	BINCLUDE "mappings/sprite/obj11_b.bin"
-
+             even
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
     if ~~removeJmpTos
@@ -21247,6 +21289,7 @@ Obj17_Display:
 ; sprite mappings - helix of spikes on a pole (GHZ) (unused)
 ; -----------------------------------------------------------------------------
 Obj17_MapUnc_10452:	BINCLUDE "mappings/sprite/obj17.bin"
+           even
 ; ===========================================================================
 
     if gameRevision<2
@@ -21629,10 +21672,12 @@ loc_107EE:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj18_MapUnc_107F6:	BINCLUDE "mappings/sprite/obj18_a.bin"
+      even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj18_MapUnc_1084E:	BINCLUDE "mappings/sprite/obj18_b.bin"
+       even
 ; ===========================================================================
 
     if gameRevision<2
@@ -21987,36 +22032,43 @@ Obj1A_GHZ_SlopeData:
 ; unused sprite mappings (GHZ)
 ; -------------------------------------------------------------------------------
 Obj1A_MapUnc_10C6C:	BINCLUDE "mappings/sprite/obj1A_a.bin"
+          even
 ; ----------------------------------------------------------------------------
 ; unused sprite mappings (MZ, SLZ, SBZ)
 ; ----------------------------------------------------------------------------
 Obj1F_MapUnc_10F0C:	BINCLUDE "mappings/sprite/obj1F_a.bin"
-
+               even
 ; Slope data for platforms.
 ;byte_10FDC:
 Obj1A_OOZ_SlopeData:
 	dc.b $10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10
+	even
 ;byte_10FEC:
 Obj1A_HPZ_SlopeData
 	dc.b $10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10
 	dc.b $10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10
-	dc.b $10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10
+	dc.b $10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10,$10  
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings (HPZ)
 ; ----------------------------------------------------------------------------
 Obj1A_MapUnc_1101C:	BINCLUDE "mappings/sprite/obj1A_b.bin"
+         even
 ; ----------------------------------------------------------------------------
 ; sprite mappings (OOZ)
 ; ----------------------------------------------------------------------------
 Obj1F_MapUnc_110C6:	BINCLUDE "mappings/sprite/obj1F_b.bin"
+     even
 ; -------------------------------------------------------------------------------
 ; sprite mappings (MCZ)
 ; -------------------------------------------------------------------------------
 Obj1F_MapUnc_11106:	BINCLUDE "mappings/sprite/obj1F_c.bin"
+          even
 ; -------------------------------------------------------------------------------
 ; sprite mappings (ARZ)
 ; -------------------------------------------------------------------------------
 Obj1F_MapUnc_1115E:	BINCLUDE "mappings/sprite/obj1F_d.bin"
+          even
 ; ===========================================================================
 
     if gameRevision<2
@@ -22196,30 +22248,37 @@ byte_11392:	dc.b $7F,  6,$FD,  2
 ; sprite mappings
 ; --------------------------------------------------------------------------------
 Obj71_MapUnc_11396:	BINCLUDE "mappings/sprite/obj71_a.bin"
+       even
 ; ----------------------------------------------------------------------------------------
 ; Unknown sprite mappings
 ; ----------------------------------------------------------------------------------------
 Obj1C_MapUnc_113D6:	BINCLUDE "mappings/sprite/obj1C_a.bin"
+       even
 ; --------------------------------------------------------------------------------
 ; Unknown sprite mappings
 ; --------------------------------------------------------------------------------
 Obj1C_MapUnc_113EE:	BINCLUDE "mappings/sprite/obj1C_b.bin"
+       even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj1C_MapUnc_11406:	BINCLUDE "mappings/sprite/obj1C_c.bin"
+        even
 ; --------------------------------------------------------------------------------
 ; sprite mappings
 ; --------------------------------------------------------------------------------
 Obj1C_MapUnc_114AE:	BINCLUDE "mappings/sprite/obj1C_d.bin"
+         even
 ; --------------------------------------------------------------------------------
 ; sprite mappings
 ; --------------------------------------------------------------------------------
 Obj1C_MapUnc_11552:	BINCLUDE "mappings/sprite/obj1C_e.bin"
+         even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj71_MapUnc_11576:	BINCLUDE "mappings/sprite/obj71_b.bin"
+        even
 ; ===========================================================================
 
     if gameRevision<2
@@ -22289,7 +22348,7 @@ Obj2A_Main:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj2A_MapUnc_11666:	BINCLUDE "mappings/sprite/obj2A.bin"
-
+                 even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 2D - One way barrier from CPZ and DEZ
@@ -22434,6 +22493,7 @@ return_11820:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj2D_MapUnc_11822:	BINCLUDE "mappings/sprite/obj2D.bin"
+            even
 ; ===========================================================================
 
     if gameRevision<2
@@ -22959,27 +23019,32 @@ Obj29_Main:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj28_MapUnc_11E1C:	BINCLUDE "mappings/sprite/obj28_a.bin"
+               even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj28_MapUnc_11E40:	BINCLUDE "mappings/sprite/obj28_b.bin"
+           even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj28_MapUnc_11E64:	BINCLUDE "mappings/sprite/obj28_c.bin"
+          even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj28_MapUnc_11E88:	BINCLUDE "mappings/sprite/obj28_d.bin"
+           even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj28_MapUnc_11EAC:	BINCLUDE "mappings/sprite/obj28_e.bin"
+           even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj29_MapUnc_11ED0:	BINCLUDE "mappings/sprite/obj29.bin"
-
+                   even
     if ~~removeJmpTos
 JmpTo_RandomNumber ; JmpTo
 	jmp	(RandomNumber).l
@@ -23413,20 +23478,22 @@ BigRingFlash_Delete:
 Ani_Ring:	offsetTable
 		offsetTableEntry.w +	; 0
 +		dc.b   5,  4,  5,  6,  7,$FC
+                  even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj25_MapUnc_12382:	BINCLUDE "mappings/sprite/obj37_a.bin"
-
+                even
 ; -------------------------------------------------------------------------------
 ; Unused sprite mappings
 ; -------------------------------------------------------------------------------
 Obj37_MapUnc_123E6:	BINCLUDE "mappings/sprite/obj37_b.bin"
+            even
 ; -------------------------------------------------------------------------------
 ; Unused sprite mappings
 ; -------------------------------------------------------------------------------
 Obj37_MapUnc_124E6:	BINCLUDE "mappings/sprite/obj37_c.bin"
-
+               even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object DC - Ring prize from Casino Night Zone
@@ -24243,6 +24310,7 @@ Ani_obj26_Broken:
 ; ---------------------------------------------------------------------------------
 ; MapUnc_12D36: MapUnc_obj26:
 Obj26_MapUnc_12D36:	BINCLUDE "mappings/sprite/obj26.bin"
+          even
 ; ===========================================================================
 
     if gameRevision<2
@@ -24474,6 +24542,7 @@ loc_13014:
 ; word_1303A:
 CyclingPal_TitleStar:
 	binclude "art/palettes/Title Star Cycle.bin"
+	 even
 CyclingPal_TitleStar_End
 
 word_13046:
@@ -24848,9 +24917,11 @@ off_133D4:	C9PalInfo                      loc_1344C,  Pal_AD3E,   0, $F,4,7
 off_133E0:	C9PalInfo                      loc_1344C,  Pal_AC9E,   0,$1F,4,7
 
 Pal_133EC:	BINCLUDE "art/palettes/Title Sonic.bin"
+            even
 Pal_1340C:	BINCLUDE "art/palettes/Title Background.bin"
+        even
 Pal_1342C:	BINCLUDE "art/palettes/Title Emblem.bin"
-
+                  even
 ; ===========================================================================
 
 loc_1344C:
@@ -25109,11 +25180,12 @@ byte_136A4:
 ; Sprite Mappings - Flashing stars from intro (Obj0E)
 ; -----------------------------------------------------------------------------
 Obj0E_MapUnc_136A8:	BINCLUDE "mappings/sprite/obj0E.bin"
+          even
 ; -----------------------------------------------------------------------------
 ; sprite mappings
 ; -----------------------------------------------------------------------------
 Obj0F_MapUnc_13B70:	BINCLUDE "mappings/sprite/obj0F.bin"
-
+            even
     if ~~removeJmpTos
 JmpTo4_PlaySound ; JmpTo
 	jmp	(PlaySound).l
@@ -25584,7 +25656,7 @@ Obj39_Check2PMode:
 	bne.s	Obj39_Display
 	tst.b	(Time_Over_flag_2P).w
 	bne.s	Obj39_Display
-	move.w	#1,(Game_Over_2P).w
+	move.b	#1,(Game_Over_2P).w
 	move.w	#VsRSID_Zone,(Results_Screen_2P).w
 	jsrto	(sub_8476).l, JmpTo_sub_8476
 	move.w	#-1,(a4)
@@ -26511,6 +26583,7 @@ word_14C32:	dc.w 7
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj39_MapUnc_14C6C:	BINCLUDE "mappings/sprite/obj39.bin"
+         even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
@@ -26605,6 +26678,7 @@ word_14E96:	dc.w 7
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj6F_MapUnc_14ED0:	BINCLUDE "mappings/sprite/obj6F.bin"
+          even
 ; ===========================================================================
 
 ;loc_15584: ; level title card drawing function called from Vint
@@ -27257,7 +27331,7 @@ MoveSpikes_Retract:
 ; -------------------------------------------------------------------------------
 Obj36_MapUnc_15B68:	BINCLUDE "mappings/sprite/obj36.bin"
 
-
+                  even
 
 
 ; ===========================================================================
@@ -27303,7 +27377,7 @@ Obj3B_Main:
 ; Unused sprite mappings
 ; -------------------------------------------------------------------------------
 Obj3B_MapUnc_15D2E:	BINCLUDE "mappings/sprite/obj3B.bin"
-
+                even
     if ~~removeJmpTos
 	align 4
     endif
@@ -27443,6 +27517,7 @@ Obj3C_FragmentSpeeds_RightToLeft:
 ; Unused sprite mappings
 ; -------------------------------------------------------------------------------
 Obj3C_MapUnc_15ECC:	BINCLUDE "mappings/sprite/obj3C.bin"
+          even
 ; ===========================================================================
 	bra.w	ObjNull
 
@@ -31146,9 +31221,13 @@ loc_177FA:
 	; [Bug] Sonic Team forgot to start this file with a boundary
 	; marker, meaning the game could potentially read past the start
 	; of the file and load random bumpers.
-	;dc.w	$0000, $0000, $0000
+	even
+	dc.w	$0000, $0000, $0000
 SpecialCNZBumpers_Act1:	BINCLUDE	"level/objects/CNZ 1 bumpers.bin"	; byte_1781A
+        even
+       	dc.w	$0000, $0000, $0000
 SpecialCNZBumpers_Act2:	BINCLUDE	"level/objects/CNZ 2 bumpers.bin"	; byte_1795E
+          even
 ; ===========================================================================
 
     if gameRevision<2
@@ -31523,10 +31602,12 @@ ObjectLayoutBoundary macro
 ; byte_1802A;
     if gameRevision=0
 Objects_CNZ1_2P:	BINCLUDE	"level/objects/CNZ_1_2P (REV00).bin"
+      even
     else
     ; a Crawl badnik was moved slightly further away from a ledge
     ; 2 flippers were moved closer to a wall
 Objects_CNZ1_2P:	BINCLUDE	"level/objects/CNZ_1_2P.bin"
+    even
     endif
 
 	ObjectLayoutBoundary
@@ -31534,10 +31615,12 @@ Objects_CNZ1_2P:	BINCLUDE	"level/objects/CNZ_1_2P.bin"
 ; byte_18492:
     if gameRevision=0
 Objects_CNZ2_2P:	BINCLUDE	"level/objects/CNZ_2_2P (REV00).bin"
+     even
     else
     ; 4 Crawl badniks were slightly moved, placing them closer/farther away from ledges
     ; 2 flippers were moved away from a wall to keep players from getting stuck behind them
 Objects_CNZ2_2P:	BINCLUDE	"level/objects/CNZ_2_2P.bin"
+    even
     endif
 
 	ObjectLayoutBoundary
@@ -32691,15 +32774,18 @@ byte_195BA:	dc.b	$0F, $01, $FF
 ; -------------------------------------------------------------------------------
 ; SprTbl_0D_Primary:
 Obj0D_MapUnc_195BE:	BINCLUDE "mappings/sprite/obj0D_a.bin"
+     even
 ; -------------------------------------------------------------------------------
 ; sprite mappings - Secondary sprite table for object 0D (signpost)
 ; -------------------------------------------------------------------------------
 ; SprTbl_0D_Scndary:
 Obj0D_MapUnc_19656:	BINCLUDE "mappings/sprite/obj0D_b.bin"
+          even
 ; -------------------------------------------------------------------------------
 ; dynamic pattern loading cues
 ; -------------------------------------------------------------------------------
 Obj0D_MapRUnc_196EE:	BINCLUDE "mappings/spriteDPLC/obj0D.bin"
+           even
 ; ===========================================================================
 
     if gameRevision<2
@@ -39893,15 +39979,17 @@ byte_1DBBD:	dc.b   7,  6,  5,  4,  3,  2,  1,  2,  3,  4,  5,  6,$FF
 Ani_obj38:	offsetTable
 		offsetTableEntry.w +	; 0
 +		dc.b   0,  5,  0,  5,  1,  5,  2,  5,  3,  5,  4,$FF
-
+                even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj38_MapUnc_1DBE4:	BINCLUDE "mappings/sprite/obj38.bin"
+            even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj35_MapUnc_1DCBC:	BINCLUDE "mappings/sprite/obj35.bin"
+          even
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -40113,10 +40201,12 @@ Obj08Ani_Skid:	dc.b   3,$11,$12,$13,$14,$FC
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj08_MapUnc_1DF5E:	BINCLUDE "mappings/sprite/obj08.bin"
+           even
 ; -------------------------------------------------------------------------------
 ; dynamic pattern loading cues
 ; -------------------------------------------------------------------------------
 Obj08_MapRUnc_1E074:	BINCLUDE "mappings/spriteDPLC/obj08.bin"
+       even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 7E - Super Sonic's stars
@@ -40199,6 +40289,7 @@ JmpTo8_DeleteObject ; JmpTo
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj7E_MapUnc_1E1BE:	BINCLUDE "mappings/sprite/obj7E.bin"
+       even
 ; ===========================================================================
 
     if gameRevision<2
@@ -42044,10 +42135,12 @@ byte_1F420:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj79_MapUnc_1F424:	BINCLUDE "mappings/sprite/obj79_a.bin"
+          even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj79_MapUnc_1F4A0:	BINCLUDE "mappings/sprite/obj79_b.bin"
+      even
 ; ===========================================================================
 
 ; loc_1F4C4:
@@ -42281,6 +42374,7 @@ JmpTo12_DeleteObject ; JmpTo
 ; Unused sprite mappings
 ; -------------------------------------------------------------------------------
 Obj7D_MapUnc_1F6FE:	BINCLUDE "mappings/sprite/obj7D.bin"
+          even
 ; ===========================================================================
 
     if gameRevision<2
@@ -42405,6 +42499,7 @@ byte_1F853:	dc.b   3,  1,  0,  1,$FD,  0
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj44_MapUnc_1F85A:	BINCLUDE "mappings/sprite/obj44.bin"
+           even
 ; ===========================================================================
 
     if gameRevision<2
@@ -43085,6 +43180,7 @@ return_1FFB6:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj03_MapUnc_1FFB8:	BINCLUDE "mappings/sprite/obj03.bin"
+         even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -43204,6 +43300,7 @@ byte_20198:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj0B_MapUnc_201A0:	BINCLUDE "mappings/sprite/obj0B.bin"
+       even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -43314,6 +43411,7 @@ loc_202E6:
 ; Unused sprite mappings
 ; ----------------------------------------------------------------------------
 Obj0C_MapUnc_202FA:	BINCLUDE "mappings/sprite/obj0C.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -43377,6 +43475,7 @@ Obj12_Main:
 ; sprite mappings (unused)
 ; -------------------------------------------------------------------------------
 Obj12_MapUnc_20382:	BINCLUDE "mappings/sprite/obj12.bin"
+           even
 ; ===========================================================================
 
     if gameRevision<2
@@ -43531,6 +43630,7 @@ Obj13_ChkDel:
 ; sprite mappings (unused)
 ; -------------------------------------------------------------------------------
 Obj13_MapUnc_20528:	BINCLUDE "mappings/sprite/obj13.bin"
+          even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -43653,10 +43753,12 @@ BranchTo_JmpTo10_DisplaySprite ; BranchTo
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj04_MapUnc_20A0E:	BINCLUDE "mappings/sprite/obj04_a.bin"
+          even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj04_MapUnc_20AFE:	BINCLUDE "mappings/sprite/obj04_b.bin"
+             even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 49 - Waterfall from EHZ
@@ -43727,7 +43829,7 @@ Obj49_Display:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj49_MapUnc_20C50:	BINCLUDE "mappings/sprite/obj49.bin"
-
+              even
 
 
 
@@ -43791,12 +43893,13 @@ Obj31_Main:
 ; sprite non-mappings
 ; -------------------------------------------------------------------------------
 Obj31_MapUnc_20E6C:	BINCLUDE "mappings/sprite/obj31_a.bin"
+            even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj31_MapUnc_20E74:	BINCLUDE "mappings/sprite/obj31_b.bin"
 ; ===========================================================================
-
+                 even
 
 
 
@@ -43865,7 +43968,7 @@ Obj74_Main:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj74_MapUnc_20F66:	BINCLUDE "mappings/sprite/obj74.bin"
-
+              even
 
 
 
@@ -43920,7 +44023,7 @@ Obj7C_Main:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj7C_MapUnc_2103C:	BINCLUDE "mappings/sprite/obj7C.bin"
-
+                  even
 
 
 
@@ -43986,7 +44089,7 @@ Obj27_Main:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj27_MapUnc_21120:	BINCLUDE "mappings/sprite/obj27.bin"
-
+                      even
 
 
 
@@ -45023,7 +45126,7 @@ byte_21C8E:
 	dc.b $FD,$FC,$FB,$FA,$F9,$F8,$F7,$F6,$F5,$F4,$F3,$F2,$F2,$F2,$F2,$F2; 32
 	dc.b $F2	; 48
 
-	rev02even
+	even
 byte_21CBF:
 	dc.b   5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5
 	dc.b   5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5,  5; 16
@@ -45034,10 +45137,12 @@ byte_21CBF:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj14_MapUnc_21CF0:	BINCLUDE "mappings/sprite/obj14_a.bin"
+       even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj14_MapUnc_21D7C:	BINCLUDE "mappings/sprite/obj14_b.bin"
+          even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -45182,6 +45287,7 @@ Obj16_Fall:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj16_MapUnc_21F14:	BINCLUDE "mappings/sprite/obj16.bin"
+          even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -45449,6 +45555,7 @@ Obj19_MoveRoutine8:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj19_MapUnc_2222A:	BINCLUDE "mappings/sprite/obj19.bin"
+              even
 ; ===========================================================================
 
     if gameRevision<2
@@ -45591,6 +45698,7 @@ Obj1B_GiveBoost_Done:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj1B_MapUnc_223E2:	BINCLUDE "mappings/sprite/obj1B.bin"
+          even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -45742,6 +45850,7 @@ BranchTo3_JmpTo7_MarkObjGone
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj1D_MapUnc_22576:	BINCLUDE "mappings/sprite/obj1D.bin"
+        even
 ; ===========================================================================
 
     if gameRevision<2
@@ -46404,10 +46513,12 @@ byte_23246:	dc.b   5,  4,  5,  2,  3,  0,  1,  0,  1,  2,  3,  4,  5,$FC
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj20_MapUnc_23254:	BINCLUDE "mappings/sprite/obj20_a.bin"
+             even
 ; -------------------------------------------------------------------------------
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj20_MapUnc_23294:	BINCLUDE "mappings/sprite/obj20_b.bin"
+       even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -46835,14 +46946,17 @@ SmashableObject_ScoreBonus:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj2F_MapUnc_236FA:	BINCLUDE "mappings/sprite/obj2F.bin"
+           even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj32_MapUnc_23852:	BINCLUDE "mappings/sprite/obj32_a.bin"
+         even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj32_MapUnc_23886:	BINCLUDE "mappings/sprite/obj32_b.bin"
+        even
 ; ===========================================================================
 
     if gameRevision<2
@@ -47291,10 +47405,12 @@ Ani_obj33:	offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj33_MapUnc_23DDC:	BINCLUDE "mappings/sprite/obj33_a.bin"
+             even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj33_MapUnc_23DF0:	BINCLUDE "mappings/sprite/obj33_b.bin"
+         even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -47488,6 +47604,7 @@ return_23FDE:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj43_MapUnc_23FE0:	BINCLUDE "mappings/sprite/obj43.bin"
+          even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -47993,14 +48110,17 @@ byte_244D6:
 	dc.b   0,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9,  9,  9,  9,  9,  9
 	dc.b   9,  9,  8,  7,  6,  5,  4,  3,  2,  1,  0,  0,  0,  0,  0,  0; 16
 	dc.b   0,$FF	; 32
+	even
 byte_244F8:
 	dc.b   0, $A, $B, $C, $D, $E, $F,$10,$11,$12,$13,$13,$13,$13,$13,$13
 	dc.b $13,$13,$12,$11,$10, $F, $E, $D, $C, $B, $A, $A, $A, $A, $A, $A; 16
 	dc.b  $A,$FF	; 32
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj45_MapUnc_2451A:	BINCLUDE "mappings/sprite/obj45.bin"
+         even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 46 - Ball from OOZ (unused, beta leftover)
@@ -48212,6 +48332,7 @@ loc_24C32:
 ; Unused sprite mappings
 ; ----------------------------------------------------------------------------
 Obj46_MapUnc_24C52:	BINCLUDE "mappings/sprite/obj46.bin"
+          even
 ; ===========================================================================
 
     if gameRevision<2
@@ -48311,6 +48432,7 @@ BranchTo_JmpTo12_MarkObjGone ; BranchTo
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj47_MapUnc_24D96:	BINCLUDE "mappings/sprite/obj47.bin"
+  even
 ; ===========================================================================
 
     if gameRevision<2
@@ -48598,6 +48720,7 @@ word_2507A:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj3D_MapUnc_250BA:	BINCLUDE "mappings/sprite/obj3D.bin"
+       even
 ; ===========================================================================
 
     if gameRevision<2
@@ -48894,6 +49017,7 @@ loc_254F2:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj48_MapUnc_254FE:	BINCLUDE "mappings/sprite/obj48.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -49054,6 +49178,7 @@ byte_257FB:	dc.b   7,  3,  4,$FC,  4,  3,  1,$FD,  0
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj22_MapUnc_25804:	BINCLUDE "mappings/sprite/obj22.bin"
+        even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -49216,6 +49341,7 @@ loc_259B8:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj23_MapUnc_259E6:	BINCLUDE "mappings/sprite/obj23.bin"
+            even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 2B - Rising pillar from ARZ
@@ -49426,6 +49552,7 @@ loc_25C64:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj2B_MapUnc_25C6E:	BINCLUDE "mappings/sprite/obj2B.bin"
+           even
 ; ===========================================================================
 
     if gameRevision<2
@@ -49655,6 +49782,7 @@ JmpTo29_DeleteObject ; JmpTo
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj2C_MapUnc_2631E:	BINCLUDE "mappings/sprite/obj2C.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -49859,17 +49987,19 @@ byte_26550:
 	dc.b   1,  1,  1,  1,  1,  1,  1,  1,  2,  2,  2,  2,  2,  2,  2,  2; 32
 	dc.b   3,  3,  3,  3,  3,  3,  4,  4,  0,  0,  0,  0,  0,  0,  0,  0; 48
 	dc.b   0,  0,  0,  0,  0,  0,  0,  0; 64
+	even
 ;byte_26598:
 Obj40_SlopeData_DiagUp:
 	dc.b   8,  8,  8,  8,  8,  8,  8,  9, $A, $B, $C, $D, $E, $F,$10,$10
 	dc.b $11,$12,$13,$14,$14,$15,$15,$16,$17,$18,$18,$18,$18,$18,$18,$18; 16
 	dc.b $18,$18,$18,$18,$18,$18,$18,$18; 32
+	even
 ;byte_265C0:
 Obj40_SlopeData_Straight:
 	dc.b   8,  8,  8,  8,  8,  8,  8,  9, $A, $B, $C, $C, $C, $C, $D, $D
 	dc.b  $D, $D, $D, $D, $E, $E, $F, $F,$10,$10,$10,$10, $F, $F, $E, $E; 16
 	dc.b  $D, $D, $D, $D, $D, $D, $D, $D; 32
-
+        even
 ; animation script
 ; off_265E8:
 Ani_obj40:	offsetTable
@@ -49883,6 +50013,7 @@ byte_265EF:	dc.b   3,  1,  0,$FD,  0
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj40_MapUnc_265F4:	BINCLUDE "mappings/sprite/obj40.bin"
+       even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -50096,6 +50227,7 @@ JmpTo30_DeleteObject ; JmpTo
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj42_MapUnc_2686C:	BINCLUDE "mappings/sprite/obj42.bin"
+           even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -50257,6 +50389,7 @@ loc_26A50:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj64_MapUnc_26A5C:	BINCLUDE "mappings/sprite/obj64.bin"
+              even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -50674,10 +50807,12 @@ loc_26EC2:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj65_Obj6A_Obj6B_MapUnc_26EC8:	BINCLUDE "mappings/sprite/obj65_a.bin"
+          even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj65_MapUnc_26F04:	BINCLUDE "mappings/sprite/obj65_b.bin"
+      even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -50860,6 +50995,7 @@ loc_270DC:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj66_MapUnc_27120:	BINCLUDE "mappings/sprite/obj66.bin"
+ even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -51155,6 +51291,7 @@ byte_27535:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj67_MapUnc_27548:	BINCLUDE "mappings/sprite/obj67.bin"
+        even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -51342,10 +51479,12 @@ Obj68_CollisionFlags:
 	dc.b $A6	; 1
 	dc.b $84	; 2
 	dc.b $A6	; 3
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj68_Obj6D_MapUnc_27750:	BINCLUDE "mappings/sprite/obj68.bin"
+      even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 6D - Floor spike from MTZ
@@ -51620,6 +51759,7 @@ loc_279FC:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj69_MapUnc_27A26:	BINCLUDE "mappings/sprite/obj69.bin"
+        even
 ; ===========================================================================
 
     if gameRevision<2
@@ -51833,16 +51973,20 @@ return_27CDA:
 byte_27CDC:
 	dc.b   0,  0,  4,  0,  0,$10,  4,  0,$FE,  0,  0,$20,  0,  0,  4,  0
 	dc.b   0,$10,$FC,  0,$FE,  0,  0,$20; 16
+	even
 byte_27CF4:
 	dc.b   0,  0,  1,  0,  0,$40,$FF,  0,  0,  0,  0,$80,  0,  0,$FF,  0
 	dc.b   0,$40,  1,  0,  0,  0,  0,$80,  1,  0,  0,  0,  0,$40; 16
+	even
 byte_27D12:
 	dc.b   0,  0,  1,  0,  0,$40,  1,  0,  0,  0,  0,$80,  0,  0,$FF,  0
 	dc.b   0,$40,$FF,  0,  0,  0,  0,$80,$FF,  0,  0,  0,  0,$40; 16
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj6A_MapUnc_27D30:	BINCLUDE "mappings/sprite/obj6A.bin"
+          even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -52163,6 +52307,7 @@ loc_27FF8:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj6B_MapUnc_2800E:	BINCLUDE "mappings/sprite/obj6B.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -52425,20 +52570,24 @@ byte_282DC:
 	dc.b   0,$80,  0,  3,$FF,$E0,  0,$C6,  0,  3,  0,  0,  1,  0,  0,  6; 16
 	dc.b   0,$20,  0,$C6,  0,  8,  0,$20,  0,$80,  0,  8,  0,$20,  0,$3A; 32
 	dc.b   0,  8	; 48
+	even
 byte_2830E:
 	dc.b   0,  7,  0,  0,  0,  0,  0,$11,$FF,$E0,  0,$5A,  0,$13,$FF,$E0
 	dc.b   0,$C0,  0,$13,$FF,$E0,  1,$26,  0,$13,  0,  0,  1,$80,  0,$16; 16
 	dc.b   0,$20,  1,$26,  0,$18,  0,$20,  0,$C0,  0,$18,  0,$20,  0,$5A; 32
 	dc.b   0,$18	; 48
+	even
 byte_28340:
 	dc.b   0,  7,  0,  0,  0,  0,  0,$21,$FF,$E0,  0,$7A,  0,$23,$FF,$E0
 	dc.b   1,  0,  0,$23,$FF,$E0,  1,$86,  0,$23,  0,  0,  2,  0,  0,$26; 16
 	dc.b   0,$20,  1,$86,  0,$28,  0,$20,  1,  0,  0,$28,  0,$20,  0,$7A; 32
 	dc.b   0,$28	; 48
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj6C_MapUnc_28372:	BINCLUDE "mappings/sprite/obj6C.bin"
+       even
 ; ===========================================================================
 
     if gameRevision<2
@@ -52612,6 +52761,7 @@ loc_284BC:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj6E_MapUnc_2852C:	BINCLUDE "mappings/sprite/obj6E.bin"
+         even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -52803,10 +52953,12 @@ Obj70_Positions:
 	dc.b $B8, $C,$17
 	dc.b $C1,$DA,$1B
 	dc.b $F3,$B8,$1F
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj70_MapUnc_28786:	BINCLUDE "mappings/sprite/obj70.bin"
+       even
 ; ===========================================================================
 
     if gameRevision<2
@@ -53082,6 +53234,7 @@ Obj73_SubObject:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj73_MapUnc_28B9C:	BINCLUDE "mappings/sprite/obj73.bin"
+        even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -53259,6 +53412,7 @@ loc_28D6C:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj75_MapUnc_28D8A:	BINCLUDE "mappings/sprite/obj75.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -53420,6 +53574,7 @@ Obj76_SlideOut:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj76_MapUnc_28F3A:	BINCLUDE "mappings/sprite/obj76.bin"
+             even
 ; ===========================================================================
 
     if gameRevision<2
@@ -53536,6 +53691,7 @@ Ani_obj77_Open:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj77_MapUnc_29064:	BINCLUDE "mappings/sprite/obj77.bin"
+          even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -53961,6 +54117,7 @@ loc_2953E:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj7A_MapUnc_29564:	BINCLUDE "mappings/sprite/obj7A.bin"
+        even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -54159,6 +54316,7 @@ byte_29777:	dc.b   5,  1,  2,  2,  2,  4,$FD,  0
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj7B_MapUnc_29780:	BINCLUDE "mappings/sprite/obj7B.bin"
+             even
 ; ===========================================================================
 
     if gameRevision<2
@@ -54296,6 +54454,7 @@ return_29936:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj7F_MapUnc_29938:	BINCLUDE "mappings/sprite/obj7F.bin"
+            even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -54579,10 +54738,12 @@ loc_29C42:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj80_MapUnc_29C64:	BINCLUDE "mappings/sprite/obj80_a.bin"
+              even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj80_MapUnc_29DD0:	BINCLUDE "mappings/sprite/obj80_b.bin"
+            even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -54800,6 +54961,7 @@ return_2A24C:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj81_MapUnc_2A24E:	BINCLUDE "mappings/sprite/obj81.bin"
+        even
 ; ===========================================================================
 
     if gameRevision<2
@@ -55056,6 +55218,7 @@ return_2A474:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj82_MapUnc_2A476:	BINCLUDE "mappings/sprite/obj82.bin"
+    even
 ; ===========================================================================
 
     if gameRevision<2
@@ -55587,8 +55750,10 @@ return_2AA10:
 ; ----------------------------------------------------------------------------
 ; sidefacing fan
 Obj3F_MapUnc_2AA12:	BINCLUDE "mappings/sprite/obj3F_a.bin"
+    even
 ; upfacing fan
 Obj3F_MapUnc_2AAC4:	BINCLUDE "mappings/sprite/obj3F_b.bin"
+    even
 ; ===========================================================================
 
     if gameRevision<2
@@ -56027,7 +56192,9 @@ loc_2B068:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj85_MapUnc_2B07E:	BINCLUDE "mappings/sprite/obj85_a.bin"
+     even
 Obj85_MapUnc_2B0EC:	BINCLUDE "mappings/sprite/obj85_b.bin"
+     even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -56309,6 +56476,7 @@ byte_2B451:	dc.b   0,  3,  4,  5,  5,  5,  5,$FD,  2
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj86_MapUnc_2B45A:	BINCLUDE "mappings/sprite/obj86.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -56451,10 +56619,12 @@ byte_2B654:
 	dc.b $E0,  0,$10,$20,$E8,$F8,$18,$18,$F0,$F0,$20,$10,$F8,$E8,$28,  8; 16
 	dc.b   8,$E8,$28,  8,$10,$F0,$20,$10,$18,$F8,$18,$18,$20,  0,$10,$20; 32
 	dc.b $28,  0,  8,$20,$28,  8,  8,$18,$28,$10,  8,$10,$28,$18,  8,  8; 48
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjD2_MapUnc_2B694:	BINCLUDE "mappings/sprite/objD2.bin"
+        even
 ; ===========================================================================
 
     if gameRevision<2
@@ -56538,6 +56708,7 @@ JmpTo28_DisplaySprite ; JmpTo
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjD3_MapUnc_2B8D4:	BINCLUDE "mappings/sprite/objD6_a.bin"
+           even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -56642,6 +56813,7 @@ ObjD4_Vertical:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjD4_MapUnc_2B9CA:	BINCLUDE "mappings/sprite/objD4.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -56793,6 +56965,7 @@ loc_2BB08:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjD5_MapUnc_2BB40:	BINCLUDE "mappings/sprite/objD5.bin"
+       even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -57078,6 +57251,7 @@ byte_2BEB7:	dc.b   1,  1,  0,$FF
 ; sprite mappings
 ; ------------------------------------------------------------------------------
 ObjD6_MapUnc_2BEBC:	BINCLUDE "mappings/sprite/objD6_b.bin"
+           even
 ; ===========================================================================
 
 
@@ -57836,6 +58010,7 @@ byte_2C61F:	dc.b   3,  2,  0,  2,$FD,  0
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjD7_MapUnc_2C626:	BINCLUDE "mappings/sprite/objD7.bin"
+         even
 ; ===========================================================================
 
     if gameRevision<2
@@ -58080,6 +58255,7 @@ byte_2C8BD:	dc.b   3,  5,  2,  5,$FD,  2
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjD8_MapUnc_2C8C4:	BINCLUDE "mappings/sprite/objD8.bin"
+ even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -58394,7 +58570,7 @@ byte_2CBF8:	dc.b   7,  0,  1,$FD,  1
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj4A_MapUnc_2CBFE:	BINCLUDE "mappings/sprite/obj4A.bin"
-
+            even
     if ~~removeJmpTos
 	align 4
     endif
@@ -58697,6 +58873,7 @@ byte_2CF90:		dc.b  $E,  8,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj50_MapUnc_2CF94:	BINCLUDE "mappings/sprite/obj50.bin"
+  even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -58971,7 +59148,7 @@ byte_2D2E1:	dc.b	$09, $01, $01, $01, $01, $01, $FD, $00
 ; ----------------------------------------------------------------------------
 ; MapUnc_2D2EA: SprTbl_Buzzer:
 Obj4B_MapUnc_2D2EA:	BINCLUDE "mappings/sprite/obj4B.bin"
-
+                even
     if ~~removeJmpTos
 	align 4
     endif
@@ -59076,7 +59253,7 @@ byte_2D43E:	dc.b   7,  0,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj5C_MapUnc_2D442:	BINCLUDE "mappings/sprite/obj5C.bin"
-
+                  even
     if ~~removeJmpTos
 	align 4
     endif
@@ -59151,6 +59328,7 @@ JmpTo50_DeleteObject ; JmpTo
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj58_MapUnc_2D50A:	BINCLUDE "mappings/sprite/obj58.bin"
+        even
 ; ===========================================================================
 
 	; Unused - a little dead code here (until the next label)
@@ -61001,7 +61179,7 @@ byte_2EAD9:	dc.b  $F,$1E,$FF
 ; sprite mappings - uses ArtNem_CPZBoss
 ; ----------------------------------------------------------------------------
 Obj5D_MapUnc_2EADC:	BINCLUDE "mappings/sprite/obj5D_a.bin"
-
+                    even
 ; animation script
 ; off_2ED5C:
 Ani_obj5D_b:	offsetTable
@@ -61025,14 +61203,17 @@ byte_2ED7F:	dc.b  $F,  6,  6,  6,  6,  6,  6,  6,  6,  6,  6,$FD,  1
 ; sprite mappings - uses ArtNem_Eggpod
 ; ----------------------------------------------------------------------------
 Obj5D_MapUnc_2ED8C:	BINCLUDE "mappings/sprite/obj5D_b.bin"
+ even
 ; ----------------------------------------------------------------------------
 ; sprite mappings - uses ArtNem_EggpodJets
 ; ----------------------------------------------------------------------------
 Obj5D_MapUnc_2EE88:	BINCLUDE "mappings/sprite/obj5D_c.bin"
+ even
 ; ----------------------------------------------------------------------------
 ; sprite mappings - uses ArtNem_BossSmoke
 ; ----------------------------------------------------------------------------
 Obj5D_MapUnc_2EEA0:	BINCLUDE "mappings/sprite/obj5D_d.bin"
+ even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -62911,7 +63092,7 @@ byte_2F956:
 Obj56_MapUnc_2F970:	BINCLUDE "mappings/sprite/obj56_a.bin"
 	; propeller
 	; 7 frames
-
+            even
 ; animation script
 ; off_2FA44:
 Ani_obj56_b:	offsetTable
@@ -62932,6 +63113,7 @@ byte_2FA53:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj56_MapUnc_2FA58:	BINCLUDE "mappings/sprite/obj56_b.bin"
+        even
 	; ground vehicle
 	; frame 0 = vehicle itself
 	; frame 1-3 = spike
@@ -62968,7 +63150,7 @@ Obj56_MapUnc_2FAF8:	BINCLUDE "mappings/sprite/obj56_c.bin"
 	; frame 5 = top, when hit
 	; frame 6 = top, when flying off
 ; ===========================================================================
-
+                    even
     if ~~removeJmpTos
 JmpTo35_DisplaySprite ; JmpTo
 	jmp	(DisplaySprite).l
@@ -63565,7 +63747,7 @@ loc_3022A:
 ; sprite mappings - uses ArtNem_BossSmoke
 ; ----------------------------------------------------------------------------
 Obj52_MapUnc_30258:	BINCLUDE "mappings/sprite/obj52_a.bin"
-
+                   even
 ; animation script
 ; off_30288:
 Ani_obj52:	offsetTable
@@ -63597,7 +63779,7 @@ byte_302B7:	dc.b   3, $E, $F,$FF
 ; sprite mappings - uses ArtNem_Eggpod + ?
 ; ----------------------------------------------------------------------------
 Obj52_MapUnc_302BC:	BINCLUDE "mappings/sprite/obj52_b.bin"
-
+                     even
     if ~~removeJmpTos
 	align 4
     endif
@@ -64473,7 +64655,7 @@ byte_30D47:	dc.b  $F,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4,  4
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj89_MapUnc_30D68:	BINCLUDE "mappings/sprite/obj89_a.bin"
-
+                    even
 ; animation script
 ; off_30DC8:
 Ani_obj89_b:	offsetTable
@@ -64501,7 +64683,7 @@ byte_30E00:	dc.b   7,  5,$FF
 ; ----------------------------------------------------------------------------
 Obj89_MapUnc_30E04:	BINCLUDE "mappings/sprite/obj89_b.bin"
 ; ===========================================================================
-
+                              even
     if ~~removeJmpTos
 JmpTo37_DisplaySprite ; JmpTo
 	jmp	(DisplaySprite).l
@@ -65105,7 +65287,7 @@ byte_316E8:	dc.b   7,$12,$FF
 ; ----------------------------------------------------------------------------
 Obj57_MapUnc_316EC:	BINCLUDE "mappings/sprite/obj57.bin"
 ; ===========================================================================
-
+                     even
     if ~~removeJmpTos
 JmpTo38_DisplaySprite ; JmpTo
 	jmp	(DisplaySprite).l
@@ -65815,7 +65997,7 @@ byte_320E4:	dc.b   1, $F,$10,$11,$FF
 ; ----------------------------------------------------------------------------
 Obj51_MapUnc_320EA:	BINCLUDE "mappings/sprite/obj51.bin"
 ; ===========================================================================
-
+                      even
     if ~~removeJmpTos
 JmpTo39_DisplaySprite ; JmpTo
 	jmp	(DisplaySprite).l
@@ -66809,7 +66991,7 @@ byte_32DC3:	dc.b   7,$11,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj54_MapUnc_32DC6:	BINCLUDE "mappings/sprite/obj54.bin"
-
+                        even
     if ~~removeJmpTos
 	align 4
     endif
@@ -67590,7 +67772,7 @@ byte_33753:
 ; ----------------------------------------------------------------------------
 Obj55_MapUnc_33756:	BINCLUDE "mappings/sprite/obj55.bin"
 ; ===========================================================================
-
+                    even
     if ~~removeJmpTos
 JmpTo41_DisplaySprite ; JmpTo
 	jmp	(DisplaySprite).l
@@ -68499,10 +68681,12 @@ byte_34208:
 ; sprite mappings - uses ArtNem_SpecialSonicAndTails
 ; ----------------------------------------------------------------------------
 Obj09_MapUnc_34212:	BINCLUDE "mappings/sprite/obj09.bin"
+          even
 ; ----------------------------------------------------------------------------
 ; sprite mappings for special stage shadows
 ; ----------------------------------------------------------------------------
 Obj63_MapUnc_34492:	BINCLUDE "mappings/sprite/obj63.bin"
+       even
 ; ----------------------------------------------------------------------------
 ; custom dynamic pattern loading cues for special stage Sonic, Tails and
 ; Tails' tails
@@ -68515,6 +68699,7 @@ Obj63_MapUnc_34492:	BINCLUDE "mappings/sprite/obj63.bin"
 ; hence the two-byte dplc count is removed from each frame.
 ; ----------------------------------------------------------------------------
 Obj09_MapRUnc_345FA:	BINCLUDE "mappings/spriteDPLC/obj09.bin"
+      even
 ; ===========================================================================
 
     if ~~removeJmpTos
@@ -68820,11 +69005,12 @@ byte_34B34:
 	dc.b   3, $C, $D, $E, $F,$FF
 byte_34B3A:
 	dc.b   1,$10,$11,$FF
+	even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj10_MapUnc_34B3E:	BINCLUDE "mappings/sprite/obj10.bin"
-
+                even
 ; animation script
 ; off_34D86:
 Ani_obj88:	offsetTable
@@ -68842,7 +69028,7 @@ byte_34D9E:	dc.b   3, $E, $F,$10,$11,$12,$13,$14,$FF
 ; ----------------------------------------------------------------------------
 Obj88_MapUnc_34DA8:	BINCLUDE "mappings/sprite/obj88.bin"
 ; ===========================================================================
-
+                       even
     if ~~removeJmpTos
 JmpTo43_DisplaySprite ; JmpTo
 	jmp	(DisplaySprite).l
@@ -70445,7 +70631,7 @@ byte_35E19:	dc.b   2,$24,$26,$1C,$FF	; RINGS ?? ?? !
 ; ----------------------------------------------------------------------------
 Obj5A_MapUnc_35E1E:	BINCLUDE "mappings/sprite/obj5A.bin"
 ; ===========================================================================
-
+                  even
 loc_35F76:
 	add.w	d0,d0
 	move.w	d0,d1
@@ -70458,6 +70644,7 @@ loc_35F76:
 ; ===========================================================================
 ; Special Stage Chaos Emerald palette
 word_35F92:	BINCLUDE	"art/palettes/SS Emerald.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 59 - Emerald from Special Stage
@@ -70756,7 +70943,7 @@ byte_36257:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj59_MapUnc_3625A:	BINCLUDE "mappings/sprite/obj59.bin"
-
+                  even
 ; animation script:
 ; off_362D2:
 Ani_obj5B_obj60:offsetTable
@@ -70797,7 +70984,7 @@ byte_36324: dc.b   1,$1E,$1F,$20,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj5A_Obj5B_Obj60_MapUnc_3632A:	BINCLUDE "mappings/sprite/obj5A_5B_60.bin"
-
+                   even
 ; animation script:
 ; off_364CE:
 Ani_obj61:	offsetTable
@@ -70838,6 +71025,7 @@ byte_36502: dc.b   2, $A, $B, $C,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj61_MapUnc_36508:	BINCLUDE "mappings/sprite/obj61.bin"
+       even
 ; ===========================================================================
 
 JmpTo44_DisplaySprite ; JmpTo
@@ -71494,6 +71682,7 @@ Ani_obj8C:	offsetTable
 ; sprite mappings
 ; ------------------------------------------------------------------------
 Obj8C_MapUnc_36A4E:	BINCLUDE "mappings/sprite/obj8C.bin"
+     even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 8D - Grounder in wall, from ARZ
@@ -72014,7 +72203,7 @@ Ani_obj91:	offsetTable
 ; --------------------------------------------------------------------------
 Obj91_MapUnc_36EF6:	BINCLUDE "mappings/sprite/obj91.bin"
 
-
+                   even
 
 
 ; ===========================================================================
@@ -72187,6 +72376,7 @@ byte_3708E:	dc.b   9,  2,  3,$FF
 ; sprite mappings
 ; ---------------------------------------------------------------------------
 Obj92_Obj93_MapUnc_37092:	BINCLUDE "mappings/sprite/obj93.bin"
+        even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 95 - Sol (fireball-throwing orbit badnik) from HTZ
@@ -72374,7 +72564,7 @@ Ani_obj95_b:	offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj95_MapUnc_372E6:	BINCLUDE "mappings/sprite/obj95.bin"
-
+                  even
 Invalid_SubObjData:
 
 ; ===========================================================================
@@ -72771,7 +72961,7 @@ Obj94_SubObjData:
 ; sprite mappings
 ; ------------------------------------------------------------------------
 Obj94_Obj98_MapUnc_37678:	BINCLUDE "mappings/sprite/obj97.bin"
-
+              even
 ; seems to be a lookup table for oscillating horizontal position offset
 byte_376A8:
 	dc.b $F,  0
@@ -73014,6 +73204,7 @@ Ani_obj99:	offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj99_Obj98_MapUnc_3789A:	BINCLUDE "mappings/sprite/obj99.bin"
+          even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 9A - Turtloid (turtle badnik) from Sky Chase Zone
@@ -73437,7 +73628,7 @@ byte_37D90:	dc.b   9,  1,  2,  1,$FF
 ; sprite mappings
 ; ------------------------------------------------------------------------
 Obj9D_Obj98_MapUnc_37D96:	BINCLUDE "mappings/sprite/obj9D.bin"
-
+                  even
 
 
 
@@ -73618,7 +73809,7 @@ Obj9E_SubObjData:
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 Obj9E_MapUnc_37FF2:	BINCLUDE "mappings/sprite/obj9E.bin"
-
+                  even
 
 
 
@@ -73987,6 +74178,7 @@ byte_3830E:	dc.b  $E,  0,  2,  1,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 Obj9F_MapUnc_38314:	BINCLUDE "mappings/sprite/objA0.bin"
+       even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object A1 - Slicer (praying mantis dude) from MTZ
@@ -74232,7 +74424,7 @@ Ani_objA2:	offsetTable
 ; ----------------------------------------------------------------------------
 ObjA1_MapUnc_385E2:	BINCLUDE "mappings/sprite/objA2.bin"
 
-
+                  even
 
 
 ; ===========================================================================
@@ -74425,7 +74617,7 @@ Ani_objA3_c:	offsetTable
 ; sprite mappings
 ; -------------------------------------------------------------------------------
 ObjA3_MapUnc_388F0:	BINCLUDE "mappings/sprite/objA3.bin"
-
+                    even
 
 
 
@@ -74555,7 +74747,7 @@ Ani_objA4:	offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjA4_Obj98_MapUnc_38A96:	BINCLUDE "mappings/sprite/objA4.bin"
-
+                    even
 
 
 
@@ -74769,6 +74961,7 @@ Ani_SpinyShot:	offsetTable
 ; sprite mappings
 ; ------------------------------------------------------------------------------
 ObjA5_ObjA6_Obj98_MapUnc_38CCA:	BINCLUDE "mappings/sprite/objA6.bin"
+       even
 ; ===========================================================================
 ; 3E is unused as well as 12 and 13
 Grabber_Timer = $2C ;$44      ; word
@@ -75645,7 +75838,7 @@ Ani_CluckerShot:offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjAD_Obj98_MapUnc_395B4:	BINCLUDE "mappings/sprite/objAE.bin"
-
+                    even
 
 
 
@@ -76393,11 +76586,12 @@ byte_39E64:	dc.b   3,  7,  7,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjAF_Obj98_MapUnc_39E68:	BINCLUDE "mappings/sprite/objAF_a.bin"
+      even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjAF_MapUnc_3A08C:	BINCLUDE "mappings/sprite/objAF_b.bin"
-
+              even
 
 
 
@@ -76739,7 +76933,7 @@ word_3A49E:
 ; Palette for the SEGA screen (background and pre-wipe foreground) (7 frames)
 ;pal_3A4A4:
 	BINCLUDE	"art/palettes/Sega Screen 2.bin"
-
+                      even
 
 ; probably some sort of description of how to use the following palette
 word_3A514:
@@ -76752,7 +76946,7 @@ word_3A514:
 ; Palette for the SEGA screen (wiping and post-wipe foreground) (7 frames)
 ;pal_3A51A:
 	BINCLUDE	"art/palettes/Sega Screen 3.bin"
-
+                   even
 ; off_3A58A:
 ObjB0_SubObjData:
 	subObjData ObjB1_MapUnc_3A5A6,make_art_tile(ArtTile_ArtUnc_Giant_Sonic,2,1),0,1,$10,0
@@ -76774,6 +76968,7 @@ Ani_objB0:	offsetTable
 ; also has the "trademark hider" mappings
 ; ------------------------------------------------------------------------------
 ObjB1_MapUnc_3A5A6:	BINCLUDE "mappings/sprite/objB1.bin"
+         even
 ; ===========================================================================
 ;loc_3A68A
 SegaScr_VInt:
@@ -77763,12 +77958,13 @@ Ani_objB2_b:	offsetTable
 ; sprite mappings
 ; -----------------------------------------------------------------------------
 ObjB2_MapUnc_3AFF2:	BINCLUDE "mappings/sprite/objB2_a.bin"
+        even
 ; -----------------------------------------------------------------------------
 ; sprite mappings
 ; -----------------------------------------------------------------------------
 ObjB2_MapUnc_3B292:	BINCLUDE "mappings/sprite/objB2_b.bin"
 
-
+                 even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object B3 - Clouds (placeable object) from SCZ
@@ -77816,7 +78012,7 @@ ObjB3_SubObjData:
 ; sprite mappings
 ; -----------------------------------------------------------------------------
 ObjB3_MapUnc_3B32C:	BINCLUDE "mappings/sprite/objB3.bin"
-
+               even
 
 
 
@@ -77870,6 +78066,7 @@ Ani_objB4:	offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjB4_MapUnc_3B3BE:	BINCLUDE "mappings/sprite/objB4.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object B5 - Horizontal propeller from WFZ
@@ -77992,6 +78189,7 @@ byte_3B544:	dc.b $7E,  0,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjB5_MapUnc_3B548:	BINCLUDE "mappings/sprite/objB5.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object B6 - Tilting platform from WFZ
@@ -78283,6 +78481,7 @@ byte_3B850:	dc.b   3,  0,  1,  2,$FA,  0
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjB6_MapUnc_3B856:	BINCLUDE "mappings/sprite/objB6.bin"
+          even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object B7 - Unused huge vertical laser from WFZ
@@ -78317,7 +78516,7 @@ ObjB7_Main:
 ObjB7_SubObjData:
 	subObjData ObjB7_MapUnc_3B8E4,make_art_tile(ArtTile_ArtNem_WfzVrtclLazer,2,1),4,4,$18,$A9
 ObjB7_MapUnc_3B8E4:	BINCLUDE "mappings/sprite/objB7.bin"
-
+                  even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object B8 - Wall turret from WFZ
@@ -78416,6 +78615,7 @@ byte_3BA2A:
 	dc.b $10	; 9
 	dc.b   1	; 10
 	dc.b   1	; 11
+	even
 ; off_3BA36:
 ObjB8_SubObjData:
 	subObjData ObjB8_Obj98_MapUnc_3BA46,make_art_tile(ArtTile_ArtNem_WfzWallTurret,0,0),4,4,$10,0
@@ -78429,6 +78629,7 @@ Ani_WallTurretShot: offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjB8_Obj98_MapUnc_3BA46:	BINCLUDE "mappings/sprite/objB8.bin"
+      even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object B9 - Laser from WFZ that shoots down the Tornado
@@ -78500,6 +78701,7 @@ ObjBA_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjBA_MapUnc_3BB70:	BINCLUDE "mappings/sprite/objBA.bin"
+     even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object BB - Removed object (unknown, unused)
@@ -78531,6 +78733,7 @@ ObjBB_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjBB_MapUnc_3BBA0:	BINCLUDE "mappings/sprite/objBB.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object BC - Fire coming out of Robotnik's ship in WFZ
@@ -78572,6 +78775,7 @@ ObjBC_SubObjData2:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjBC_MapUnc_3BC08:	BINCLUDE "mappings/sprite/objBC.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object BD - Ascending/descending metal platforms from WFZ
@@ -78707,6 +78911,7 @@ byte_3BD38:	dc.b   1,  0,  1,  2,$FA
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjBD_MapUnc_3BD3E:	BINCLUDE "mappings/sprite/objBD.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object BE - Lateral cannon (temporary platform that pops in/out) from WFZ
@@ -78803,6 +79008,7 @@ byte_3BE40:	dc.b   5,  3,  2,  1,  0,$FC
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjBE_MapUnc_3BE46:	BINCLUDE "mappings/sprite/objBE.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object BF - Rotaty-stick badnik from WFZ
@@ -78842,6 +79048,7 @@ Ani_objBF:	offsetTable
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjBF_MapUnc_3BEE0:	BINCLUDE "mappings/sprite/objBF.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object C0 - Speed launcher from WFZ
@@ -79014,6 +79221,7 @@ ObjC0_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjC0_MapUnc_3C098:	BINCLUDE "mappings/sprite/objC0.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object C1 - Breakable plating from WFZ
@@ -79197,6 +79405,7 @@ ObjC1_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjC1_MapUnc_3C280:	BINCLUDE "mappings/sprite/objC1.bin"
+ even
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object C2 - Rivet thing you bust to get into ship at the end of WFZ
@@ -79257,7 +79466,7 @@ ObjC2_SubObjData:
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjC2_MapUnc_3C3C2:	BINCLUDE "mappings/sprite/objC2.bin"
-
+                    even
 Invalid_SubObjData2:
 
 ; ===========================================================================
@@ -80237,6 +80446,7 @@ byte_3CCD0:	dc.b   3,  7,  8,  9, $A, $B,$FF
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjC5_MapUnc_3CCD8:	BINCLUDE "mappings/sprite/objC5_a.bin"
+           even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
@@ -80498,11 +80708,12 @@ Ani_objC6:	offsetTable
 ; sprite mappings ; Robotnik running
 ; ----------------------------------------------------------------------------
 ObjC6_MapUnc_3D0EE:	BINCLUDE "mappings/sprite/objC6_a.bin"
+ even
 ; ----------------------------------------------------------------------------
 ; sprite mappings
 ; ----------------------------------------------------------------------------
 ObjC6_MapUnc_3D1DE:	BINCLUDE "mappings/sprite/objC6_b.bin"
-
+                      even
 
 
 
@@ -80706,7 +80917,7 @@ Ani_objC8:	offsetTable
 ; ----------------------------------------------------------------------------
 ObjC8_MapUnc_3D450:	BINCLUDE "mappings/sprite/objC8.bin"
 
-
+                  even
 
 ChildRefrenceDEZBOSS = $46
 ParentRefrence_2 = $12 ; insted of $14
@@ -83042,6 +83253,7 @@ Obj8A_Display:
 ; sprite mappings (unused?)
 ; ----------------------------------------------------------------------------
 Obj8A_MapUnc_3EB4E:	BINCLUDE "mappings/sprite/obj8A.bin"
+       even
 ; ===========================================================================
 
     if gameRevision<2
@@ -85868,13 +86080,13 @@ BuildHUD_P2_Continued:
 ; sprite mappings for the HUD
 ; uses the art in VRAM from $D940 - $FC00
 HUD_MapUnc_40A9A:	BINCLUDE "mappings/sprite/hud_a.bin"
-
+                 even
 
 HUD_MapUnc_40BEA:	BINCLUDE "mappings/sprite/hud_b.bin"
 
-
+                  even
 HUD_MapUnc_40C82:	BINCLUDE "mappings/sprite/hud_c.bin"
-
+                    even
 ; ---------------------------------------------------------------------------
 ; Add points subroutine
 ; subroutine to add to Player 1's score
@@ -86643,7 +86855,7 @@ Art_Hud:	BINCLUDE	"art/uncompressed/Big and small numbers used on counters - 1.b
 Art_LivesNums:	BINCLUDE	"art/uncompressed/Big and small numbers used on counters - 2.bin"
 ; ArtUnc_4178C:
 Art_Text:	BINCLUDE	"art/uncompressed/Big and small numbers used on counters - 3.bin"
-
+                       even
     if ~~removeJmpTos
 JmpTo_DrawSprite_2P_Loop ; JmpTo
 	jmp	(DrawSprite_2P_Loop).l

@@ -1298,8 +1298,8 @@ Ctrl_2_pressed =		Ctrl_2_Press
 				ds.b	4	; $FFFFF608-$FFFFF60B ; seems unused
 VDP_Reg1_val:			ds.w	1	; normal value of VDP register #1 when display is disabled
 VDP_reg_1_command:              = VDP_Reg1_val
-_unkEF44_1:				ds.l	1	; $FFFFF60E-$FFFFF613 ; seems unused
-Slotted_object_bits:		ds.b    2
+				ds.l	1	; $FFFFF60E-$FFFFF613 ; seems unused
+		ds.b    2
 Demo_Time_left:			ds.w	1	; 2 bytes
 
 Vscroll_Factor:
@@ -1428,7 +1428,7 @@ Demo_button_index_2P:		ds.w	1	; index into button press demo data, for player 2
 Demo_press_counter_2P:		ds.w	1	; frames remaining until next button press, for player 2
 Tornado_Velocity_X:		ds.w	1	; speed of tails' plane in scz ($FFFFF736)
 Tornado_Velocity_Y:		ds.w	1
-Save_pointer:			ds.l	1	; $FFFFF73A-$FFFFF73D
+			ds.l	1	; $FFFFF73A-$FFFFF73D
 ScreenShift:			ds.b	1
 Boss_CollisionRoutine:		ds.b	1
 Boss_AnimationArray:		ds.b	$10	; up to $10 bytes; 2 bytes per entry
@@ -1478,7 +1478,7 @@ Obj_index_Addr_Loc:			ds.l    1
 Boss_defeated_flag:		ds.b	1
 Screen_Y_wrap_value:		ds.w	1	; $FFFFF7A8-$FFFFF7A9 ; seems unused
 Current_Boss_ID:		ds.b	1
-Super_emerald_count:            ds.b    1
+            ds.b    1
 Collected_special_ring_array:	ds.l	1	; $FFFFF7AB-$FFFFF7AF ; seems unused
 MTZ_Platform_Cog_X:			ds.w	1	; X position of moving MTZ platform for cog animation.
 MTZCylinder_Angle_Sonic:	ds.b	1
@@ -1654,6 +1654,7 @@ Rings_Collected_2P:		ds.w	1
 Monitors_Broken:		ds.w	1	; number of monitors broken during an act in two player mode
 Monitors_Broken_2P:		ds.w	1
 Loser_Time_Left:				; 2 bytes
+
 				ds.b	1	; seconds
 				ds.b	1	; frames
 
@@ -1719,18 +1720,23 @@ Total_Bonus_Countdown:		ds.w	1
 
 Level_Music:			ds.w	1
 Bonus_Countdown_3:		ds.w	1
-Emerald_flicker_flag:		ds.w	1
+Game_Over_2P:                   ds.b   1
+Super_emerald_count:             ds.b    1
+Respawn_table_keep:      ds.b    1
+MHZ_pollen_counter:             ds.b    1
+Emerald_flicker_flag:           ds.w    1
+Slotted_object_bits:		ds.w	1
+_unkEF44_1:                     ds.l    1
+Save_pointer:                   ds.l    1
 SRAM_mask_interrupts_flag:      ds.w    1
-Game_Over_2P:			ds.w	1
-
-				ds.b	6	; $FFFFFF9A-$FFFFFF9F ; seems unused
 
 SS2p_RingBuffer:		ds.w	6
-				ds.b	4	; $FFFFFFAC-$FFFFFFAF ; seems unused
+
 Got_Emerald:			ds.b	1
 Emerald_count:			ds.b	1
+Collected_emeralds_array:
 Got_Emeralds_array:		ds.b	7	; 7 bytes
-Collected_emeralds_array =      Got_Emeralds_array
+
 				ds.b	7	; $FFFFFFB9-$FFFFFFBF ; filler  (appearently super emeralds lmao)
 Next_Extra_life_score:		ds.l	1
 Next_Extra_life_score_2P:	ds.l	1
@@ -1762,7 +1768,7 @@ SFX_to_play:			ds.b	1	; normal
 SFX_to_play_2:			ds.b	1	; alternating stereo
 unk_FFE3:			ds.b	1
 Music_to_play_2:		ds.b	1	; alternate (higher priority?) slot
-				ds.b	$B	; $FFFFFFE5-$FFFFFFEF ; seems unused
+				ds.b	$9	; $FFFFFFE5-$FFFFFFEF ; seems unused
 
 Demo_mode_flag:			ds.w	1 ; 1 if a demo is playing (2 bytes)
 Demo_number:			ds.w	1 ; which demo will play next (2 bytes)
