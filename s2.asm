@@ -117,7 +117,7 @@ RamEndingLocation  dc.l  $2003FF
 	dc.b "                                        "	; Notes (unused, anything can be put in this space, but it has to be 52 bytes.)
 	dc.b "JUE             " ; Country code (region)
 EndOfHeader:
-
+          even
 ; ===========================================================================
 ; Crash/Freeze the 68000. Note that the Z80 continues to run, so the music keeps playing.
 ; loc_200:
@@ -2514,6 +2514,7 @@ PalCycle_HTZ_LavaDelayData: ; number of frames between changes of the lava palet
 	dc.b	 8, $A, $B, $B
 	dc.b	$B, $B, $D, $F
 	dc.b	$D, $B, $B, $B
+	even
 ; ===========================================================================
 
 PalCycle_HPZ:
@@ -89832,30 +89833,38 @@ MapUnc_SaveScreenNEW:
 ;----------------------------------------------------------------------------------
 ; EHZ 16x16 block mappings (Kosinski compression) ; was: (Kozinski compression)
 BM16_EHZ:	BINCLUDE	"mappings/16x16/EHZ.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; EHZ/HTZ main level patterns (Kosinski compression)
 ; ArtKoz_95C24:
 ArtKos_EHZ:	BINCLUDE	"art/kosinski/EHZ_HTZ.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; HTZ 16x16 block mappings (Kosinski compression)
 BM16_HTZ:	BINCLUDE	"mappings/16x16/HTZ.bin"
+    even
 ;-----------------------------------------------------------------------------------
 ; HTZ pattern suppliment to EHZ level patterns (Kosinski compression)
 ; ArtKoz_98AB4:
 ArtKos_HTZ:	BINCLUDE	"art/kosinski/HTZ_Supp.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; EHZ/HTZ 128x128 block mappings (Kosinski compression)
 BM128_EHZ:	BINCLUDE	"mappings/128x128/EHZ_HTZ.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; MTZ 16x16 block mappings (Kosinski compression)
 BM16_MTZ:	BINCLUDE	"mappings/16x16/MTZ.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; MTZ main level patterns (Kosinski compression)
 ; ArtKoz_9DB64:
 ArtKos_MTZ:	BINCLUDE	"art/kosinski/MTZ.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; MTZ 128x128 block mappings (Kosinski compression)
 BM128_MTZ:	BINCLUDE	"mappings/128x128/MTZ.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; HPZ 16x16 block mappings (Kosinski compression)
 BM16_HPZ:	;BINCLUDE	"mappings/16x16/HPZ.bin"
@@ -89868,262 +89877,331 @@ BM128_HPZ:	;BINCLUDE	"mappings/128x128/HPZ.bin"
 ;-----------------------------------------------------------------------------------
 ; OOZ 16x16 block mappings (Kosinski compression)
 BM16_OOZ:	BINCLUDE	"mappings/16x16/OOZ.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; OOZ main level patterns (Kosinski compression)
 ; ArtKoz_A4204:
 ArtKos_OOZ:	BINCLUDE	"art/kosinski/OOZ.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; OOZ 128x128 block mappings (Kosinski compression)
 BM128_OOZ:	BINCLUDE	"mappings/128x128/OOZ.bin"
+   even
 ;-----------------------------------------------------------------------------------
 ; MCZ 16x16 block mappings (Kosinski compression)
 BM16_MCZ:	BINCLUDE	"mappings/16x16/MCZ.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; MCZ main level patterns (Kosinski compression)
 ; ArtKoz_A9D74:
 ArtKos_MCZ:	BINCLUDE	"art/kosinski/MCZ.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; MCZ 128x128 block mappings (Kosinski compression)
 BM128_MCZ:	BINCLUDE	"mappings/128x128/MCZ.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; CNZ 16x16 block mappings (Kosinski compression)
 BM16_CNZ:	BINCLUDE	"mappings/16x16/CNZ.bin"
+     even
 ;-----------------------------------------------------------------------------------
 ; CNZ main level patterns (Kosinski compression)
 ; ArtKoz_B0894:
 ArtKos_CNZ:	BINCLUDE	"art/kosinski/CNZ.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; CNZ 128x128 block mappings (Kosinski compression)
 BM128_CNZ:	BINCLUDE	"mappings/128x128/CNZ.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ 16x16 block mappings (Kosinski compression)
 BM16_CPZ:	BINCLUDE	"mappings/16x16/CPZ_DEZ.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ main level patterns (Kosinski compression)
 ; ArtKoz_B6174:
 ArtKos_CPZ:	BINCLUDE	"art/kosinski/CPZ_DEZ.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ 128x128 block mappings (Kosinski compression)
 BM128_CPZ:	BINCLUDE	"mappings/128x128/CPZ_DEZ.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; ARZ 16x16 block mappings (Kosinski compression)
 BM16_ARZ:	BINCLUDE	"mappings/16x16/ARZ.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; ARZ main level patterns (Kosinski compression)
 ; ArtKoz_BCC24:
 ArtKos_ARZ:	BINCLUDE	"art/kosinski/ARZ.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; ARZ 128x128 block mappings (Kosinski compression)
 BM128_ARZ:	BINCLUDE	"mappings/128x128/ARZ.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ 16x16 block mappings (Kosinski compression)
 BM16_WFZ:	BINCLUDE	"mappings/16x16/WFZ_SCZ.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ main level patterns (Kosinski compression)
 ; ArtKoz_C5004:
 ArtKos_SCZ:	BINCLUDE	"art/kosinski/WFZ_SCZ.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; WFZ pattern suppliment to SCZ tiles (Kosinski compression)
 ; ArtKoz_C7EC4:
 ArtKos_WFZ:	BINCLUDE	"art/kosinski/WFZ_Supp.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ 128x128 block mappings (Kosinski compression)
 BM128_WFZ:	BINCLUDE	"mappings/128x128/WFZ_SCZ.bin"
-
+           even
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;-----------------------------------------------------------------------------------
 ; Exit curve + slope up
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CA904:
 MapSpec_Rise1:	BINCLUDE	"mappings/special stage/Slope up - Frame 1.bin"
+            even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CADA8:
 MapSpec_Rise2:	BINCLUDE	"mappings/special stage/Slope up - Frame 2.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CB376:
 MapSpec_Rise3:	BINCLUDE	"mappings/special stage/Slope up - Frame 3.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CB92E:
 MapSpec_Rise4:	BINCLUDE	"mappings/special stage/Slope up - Frame 4.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CBF92:
 MapSpec_Rise5:	BINCLUDE	"mappings/special stage/Slope up - Frame 5.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CC5BE:
 MapSpec_Rise6:	BINCLUDE	"mappings/special stage/Slope up - Frame 6.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CCC7A:
 MapSpec_Rise7:	BINCLUDE	"mappings/special stage/Slope up - Frame 7.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CD282:
 MapSpec_Rise8:	BINCLUDE	"mappings/special stage/Slope up - Frame 8.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CD7C0:
 MapSpec_Rise9:	BINCLUDE	"mappings/special stage/Slope up - Frame 9.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CDD44:
 MapSpec_Rise10:	BINCLUDE	"mappings/special stage/Slope up - Frame 10.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CE2BE:
 MapSpec_Rise11:	BINCLUDE	"mappings/special stage/Slope up - Frame 11.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CE7DE:
 MapSpec_Rise12:	BINCLUDE	"mappings/special stage/Slope up - Frame 12.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CEC52:
 MapSpec_Rise13:	BINCLUDE	"mappings/special stage/Slope up - Frame 13.bin"
+           even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CF0BC:
 MapSpec_Rise14:	BINCLUDE	"mappings/special stage/Slope up - Frame 14.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CF580:
 MapSpec_Rise15:	BINCLUDE	"mappings/special stage/Slope up - Frame 15.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CFA00:
 MapSpec_Rise16:	BINCLUDE	"mappings/special stage/Slope up - Frame 16.bin"
+           even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_CFE4A:
 MapSpec_Rise17:	BINCLUDE	"mappings/special stage/Slope up - Frame 17.bin"
 
+               even
 ;-----------------------------------------------------------------------------------
 ; Straight path
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D028C:
 MapSpec_Straight1:	BINCLUDE	"mappings/special stage/Straight path - Frame 1.bin"
+           even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D090A:
 MapSpec_Straight2:	BINCLUDE	"mappings/special stage/Straight path - Frame 2.bin"
+           even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D0EA6:
 MapSpec_Straight3:	BINCLUDE	"mappings/special stage/Straight path - Frame 3.bin"
+            even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D1400:
 MapSpec_Straight4:	BINCLUDE	"mappings/special stage/Straight path - Frame 4.bin"
-
+              even
 ;-----------------------------------------------------------------------------------
 ; Exit curve + slope down
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D19FC:
 MapSpec_Drop1:	BINCLUDE	"mappings/special stage/Slope down - Frame 1.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D1EAC:
 MapSpec_Drop2:	BINCLUDE	"mappings/special stage/Slope down - Frame 2.bin"
+           even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D23AE:
 MapSpec_Drop3:	BINCLUDE	"mappings/special stage/Slope down - Frame 3.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D27C6:
 MapSpec_Drop4:	BINCLUDE	"mappings/special stage/Slope down - Frame 4.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D2C14:
 MapSpec_Drop5:	BINCLUDE	"mappings/special stage/Slope down - Frame 5.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D3092:
 MapSpec_Drop6:	BINCLUDE	"mappings/special stage/Slope down - Frame 6.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D3522:
 MapSpec_Drop7:	BINCLUDE	"mappings/special stage/Slope down - Frame 7.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D39EC:
 MapSpec_Drop8:	BINCLUDE	"mappings/special stage/Slope down - Frame 8.bin"
+      even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D3F78:
 MapSpec_Drop9:	BINCLUDE	"mappings/special stage/Slope down - Frame 9.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D4660:
 MapSpec_Drop10:	BINCLUDE	"mappings/special stage/Slope down - Frame 10.bin"
+            even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D4DA6:
 MapSpec_Drop11:	BINCLUDE	"mappings/special stage/Slope down - Frame 11.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D53FC:
 MapSpec_Drop12:	BINCLUDE	"mappings/special stage/Slope down - Frame 12.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D5958:
 MapSpec_Drop13:	BINCLUDE	"mappings/special stage/Slope down - Frame 13.bin"
+           even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D5F02:
 MapSpec_Drop14:	BINCLUDE	"mappings/special stage/Slope down - Frame 14.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D6596:
 MapSpec_Drop15:	BINCLUDE	"mappings/special stage/Slope down - Frame 15.bin"
+           even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D6BAA:
 MapSpec_Drop16:	BINCLUDE	"mappings/special stage/Slope down - Frame 16.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D702E:
 MapSpec_Drop17:	BINCLUDE	"mappings/special stage/Slope down - Frame 17.bin"
-
+           even
 ;-----------------------------------------------------------------------------------
 ; Curved path
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D749C:
 MapSpec_Turning1:	BINCLUDE	"mappings/special stage/Curve right - Frame 1.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D7912:
 MapSpec_Turning2:	BINCLUDE	"mappings/special stage/Curve right - Frame 2.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D7DAA:
 MapSpec_Turning3:	BINCLUDE	"mappings/special stage/Curve right - Frame 3.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D8250:
 MapSpec_Turning4:	BINCLUDE	"mappings/special stage/Curve right - Frame 4.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D85F8:
 MapSpec_Turning5:	BINCLUDE	"mappings/special stage/Curve right - Frame 5.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings ; MapSpec_D89EC:
 MapSpec_Turning6:	BINCLUDE	"mappings/special stage/Curve right - Frame 6.bin"
-
+      even
 ;-----------------------------------------------------------------------------------
 ; Exit curve
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Exit curve  ; MapSpec_D8E24:
 MapSpec_Unturn1:	BINCLUDE	"mappings/special stage/Curve right - Frame 7.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Exit curve  ; MapSpec_D92B6:
 MapSpec_Unturn2:	BINCLUDE	"mappings/special stage/Curve right - Frame 8.bin"
+        even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Exit curve  ; MapSpec_D9778:
 MapSpec_Unturn3:	BINCLUDE	"mappings/special stage/Curve right - Frame 9.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Exit curve  ; MapSpec_D9B80:
 MapSpec_Unturn4:	BINCLUDE	"mappings/special stage/Curve right - Frame 10.bin"
+          even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Exit curve  ; MapSpec_DA016:
 MapSpec_Unturn5:	BINCLUDE	"mappings/special stage/Curve right - Frame 11.bin"
-
+           even
 ;-----------------------------------------------------------------------------------
 ; Enter curve
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Begin curve right ; MapSpec_DA4CE:
 MapSpec_Turn1:	BINCLUDE	"mappings/special stage/Begin curve right - Frame 1.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Begin curve right ; MapSpec_DAB20:
 MapSpec_Turn2:	BINCLUDE	"mappings/special stage/Begin curve right - Frame 2.bin"
+       even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Begin curve right ; MapSpec_DB086:
 MapSpec_Turn3:	BINCLUDE	"mappings/special stage/Begin curve right - Frame 3.bin"
+     even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Begin curve right ; MapSpec_DB5AE:
 MapSpec_Turn4:	BINCLUDE	"mappings/special stage/Begin curve right - Frame 4.bin"
+     even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Begin curve right ; MapSpec_DBB62:
 MapSpec_Turn5:	BINCLUDE	"mappings/special stage/Begin curve right - Frame 5.bin"
+         even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Begin curve right ; MapSpec_DC154:
 MapSpec_Turn6:	BINCLUDE	"mappings/special stage/Begin curve right - Frame 6.bin"
+     even
 ;-----------------------------------------------------------------------------------
 ; Special stage tube mappings
 ; Begin curve right ; MapSpec_DC5E8:
@@ -90136,6 +90214,7 @@ MapSpec_Turn7:	BINCLUDE	"mappings/special stage/Begin curve right - Frame 7.bin"
 ;  the same as this one line, so to get the full tiles, each line needs to be
 ;  duplicated 7 times over.					; ArtKoz_DCA38:
 ;--------------------------------------------------------------------------------------
+         even
 ArtKos_Special:	BINCLUDE	"art/kosinski/SpecStag.bin"
 ;--------------------------------------------------------------------------------------
 ; Nemesis compressed art (127 blocks)
