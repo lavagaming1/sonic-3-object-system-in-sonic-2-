@@ -4340,8 +4340,7 @@ loc_5FD6:
 	bsr.w	ClearScreen
 	jsr	(LoadTitleCard).l ; load title card patterns
 	move	#$2300,sr
-	moveq	#PLCID_Std1,d0
-       	jsr	LoadPLC2
+
 	moveq	#0,d0
 	move.w	d0,(Timer_frames).w
 	move.b	(Current_Zone).w,d0
@@ -4619,6 +4618,8 @@ Level_FromCheckpoint:
 	move.w	#-1,(TitleCard_ZoneName+titlecard_leaveflag).w
 	move.b	#$E,(TitleCard_Left+routine).w	; make the left part move offscreen
 	move.w	#$A,(TitleCard_Left+titlecard_location).w
+	moveq	#PLCID_Std1,d0
+       	jsr	LoadPLC
 
 -	move.b	#VintID_TitleCard,(Vint_routine).w
 	bsr.w	WaitForVint
