@@ -4642,6 +4642,7 @@ Level_FromCheckpoint:
 	move.b	#0,(Control_Locked_P2).w
 	move.b	#1,(Level_started_flag).w
 
+
 ; Level_StartGame: loc_435A:
 	bclr	#GameModeFlag_TitleCard,(Game_Mode).w ; clear $80 from the game mode
 
@@ -20047,8 +20048,8 @@ LoadPLC_AnimalExplosion:
 	move.b	(Current_Zone).w,d0
 	lea	(Animal_PLCTable).l,a2
 	move.b	(a2,d0.w),d0
-	jsrto	(LoadPLC).l, JmpTo2_LoadPLC
-	jmp    	(LoadEnemyArt).l
+	jmp	(LoadPLC).l
+
 ; ===========================================================================
 
     if gameRevision<2
@@ -25533,11 +25534,11 @@ Obj34_LoadStandardWaterAndAnimalArt:
 	bne.s	+			; if not, just delete the title card
 	moveq	#PLCID_StdWtr,d0	; load the standard water graphics
 	jsrto	(LoadPLC).l, JmpTo3_LoadPLC
-	jsr    	(LoadEnemyArt).l
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
 	move.b	Animal_PLCTable(pc,d0.w),d0 ; load the animal graphics for the current zone
 	jsrto	(LoadPLC).l, JmpTo3_LoadPLC
+	jsr      (LoadEnemyArt).l
 +
 	bra.w	DeleteObject		; delete the title card object
 ; ===========================================================================
