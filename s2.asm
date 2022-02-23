@@ -1518,51 +1518,52 @@ PlaneMapToVRAM_H80_SpecialStage:
 ; sub_144E: DMA_68KtoVRAM: QueueCopyToVRAM: QueueVDPCommand: Add_To_DMA_Queue:
 Add_To_DMA_Queue:
 QueueDMATransfer:
-	movea.l	(VDP_Command_Buffer_Slot).w,a1
-	cmpa.w	#VDP_Command_Buffer_Slot,a1
-	beq.s	QueueDMATransfer_Done ; return if there's no more room in the buffer
 
-	; piece together some VDP commands and store them for later...
-	move.w	#$9300,d0 ; command to specify DMA transfer length & $00FF
-	move.b	d3,d0
-	move.w	d0,(a1)+ ; store command
+		movea.l	(VDP_Command_Buffer_Slot).w,a1
+		cmpa.w	#VDP_Command_Buffer_Slot,a1	; is the queue full?
+		beq.s	Add_To_DMA_Queue_Done	; if it is, return
 
-	move.w	#$9400,d0 ; command to specify DMA transfer length & $FF00
-	lsr.w	#8,d3
-	move.b	d3,d0
-	move.w	d0,(a1)+ ; store command
+		move.w	#$9300,d0
+		move.b	d3,d0
+		move.w	d0,(a1)+	; command to specify transfer length in words & $00FF
 
-	move.w	#$9500,d0 ; command to specify source address & $0001FE
-	lsr.l	#1,d1
-	move.b	d1,d0
-	move.w	d0,(a1)+ ; store command
+		move.w	#$9400,d0
+		lsr.w	#8,d3
+		move.b	d3,d0
+		move.w	d0,(a1)+	; command to specify transfer length in words & $FF00
 
-	move.w	#$9600,d0 ; command to specify source address & $01FE00
-	lsr.l	#8,d1
-	move.b	d1,d0
-	move.w	d0,(a1)+ ; store command
+		move.w	#$9500,d0
 
-	move.w	#$9700,d0 ; command to specify source address & $FE0000
-	lsr.l	#8,d1
-	;andi.b	#$7F,d1		; this instruction safely allows source to be in RAM; S3K added this
-	move.b	d1,d0
-	move.w	d0,(a1)+ ; store command
+		lsr.l	#1,d1
 
-	andi.l	#$FFFF,d2 ; command to specify destination address and begin DMA
-	lsl.l	#2,d2
-	lsr.w	#2,d2
-	swap	d2
-	ori.l	#vdpComm($0000,VRAM,DMA),d2 ; set bits to specify VRAM transfer
-	move.l	d2,(a1)+ ; store command
+		move.b	d1,d0
+		move.w	d0,(a1)+	; command to specify transfer source & $0001FE
 
-	move.l	a1,(VDP_Command_Buffer_Slot).w ; set the next free slot address
-	cmpa.w	#VDP_Command_Buffer_Slot,a1
-	beq.s	QueueDMATransfer_Done ; return if there's no more room in the buffer
-	move.w	#0,(a1) ; put a stop token at the end of the used part of the buffer
-; return_14AA:
-QueueDMATransfer_Done:
-	rts
-; End of function QueueDMATransfer
+		move.w	#$9600,d0
+		lsr.l	#8,d1
+		move.b	d1,d0
+		move.w	d0,(a1)+	; command to specify transfer source & $01FE00
+
+		move.w	#$9700,d0
+		lsr.l	#8,d1
+		andi.b	#$7F,d1		; this instruction safely allows source to be in RAM; S2's lacks this
+		move.b	d1,d0
+		move.w	d0,(a1)+	; command to specify transfer source & $FE0000
+
+		andi.l	#$FFFF,d2
+		lsl.l	#2,d2
+		lsr.w	#2,d2
+		swap	d2
+		ori.l	#vdpComm($0000,VRAM,DMA),d2
+		move.l	d2,(a1)+	; command to specify transfer destination and begin DMA
+
+		move.l	a1,(VDP_Command_Buffer_Slot).w	; set new free slot address
+		cmpa.w	#VDP_Command_Buffer_Slot,a1	; has the end of the queue been reached?
+		beq.s	Add_To_DMA_Queue_Done	; if it has, branch
+		move.w	#0,(a1)	; place stop token at the end of the queue
+
+Add_To_DMA_Queue_Done:
+		rts
 
 
 ; ---------------------------------------------------------------------------
@@ -1576,26 +1577,27 @@ QueueDMATransfer_Done:
 ; sub_14AC: CopyToVRAM: IssueVDPCommands: Process_DMA: Process_DMA_Queue:
 ProcessDMAQueue:
 	lea	(VDP_control_port).l,a5
-	lea	(VDP_Command_Buffer).w,a1
-; loc_14B6:
-ProcessDMAQueue_Loop:
-	move.w	(a1)+,d0
-	beq.s	ProcessDMAQueue_Done ; branch if we reached a stop token
-	; issue a set of VDP commands...
-	move.w	d0,(a5)		; transfer length
-	move.w	(a1)+,(a5)	; transfer length
-	move.w	(a1)+,(a5)	; source address
-	move.w	(a1)+,(a5)	; source address
-	move.w	(a1)+,(a5)	; source address
-	move.w	(a1)+,(a5)	; destination
-	move.w	(a1)+,(a5)	; destination
-	cmpa.w	#VDP_Command_Buffer_Slot,a1
-	bne.s	ProcessDMAQueue_Loop ; loop if we haven't reached the end of the buffer
-; loc_14CE:
-ProcessDMAQueue_Done:
-	move.w	#0,(VDP_Command_Buffer).w
-	move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
-	rts
+		lea	(DMA_queue).w,a1
+
+-
+		move.w	(a1)+,d0	; has a stop token been encountered?
+		beq.s	+	; if it has, branch
+		move.w	d0,(a5)
+		move.w	(a1)+,(a5)
+		move.w	(a1)+,(a5)
+		move.w	(a1)+,(a5)
+		move.w	(a1)+,(a5)
+		move.w	(a1)+,(a5)
+		move.w	(a1)+,(a5)
+		cmpa.w	#DMA_queue_slot,a1	; has the end of the queue been reached?
+		bne.s	-	; if not, loop
+
++
+		move.w	#0,(DMA_queue).w
+		move.l	#DMA_queue,(DMA_queue_slot).w
+		rts
+
+
 ; End of function ProcessDMAQueue
 
 
