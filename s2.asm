@@ -28916,11 +28916,11 @@ BuildSprites_ObjLoop:
 	bne.w	BuildSprites_MultiDraw	; if it is, branch
 	andi.w	#$C,d0	; is this to be positioned by screen coordinates?
 	beq.s	BuildSprites_ScreenSpaceObj	; if it is, branch
-	lea	(Camera_X_pos_copy).w,a1
+	;lea	(Camera_X_pos_copy).w,a1
 	moveq	#0,d0
 	move.b	width_pixels(a0),d0
 	move.w	x_pos(a0),d3
-	sub.w	(a1),d3
+	sub.w	Camera_X_pos_copy.w,d3
 	move.w	d3,d1
 	add.w	d0,d1	; is the object right edge to the left of the screen?
 	bmi.w	BuildSprites_NextObj	; if it is, branch
@@ -28934,7 +28934,7 @@ BuildSprites_ObjLoop:
 	moveq	#0,d0
 	move.b	y_radius(a0),d0
 	move.w	y_pos(a0),d2
-	sub.w	4(a1),d2
+	sub.w	Camera_Y_pos_copy.w,d2
 	move.w	d2,d1
 	add.w	d0,d1
 	bmi.s	BuildSprites_NextObj	; if the object is above the screen
@@ -28954,7 +28954,7 @@ BuildSprites_ScreenSpaceObj:
 ; loc_166B0:
 BuildSprites_ApproxYCheck:
 	move.w	y_pos(a0),d2
-	sub.w	4(a1),d2
+	sub.w	Camera_Y_pos_copy.w,d2
 	addi.w	#128,d2
 	andi.w	#$7FF,d2
 	cmpi.w	#-32+128,d2	; assume Y radius to be 32 pixels
@@ -28997,8 +28997,8 @@ BuildSprites_NextLevel:
 ; ===========================================================================
 ; loc_1671C:
 BuildSprites_MultiDraw:
-	move.l	a4,-(sp)
-	lea	(Camera_X_pos).w,a4
+	;move.l	a4,-(sp)
+;	lea	(Camera_X_pos).w,a4
 	movea.w	art_tile(a0),a3
 	movea.l	mappings(a0),a5
 	moveq	#0,d0
@@ -29006,7 +29006,7 @@ BuildSprites_MultiDraw:
 	; check if object is within X bounds
 	move.b	mainspr_width(a0),d0	; load pixel width
 	move.w	x_pos(a0),d3
-	sub.w	(a4),d3
+	sub.w	Camera_X_pos_copy.w,d3
 	move.w	d3,d1
 	add.w	d0,d1
 	bmi.w	BuildSprites_MultiDraw_NextObj
@@ -29022,7 +29022,7 @@ BuildSprites_MultiDraw:
 	moveq	#0,d0
 	move.b	mainspr_height(a0),d0	; load pixel height
 	move.w	y_pos(a0),d2
-	sub.w	4(a4),d2
+	sub.w	Camera_Y_pos_copy.w,d2
 	move.w	d2,d1
 	add.w	d0,d1
 	bmi.w	BuildSprites_MultiDraw_NextObj
@@ -29034,7 +29034,7 @@ BuildSprites_MultiDraw:
 	bra.s	++
 +
 	move.w	y_pos(a0),d2
-	sub.w	4(a4),d2
+	sub.w	Camera_Y_pos_copy,d2
 	addi.w	#128,d2
 	andi.w	#$7FF,d2
 	cmpi.w	#-32+128,d2
@@ -29064,10 +29064,10 @@ BuildSprites_MultiDraw:
 
 -	swap	d0
 	move.w	(a6)+,d3	; get X pos
-	sub.w	(a4),d3
+	sub.w	Camera_X_pos_copy.w,d3
 	addi.w	#128,d3
 	move.w	(a6)+,d2	; get Y pos
-	sub.w	4(a4),d2
+	sub.w	Camera_Y_pos_copy,d2
 	addi.w	#128,d2
 	andi.w	#$7FF,d2
 	addq.w	#1,a6
@@ -29087,7 +29087,7 @@ BuildSprites_MultiDraw:
 	dbf	d0,-	; repeat for number of child sprites
 ; loc_16804:
 BuildSprites_MultiDraw_NextObj:
-	movea.l	(sp)+,a4
+	;movea.l	(sp)+,a4
 	bra.w	BuildSprites_NextObj
 ; End of function BuildSprites
 
@@ -29111,7 +29111,7 @@ DrawSprite:
 	bhs.s	DrawSprite_Done
 ; loc_1681C:
 DrawSprite_Cont:
-	btst	#0,d4	; is the sprite to be X-flipped?  
+	btst	#0,d4	; is the sprite to be X-flipped?
 	bne.s	DrawSprite_FlipX	; if it is, branch
 	btst	#1,d4	; is the sprite to be Y-flipped?
 	bne.w	DrawSprite_FlipY	; if it is, branch
