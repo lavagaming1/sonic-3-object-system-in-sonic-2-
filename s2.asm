@@ -33768,7 +33768,7 @@ loc_19F4C:
 ; Object 01 - Sonic
 ; ----------------------------------------------------------------------------
 ; Sprite_19F50: Object_Sonic:
-Obj01:
+Obj01: 
 	; a0=character
 	tst.w	(Debug_placement_mode).w	; is debug mode being used?
 	beq.s	Obj01_Normal			; if not, branch
@@ -36655,6 +36655,8 @@ TailsCPU_Control: ; a0=Tails
 +
 	lea	(MainCharacter).w,a1 ; a1=character ; a1=Sonic
 	move.w	(Tails_CPU_routine).w,d0
+	cmpi.w  #$8,d0
+	bhs.w   TailsCPU_Panic
 	move.w	TailsCPU_States(pc,d0.w),d0
 	jmp	TailsCPU_States(pc,d0.w)
 ; ===========================================================================
@@ -36991,8 +36993,8 @@ TailsCPU_CheckDespawn:
 	btst	#3,status(a0)
 	beq.s	TailsCPU_TickRespawnTimer
 
-
-	movea.w	interact(a0),a3;d0
+        moveq	#0,d0
+	move.w	interact(a0),a3
 
 	move.b	(Tails_interact_ID).w,d0
 	cmp.b	(a3),d0
@@ -37013,8 +37015,8 @@ TailsCPU_ResetRespawnTimer:
 ; loc_1BEA2:
 TailsCPU_UpdateObjInteract:
 
-	movea.w	interact(a0),a3 ;d0
 
+	move.w	interact(a0),a3
 	move.b	(a3),(Tails_interact_ID).w
 	rts
 
@@ -83898,7 +83900,7 @@ Touch_NoHurt:
 ; ---------------------------------------------------------------------------
 ; loc_3F86E:
 Touch_Hurt:
-	nop
+	;nop
 	tst.b	invulnerable_time(a0)
 	bne.s	Touch_NoHurt
 	movea.l	a1,a2
@@ -83961,6 +83963,8 @@ Hurt_ChkSpikes:
 	move.w	#0,inertia(a0)
 	move.b	#AniIDSonAni_Hurt2,anim(a0)
 	move.b	#$78,invulnerable_time(a0)
+	tst.b   render_flags(a0)
+        bpl.s   KillCharacterOffscreen
 	move.w	#SndID_Hurt,d0	; load normal damage sound
 	move.l  (a2),d1
 	cmp.l	#Obj36,d1
@@ -83994,6 +83998,8 @@ KillCharacter:
 	move.b	#AniIDSonAni_Death,anim(a0)
 	bset	#high_priority_bit,art_tile(a0)
         moveq	#SndID_Hurt,d0
+        tst.b   render_flags(a0)
+        bpl.s   KillCharacterOffscreen
         move.l  (a2),d1
 	cmp.l	#Obj36,d1
 	bne.s	+
@@ -84003,6 +84009,9 @@ KillCharacter:
 +
 	moveq	#-1,d0
 	rts
+KillCharacterOffscreen:
+                  moveq	#-1,d0
+                  rts
 ; ===========================================================================
 ;loc_3F976:
 Touch_Special:
