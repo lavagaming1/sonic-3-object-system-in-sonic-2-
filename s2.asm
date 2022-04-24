@@ -4509,8 +4509,9 @@ Level_TtlCard:
 	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf_End
 
 	bsr.w	LoadZoneTiles
+
 	jsrto	(loadZoneBlockMaps).l, JmpTo_loadZoneBlockMaps
-	jsr	(LoadAnimatedBlocks).l
+        jsr	(LoadAnimatedBlocks).l
 	jsrto	(DrawInitialBG).l, JmpTo_DrawInitialBG
 	jsr	(ConvertCollisionArray).l
 	bsr.w	LoadCollisionIndexes
@@ -17648,7 +17649,10 @@ DrawBlockCol2:
 -	move.w	(a0),d3		; get ID of the 16x16 block
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3		; multiply by 8, the size in bytes of a 16x16
-	lea	(Block_Table).w,a1
+	movea.l	(BlocksAddr).w,a1
+;	movem.l	d1/a0-a1,-(sp)
+;	jsr    Correct_AnimatedTiles
+ ;       movem.l	(sp)+,d1/a0-a1
 	adda.w	d3,a1		; a1 = address of the current 16x16 in the block table
 	move.l	d1,d0
 	bsr.w	ProcessAndWriteBlock2
@@ -17668,7 +17672,10 @@ DrawBlockCol2:
 /	move.w	(a0),d3
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3
-	lea	(Block_Table).w,a1
+	movea.l	(BlocksAddr).w,a1
+;	movem.l	d1/a0-a1,-(sp)
+;	jsr    Correct_AnimatedTiles
+      ;  movem.l	(sp)+,d1/a0-a1
 	adda.w	d3,a1
 	move.l	d1,d0
 	bsr.w	ProcessAndWriteBlock2_2P
@@ -17708,7 +17715,7 @@ DrawBlockRow2:
 ; loc_DF9A: DrawTiles_Vertical3:
 DrawBlockRow3:
 	tst.w	(Two_player_mode).w
-	bne.s	DrawBlockRow_2P
+	bne.w	DrawBlockRow_2P
 	move.l	a2,-(sp)
 	move.w	d6,-(sp)
 	lea	(Block_cache).w,a2
@@ -17723,7 +17730,10 @@ DrawBlockRow3:
 -	move.w	(a0),d3		; get ID of the 16x16 block
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3		; multiply by 8, the size in bytes of a 16x16
-	lea	(Block_Table).w,a1
+	movea.l	(BlocksAddr).w,a1
+;;	movem.l	d1/a0-a1,-(sp)
+;	jsr    Correct_AnimatedTiles
+      ;  movem.l	(sp)+,d1/a0-a1
 	adda.w	d3,a1		; a1 = address of current 16x16 in the block table
 	bsr.w	ProcessAndWriteBlock
 	addq.w	#2,a0		; move onto next 16x16
@@ -17776,7 +17786,10 @@ DrawBlockRow_2P:
 -	move.w	(a0),d3
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3
-	lea	(Block_Table).w,a1
+	movea.l	(BlocksAddr).w,a1
+;	movem.l	d1/a0-a1,-(sp)
+;	jsr    Correct_AnimatedTiles
+      ;  movem.l	(sp)+,d1/a0-a1
 	adda.w	d3,a1
 	bsr.w	ProcessAndWriteBlock_2P
 	addq.w	#2,a0
@@ -17802,7 +17815,10 @@ DrawBlockRow_2P:
 -	move.w	(a0),d3
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3
-	lea	(Block_Table).w,a1
+	movea.l	(BlocksAddr).w,a1
+;	movem.l	d1/a0-a1,-(sp)
+;	jsr    Correct_AnimatedTiles
+      ;  movem.l	(sp)+,d1/a0-a1
 	adda.w	d3,a1
 	bsr.w	ProcessAndWriteBlock_2P
 	addq.w	#2,a0
@@ -18059,7 +18075,10 @@ loc_E234:
 GetBlockPtr:
 	add.w	(a3),d5
 	add.w	4(a3),d4
-	lea	(Block_Table).w,a1
+	movea.l	(BlocksAddr).w,a1
+;	movem.l	d1/a0-a1,-(sp)
+;	jsr    Correct_AnimatedTiles
+      ;  movem.l	(sp)+,d1/a0-a1
 	move.w	d4,d3		; d3 = camera Y pos + offset
 	add.w	d3,d3
 	andi.w	#$F00,d3	; limit to units of $100 ($100 = $80 * 2, $80 = height of a 128x128)
@@ -18256,38 +18275,23 @@ loadZoneBlockMaps:
 	lea	(a2,d0.w),a2
 	move.l	a2,-(sp)
 	addq.w	#4,a2
-	move.l	(a2)+,d0
-	andi.l	#$FFFFFF,d0	; pointer to block mappings
-	movea.l	d0,a0
-	lea	(Block_Table).w,a1
-	jsrto	(KosDec).l, JmpTo_KosDec	; load block maps
-	cmpi.b	#hill_top_zone,(Current_Zone).w
-	bne.s	+
-	lea	(Block_Table+$980).w,a1
-	lea	(BM16_HTZ).l,a0
-	jsrto	(KosDec).l, JmpTo_KosDec	; patch for Hill Top Zone block map
-+
-	tst.w	(Two_player_mode).w
-	beq.s	+
-	; In 2P mode, adjust the block table to halve the pattern index on each block
-	lea	(Block_Table).w,a1
+	move.l	(a2)+,(BlocksAddr).w
 
-	move.w	#bytesToWcnt(Block_Table_End-Block_Table),d2
--	move.w	(a1),d0		; read an entry
-	move.w	d0,d1
-	andi.w	#$F800,d0	; filter for upper five bits
-	andi.w	#$7FF,d1	; filter for lower eleven bits (patternIndex)
-	lsr.w	#1,d1		; halve the pattern index
-	or.w	d1,d0		; put the parts back together
-	move.w	d0,(a1)+	; change the entry with the adjusted value
-	dbf	d2,-
-+
+
+
+        move.l  (BlocksAddr).w,a1
+       ; bsr.w   Correct_AnimatedTiles
+        ;movea.l  ApmAddr.w,a0
+
+
 	move.l	(a2)+,d0
 	andi.l	#$FFFFFF,d0	; pointer to chunk mappings
 	movea.l	d0,a0
+
 	lea	(Chunk_Table).l,a1
 	jsrto	(KosDec).l, JmpTo_KosDec
 	bsr.w	loadLevelLayout
+
 	movea.l	(sp)+,a2	; zone specific pointer in LevelArtPointers
 	addq.w	#4,a2
 	moveq	#0,d0
@@ -29107,7 +29111,7 @@ DrawSprite:
 	bhs.s	DrawSprite_Done
 ; loc_1681C:
 DrawSprite_Cont:
-	btst	#0,d4	; is the sprite to be X-flipped?
+	btst	#0,d4	; is the sprite to be X-flipped?  
 	bne.s	DrawSprite_FlipX	; if it is, branch
 	btst	#1,d4	; is the sprite to be Y-flipped?
 	bne.w	DrawSprite_FlipY	; if it is, branch
@@ -57619,7 +57623,8 @@ SlotMachine_Subroutine2:
 ; ---------------------------------------------------------------------------
 +
 	bsr.w	SlotMachine_GetPixelRow	; Get pointer to pixel row
-	lea	(Block_Table+$1000).w,a1	; Destination for pixel rows
+	movea.l	(BlocksAddr).w,a1	; Destination for pixel rows
+	adda.w  #$1000,a1
 
 	move.w	#4*8-1,d1				; Slot picture is 4 tiles
 -	move.l	$80(a2),$80(a1)			; Copy pixel row for second column
@@ -85150,31 +85155,34 @@ LoadAnimatedBlocks:
 	bne.s	+
 	move.b	#-1,(Anim_Counters+1).w
 +
-	moveq	#0,d0
-	move.b	(Current_Zone).w,d0
-	add.w	d0,d0
-	move.w	AnimPatMaps(pc,d0.w),d0
-	lea	AnimPatMaps(pc,d0.w),a0
-	tst.w	(Two_player_mode).w
-	beq.s	+
-	cmpi.b	#casino_night_zone,(Current_Zone).w
-	bne.s	+
-	lea	(APM_CNZ2P).l,a0
-+
-	tst.w	(a0)
-	beq.s	+	; rts
-	lea	(Block_Table).w,a1
-	adda.w	(a0)+,a1
-	move.w	(a0)+,d1
-	tst.w	(Two_player_mode).w
-	bne.s	LoadLevelBlocks_2P
+;	moveq	#0,d0
+;	move.b	(Current_Zone).w,d0
+;;	add.w	d0,d0
+;;	move.w	AnimPatMaps(pc,d0.w),d0
+;	lea	AnimPatMaps.l,a0
+;;	adda.l  d0,a0
+;	move.l  a0,ApmAddr.w
+	rts
+;	tst.w	(Two_player_mode).w
+;	beq.s	+
+;	cmpi.b	#casino_night_zone,(Current_Zone).w
+;	bne.s	+
+;	lea	(APM_CNZ2P).l,a0
+;+
+;	tst.w	(a0)
+;	beq.s	+	; rts
+
+;	adda.w	(a0)+,a1
+;	move.w	(a0)+,d1
+;	tst.w	(Two_player_mode).w
+;	bne.s	LoadLevelBlocks_2P
 
 ; loc_40330:
-LoadLevelBlocks:
-	move.w	(a0)+,(a1)+	; copy blocks to RAM
-	dbf	d1,LoadLevelBlocks	; loop using d1
-+
-	rts
+;LoadLevelBlocks:
+;	move.w	(a0)+,(a1)+	; copy blocks to RAM
+;	dbf	d1,LoadLevelBlocks	; loop using d1
+;+
+;	rts
 ; ===========================================================================
 ; loc_40338:
 LoadLevelBlocks_2P:
@@ -85744,7 +85752,7 @@ APM_ARZ_End:
 APM_Null:	dc.w   0
 ; ===========================================================================
 ; loc_407C0:
-PatchHTZTiles:
+PatchHTZTiles: 
 	lea	(ArtNem_HTZCliffs).l,a0
 	lea	(Object_RAM+$800).w,a4
 	jsrto	(NemDecToRAM).l, JmpTo2_NemDecToRAM
@@ -89836,7 +89844,7 @@ MapUnc_SaveScreenNEW:
 
 ;----------------------------------------------------------------------------------
 ; EHZ 16x16 block mappings (Kosinski compression) ; was: (Kozinski compression)
-BM16_EHZ:	BINCLUDE	"mappings/16x16/EHZ.bin"
+BM16_EHZ:	BINCLUDE	"mappings/16x16/EHZ.unc"
           even
 ;-----------------------------------------------------------------------------------
 ; EHZ/HTZ main level patterns (Kosinski compression)
@@ -89845,7 +89853,7 @@ ArtKos_EHZ:	BINCLUDE	"art/kosinski/EHZ_HTZ.bin"
         even
 ;-----------------------------------------------------------------------------------
 ; HTZ 16x16 block mappings (Kosinski compression)
-BM16_HTZ:	BINCLUDE	"mappings/16x16/HTZ.bin"
+BM16_HTZ:	BINCLUDE	"mappings/16x16/HTZ.unc"
     even
 ;-----------------------------------------------------------------------------------
 ; HTZ pattern suppliment to EHZ level patterns (Kosinski compression)
@@ -89858,7 +89866,7 @@ BM128_EHZ:	BINCLUDE	"mappings/128x128/EHZ_HTZ.bin"
       even
 ;-----------------------------------------------------------------------------------
 ; MTZ 16x16 block mappings (Kosinski compression)
-BM16_MTZ:	BINCLUDE	"mappings/16x16/MTZ.bin"
+BM16_MTZ:	BINCLUDE	"mappings/16x16/MTZ.unc"
       even
 ;-----------------------------------------------------------------------------------
 ; MTZ main level patterns (Kosinski compression)
@@ -89880,7 +89888,7 @@ ArtKos_HPZ:	;BINCLUDE	"art/kosinski/HPZ.bin"
 BM128_HPZ:	;BINCLUDE	"mappings/128x128/HPZ.bin"
 ;-----------------------------------------------------------------------------------
 ; OOZ 16x16 block mappings (Kosinski compression)
-BM16_OOZ:	BINCLUDE	"mappings/16x16/OOZ.bin"
+BM16_OOZ:	BINCLUDE	"mappings/16x16/OOZ.unc"
         even
 ;-----------------------------------------------------------------------------------
 ; OOZ main level patterns (Kosinski compression)
@@ -89893,7 +89901,7 @@ BM128_OOZ:	BINCLUDE	"mappings/128x128/OOZ.bin"
    even
 ;-----------------------------------------------------------------------------------
 ; MCZ 16x16 block mappings (Kosinski compression)
-BM16_MCZ:	BINCLUDE	"mappings/16x16/MCZ.bin"
+BM16_MCZ:	BINCLUDE	"mappings/16x16/MCZ.unc"
        even
 ;-----------------------------------------------------------------------------------
 ; MCZ main level patterns (Kosinski compression)
@@ -89906,7 +89914,7 @@ BM128_MCZ:	BINCLUDE	"mappings/128x128/MCZ.bin"
       even
 ;-----------------------------------------------------------------------------------
 ; CNZ 16x16 block mappings (Kosinski compression)
-BM16_CNZ:	BINCLUDE	"mappings/16x16/CNZ.bin"
+BM16_CNZ:	BINCLUDE	"mappings/16x16/CNZ.unc"
      even
 ;-----------------------------------------------------------------------------------
 ; CNZ main level patterns (Kosinski compression)
@@ -89919,7 +89927,7 @@ BM128_CNZ:	BINCLUDE	"mappings/128x128/CNZ.bin"
         even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ 16x16 block mappings (Kosinski compression)
-BM16_CPZ:	BINCLUDE	"mappings/16x16/CPZ_DEZ.bin"
+BM16_CPZ:	BINCLUDE	"mappings/16x16/CPZ_DEZ.unc"
        even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ main level patterns (Kosinski compression)
@@ -89932,7 +89940,7 @@ BM128_CPZ:	BINCLUDE	"mappings/128x128/CPZ_DEZ.bin"
         even
 ;-----------------------------------------------------------------------------------
 ; ARZ 16x16 block mappings (Kosinski compression)
-BM16_ARZ:	BINCLUDE	"mappings/16x16/ARZ.bin"
+BM16_ARZ:	BINCLUDE	"mappings/16x16/ARZ.unc"
           even
 ;-----------------------------------------------------------------------------------
 ; ARZ main level patterns (Kosinski compression)
@@ -89945,7 +89953,7 @@ BM128_ARZ:	BINCLUDE	"mappings/128x128/ARZ.bin"
           even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ 16x16 block mappings (Kosinski compression)
-BM16_WFZ:	BINCLUDE	"mappings/16x16/WFZ_SCZ.bin"
+BM16_WFZ:	BINCLUDE	"mappings/16x16/WFZ_SCZ.unc"
         even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ main level patterns (Kosinski compression)

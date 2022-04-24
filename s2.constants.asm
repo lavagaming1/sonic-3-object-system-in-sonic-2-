@@ -1059,7 +1059,8 @@ Chunk_Table_End:
 Level_Layout:			ds.b	$1000
 Level_Layout_End:
 
-Block_Table:			ds.w	$C00
+Block_Table:			ds.b	$17FC
+ApmAddr:                                ds.l    1
 Block_Table_End:
 
 TempArray_LayerDef:		ds.b	$200	; used by some layer deformation routines
@@ -1133,7 +1134,7 @@ Tails_InvincibilityStars:
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
-Object_RAM_End:
+Object_RAM_End:                    
 Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff
 Sprite_Table_2:                = Kos_decomp_buffer+$800 ; bc KosM doesnt get used in 2p mode
 Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
@@ -1160,7 +1161,7 @@ Horiz_Scroll_Buf:		ds.b	$380
 Horiz_Scroll_Buf_End:
 Sonic_Stat_Record_Buf:		ds.b	$100
 Sonic_Pos_Record_Buf:		ds.b	$100
-Tails_Pos_Record_Buf:		ds.b	$100  
+Tails_Pos_Record_Buf:		ds.b	$100
 CNZ_saucer_data:		ds.b	$40	; the number of saucer bumpers in a group which have been destroyed. Used to decide when to give 500 points instead of 10
 CNZ_saucer_data_End:
 Ring_Positions:			ds.b	$600
@@ -1274,7 +1275,8 @@ Underwater_palette_line2:	ds.b palette_line_size
 Underwater_palette_line3:	ds.b palette_line_size
 Underwater_palette_line4:	ds.b palette_line_size
 
-             			ds.b	$458	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
+BlocksAddr:                                ds.l   1
+             			ds.b	$454	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
 Competition_saved_data:         ds.b    $54     ; whatever you wanna use in compition mode
 Saved_data                      ds.b    $54     ;data select
 Game_mode:
