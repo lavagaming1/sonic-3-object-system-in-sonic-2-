@@ -85752,7 +85752,7 @@ APM_ARZ_End:
 APM_Null:	dc.w   0
 ; ===========================================================================
 ; loc_407C0:
-PatchHTZTiles: 
+PatchHTZTiles:
 	lea	(ArtNem_HTZCliffs).l,a0
 	lea	(Object_RAM+$800).w,a4
 	jsrto	(NemDecToRAM).l, JmpTo2_NemDecToRAM
@@ -87291,7 +87291,7 @@ LevelArtPointers:
 	levartptrs PLCID_Mtz1,     PLCID_Mtz2,      PalID_MTZ,  ArtKos_MTZ, BM16_MTZ, BM128_MTZ ;   4 ; MTZ  ; METROPOLIS ZONE ACTS 1 & 2
 	levartptrs PLCID_Mtz1,     PLCID_Mtz2,      PalID_MTZ,  ArtKos_MTZ, BM16_MTZ, BM128_MTZ ;   5 ; MTZ3 ; METROPOLIS ZONE ACT 3
 	levartptrs PLCID_Wfz1,     PLCID_Wfz2,      PalID_WFZ,  ArtKos_SCZ, BM16_WFZ, BM128_WFZ ;   6 ; WFZ  ; WING FORTRESS ZONE
-	levartptrs PLCID_Htz1,     PLCID_Htz2,      PalID_HTZ,  ArtKos_EHZ, BM16_EHZ, BM128_EHZ ;   7 ; HTZ  ; HILL TOP ZONE
+	levartptrs PLCID_Htz1,     PLCID_Htz2,      PalID_HTZ,  ArtKos_EHZ, BM16_HTZ, BM128_EHZ ;   7 ; HTZ  ; HILL TOP ZONE
 	levartptrs PLCID_Hpz1,     PLCID_Hpz2,      PalID_HPZ,  ArtKos_HPZ, BM16_HPZ, BM128_HPZ ;   8 ; HPZ  ; HIDDEN PALACE ZONE (UNUSED)
 	levartptrs PLCID_Unused3,  PLCID_Unused4,   PalID_EHZ4, ArtKos_EHZ, BM16_EHZ, BM128_EHZ ;   9 ; LEV9 ; LEVEL 9 (UNUSED)
 	levartptrs PLCID_Ooz1,     PLCID_Ooz2,      PalID_OOZ,  ArtKos_OOZ, BM16_OOZ, BM128_OOZ ;  $A ; OOZ  ; OIL OCEAN ZONE
@@ -89853,7 +89853,11 @@ ArtKos_EHZ:	BINCLUDE	"art/kosinski/EHZ_HTZ.bin"
         even
 ;-----------------------------------------------------------------------------------
 ; HTZ 16x16 block mappings (Kosinski compression)
-BM16_HTZ:	BINCLUDE	"mappings/16x16/HTZ.unc"
+BM16_HTZ: ;BINCLUDE	"mappings/16x16/EHZ.unc", 0, $980
+
+ 	BINCLUDE	"mappings/16x16/HTZ.unc" ;, 0, $11A0
+ 	;Binclude	"mappings/16x16/EHZ.unc" , $0,$1678
+        ;Binclude     "mappings/16x16/EHZ.unc", $1788,$6C
     even
 ;-----------------------------------------------------------------------------------
 ; HTZ pattern suppliment to EHZ level patterns (Kosinski compression)
