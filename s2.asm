@@ -23,7 +23,7 @@ gameRevision = 2
 ;	| If 0, a REV00 ROM is built
 ;	| If 1, a REV01 ROM is built, which contains some fixes
 ;	| If 2, a (probable) REV02 ROM is built, which contains even more fixes
-padToPowerOfTwo = 1
+padToPowerOfTwo = 0
 ;	| If 1, pads the end of the ROM to the next power of two bytes (for real hardware)
 ;
 allOptimizations = 0
@@ -57641,7 +57641,10 @@ SlotMachine_Subroutine2:
 +
 	dbf	d1,-						; Loop for aoo pixel rows
 
-	move.l	#(Block_Table+$1000)&$FFFFFF,d1	; Source
+
+	;move.l	a1,d1	; Source
+	moveq   #0,d1
+	addi.l  #ArtUnc_CNZSlotPics,d1 ; :T
 	tst.w	(Two_player_mode).w
 	beq.s	+
 	addi.w	#tiles_to_bytes(ArtTile_ArtUnc_CNZSlotPics_1_2p-ArtTile_ArtUnc_CNZSlotPics_1),d2
@@ -89927,7 +89930,17 @@ BM128_MCZ:	BINCLUDE	"mappings/128x128/MCZ.bin"
       even
 ;-----------------------------------------------------------------------------------
 ; CNZ 16x16 block mappings (Kosinski compression)
-BM16_CNZ:	BINCLUDE	"mappings/16x16/CNZ.unc"
+BM16_CNZ: BINCLUDE    "mappings/16x16/CNZ.unc",0,$1760
+                dc.w    $0550, $0554, $0551, $0555, $0558, $055C, $0559, $055D
+                dc.w    $0552, $0556, $0553, $0557, $055A, $055E, $055B, $055F
+                dc.w    $0560, $0564, $0561, $0565, $0568, $056C, $0569, $056D
+                dc.w    $0562, $0566, $0563, $0567, $056A, $056E, $056B, $056F
+                dc.w    $0570, $0574, $0571, $0575, $0578, $057C, $0579, $057D
+                dc.w    $0572, $0576, $0573, $0577, $057A, $057E, $057B, $057F
+                dc.w    $E540, $E544, $E541, $E545, $E548, $E54C, $E549, $E54D
+                dc.w    $E542, $E546, $E543, $E547, $E54A, $E54E, $E54B, $E54F
+                dc.w    $E330, $E334, $E331, $E335, $E338, $E33C, $E339, $E33D
+                dc.w    $E332, $E336, $E333, $E337, $E33A, $E33E, $E33B, $E33F
      even
 ;-----------------------------------------------------------------------------------
 ; CNZ main level patterns (Kosinski compression)
