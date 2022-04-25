@@ -1134,7 +1134,7 @@ Tails_InvincibilityStars:
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
-Object_RAM_End:                    
+Object_RAM_End:
 Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff
 Sprite_Table_2:                = Kos_decomp_buffer+$800 ; bc KosM doesnt get used in 2p mode
 Kos_decomp_stored_registers	ds.w 20			; allows decompression to be spread over multiple frames
