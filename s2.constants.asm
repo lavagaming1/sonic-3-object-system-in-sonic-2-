@@ -1080,26 +1080,23 @@ Reserved_object_3		ds.b object_size	; during a level, an object whose sole purpo
 
 
 Dynamic_object_RAM:
-Dynamic_Object_RAM:	        ds.b object_size*90	; $1A04 bytes ; 90 objects
+                  ds.b  object_size  ; ususally always used (during game loading and stuff)
+                  ds.b  object_size
+TitleCard:                  ds.b  object_size
+TitleCard_ZoneName = TitleCard
+TitleCard_Zone:             ds.b  object_size
+TitleCard_ActNumber:            ds.b  object_size
+TitleCard_Background:           ds.b  object_size
+TitleCard_Bottom:               ds.b  object_size
+TitleCard_Left:                 ds.b  object_size
+Dynamic_Object_RAM:	        ds.b object_size*$52	; $1A04 bytes ; 90 objects
 Dynamic_Object_RAM_End =	*
 Level_object_RAM:             = Dynamic_Object_RAM_End	; $4EA bytes ; various fixed in-level objects
 ;--------------------------------------------------------------------------------------------
 ;RamVarables that were not reserved in s3k but their slots still exists
 
-TitleCard:   = Dynamic_Object_RAM+object_size*2            ;       = Dynamic_Object_RAM+object_size*2
-TitleCard_ZoneName: = Dynamic_Object_RAM+object_size*2 ;ds.b object_size	;	= Dynamic_Object_RAM+object_size*2                    ; "TIME" from TIME OVER
 
-TitleCard_Zone:     = Dynamic_Object_RAM+object_size*3 ;ds.b object_size       ;     = Dynamic_Object_RAM+object_size*3
 
-TitleCard_ActNumber: = Dynamic_Object_RAM+object_size*4; ds.b object_size     ;      = Dynamic_Object_RAM+object_size*4
-                                 ;       = Dynamic_Object_RAM+object_size*5
-
-TitleCard_Background: = Dynamic_Object_RAM+object_size*5 ;ds.b object_size	;	= Dynamic_Object_RAM+object_size*6 ; level title card: background
-
-;
-TitleCard_Bottom:  = Dynamic_Object_RAM+object_size*6 ;ds.b object_size      ;	= Dynamic_Object_RAM+object_size*7	; level title card: yellow part at the bottom
-;
-TitleCard_Left:	= Dynamic_Object_RAM+object_size*7 ;ds.b object_size	;	= Dynamic_Object_RAM+object_size*8 ; level title card: red part on the left
 
 
 
