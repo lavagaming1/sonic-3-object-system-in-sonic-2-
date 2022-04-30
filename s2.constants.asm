@@ -1655,7 +1655,7 @@ Rings_Collected:		ds.w	1	; number of rings collected during an act in two player
 Rings_Collected_2P:		ds.w	1
 Monitors_Broken:		ds.w	1	; number of monitors broken during an act in two player mode
 Monitors_Broken_2P:		ds.w	1
-Loser_Time_Left:				; 2 bytes 
+Loser_Time_Left:				; 2 bytes
 				ds.b	1	; seconds
 				ds.b	1	; frames
 
@@ -1730,7 +1730,7 @@ Game_Over_2P:			ds.w	1
 SS2p_RingBuffer:		ds.w	6
     ds.b	4	; $FFFFFFAC-$FFFFFFAF ; seems unused
 Got_Emerald:			ds.b	1
-Emerald_count:			ds.b	1      
+Emerald_count:			ds.b	1
 Got_Emeralds_array:		ds.b	7	; 7 bytes
 Collected_emeralds_array =      Got_Emeralds_array
 				ds.b	7	; $FFFFFFB9-$FFFFFFBF ; filler  (appearently super emeralds lmao)
@@ -1864,7 +1864,7 @@ SpecialStageShadow_Tails:
 SpecialStageTails_Tails:
 				ds.b	object_size
 SS_Dynamic_Object_RAM:
-				ds.b	$18*object_size
+				ds.b	$17*object_size
 SpecialStageResults:
 				ds.b	object_size
 				ds.b	$C*object_size
@@ -1872,8 +1872,8 @@ SpecialStageResults2:
 				ds.b	object_size
 				ds.b	$40*object_size
 SS_Dynamic_Object_RAM_End:
-				ds.b	object_size-$16
-SS_Object_RAM_End:
+				ds.b	object_size
+SS_Object_RAM_End:                   ;$FFFFFCFCC end of obj ram
 				; The special stage mode also uses the rest of the RAM for
 				; different purposes.
 
