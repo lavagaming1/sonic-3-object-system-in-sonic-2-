@@ -17650,13 +17650,14 @@ DrawBlockCol2:
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3		; multiply by 8, the size in bytes of a 16x16
 	movea.l	(BlocksAddr).w,a1
+;	jsr   FixBlocksIn2Pmode
 ;	movem.l	d1/a0-a1,-(sp)
 ;	jsr    Correct_AnimatedTiles
  ;       movem.l	(sp)+,d1/a0-a1
 	adda.w	d3,a1		; a1 = address of the current 16x16 in the block table
 	move.l	d1,d0
 	bsr.w	ProcessAndWriteBlock2
-	adda.w	#$10,a0		; move onto the 16x16 vertically below this one
+	lea	$10(a0),a0		; move onto the 16x16 vertically below this one
 	addi.w	#64*2*2,d1	; draw on alternate 8x8 lines
 	andi.w	#(64*32*2)-1,d1	; wrap around plane (assumed to be in 64x32 mode)
 	addi.w	#$10,d4		; add 16 to Y offset
@@ -17673,18 +17674,19 @@ DrawBlockCol2:
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3
 	movea.l	(BlocksAddr).w,a1
+;	jsr   FixBlocksIn2Pmode
 ;	movem.l	d1/a0-a1,-(sp)
 ;	jsr    Correct_AnimatedTiles
       ;  movem.l	(sp)+,d1/a0-a1
 	adda.w	d3,a1
 	move.l	d1,d0
 	bsr.w	ProcessAndWriteBlock2_2P
-	adda.w	#$10,a0
+	lea	$10(a0),a0
 	addi.w	#$80,d1
-	andi.w	#$FFF,d1
+	;andi.w	#$FFF,d1
 	addi.w	#$10,d4
-	move.w	d4,d0
-	andi.w	#$70,d0
+	;move.w	d4,d0
+	andi.w	#$70,d4
 	bne.s	+
 	bsr.w	GetBlockAddr
 +	dbf	d6,-
@@ -17731,6 +17733,7 @@ DrawBlockRow3:
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3		; multiply by 8, the size in bytes of a 16x16
 	movea.l	(BlocksAddr).w,a1
+;	jsr   FixBlocksIn2Pmode
 ;;	movem.l	d1/a0-a1,-(sp)
 ;	jsr    Correct_AnimatedTiles
       ;  movem.l	(sp)+,d1/a0-a1
@@ -17787,6 +17790,7 @@ DrawBlockRow_2P:
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3
 	movea.l	(BlocksAddr).w,a1
+;	jsr    FixBlocksIn2Pmode
 ;	movem.l	d1/a0-a1,-(sp)
 ;	jsr    Correct_AnimatedTiles
       ;  movem.l	(sp)+,d1/a0-a1
@@ -17816,6 +17820,7 @@ DrawBlockRow_2P:
 	andi.w	#$3FF,d3
 	lsl.w	#3,d3
 	movea.l	(BlocksAddr).w,a1
+;	jsr    FixBlocksIn2Pmode
 ;	movem.l	d1/a0-a1,-(sp)
 ;	jsr    Correct_AnimatedTiles
       ;  movem.l	(sp)+,d1/a0-a1
@@ -18076,6 +18081,7 @@ GetBlockPtr:
 	add.w	(a3),d5
 	add.w	4(a3),d4
 	movea.l	(BlocksAddr).w,a1
+;	jsr    FixBlocksIn2Pmode
 ;	movem.l	d1/a0-a1,-(sp)
 ;	jsr    Correct_AnimatedTiles
       ;  movem.l	(sp)+,d1/a0-a1
@@ -18262,7 +18268,27 @@ loc_E396:
 ; loadZoneBlockMaps
 
 ; Loads block and bigblock mappings for the current Zone.
+FixBlocksIn2Pmode:
+        tst.w   (Two_player_mode).w
+	bne.s    +
+        movem.l  a1/d0-d1/d2-d3,-(sp)
 
+	move.l	#$FFE,d2
+-	move.w	(a1),d0		; read an entry
+	move.w	d0,d1
+	andi.w	#$F800,d0	; filter for upper five bits
+	andi.w	#$7FF,d1	; filter for lower eleven bits (patternIndex)
+	lsr.w	#1,d1		; halve the pattern index
+	or.w	d1,d0		; put the parts back together
+	move.w	d0,(a1)+	; change the entry with the adjusted value
+	dbf	d2,-
+	tst.w   (Two_player_mode).w
+	beq.s    +
+
+	rts
++
+	movem.l  (sp)+,d0-d1/d2-d3/a1
+	rts
 loadZoneBlockMaps:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
@@ -18280,6 +18306,8 @@ loadZoneBlockMaps:
 
 
         move.l  (BlocksAddr).w,a1
+      ;  jsr    FixBlocksIn2Pmode
+
        ; bsr.w   Correct_AnimatedTiles
         ;movea.l  ApmAddr.w,a0
 
