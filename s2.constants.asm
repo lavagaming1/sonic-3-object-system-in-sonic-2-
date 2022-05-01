@@ -1148,7 +1148,7 @@ Kos_modules_left:               ds.b 1
 Kos_decomp_buffer_END:
                                 ds.b  1  ; unused odd
                       ds.w   1
-                                ds.b	$2	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
+                                ds.l	$1	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
 DMA_queue:
 VDP_Command_Buffer:		ds.w	7*$12	; stores 18 ($12) VDP commands to issue the next time ProcessDMAQueue is called
 VDP_Command_Buffer_Slot:	ds.l	1	; stores the address of the next open slot for a queued VDP command
@@ -1193,7 +1193,7 @@ Horiz_block_crossed_flag_BG3:	ds.b	1
 				ds.b	1	; $FFFFEE47 ; seems unused
 Horiz_block_crossed_flag_P2:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary horizontally
 Verti_block_crossed_flag_P2:	ds.b	1	; toggles between 0 and $10 when you cross a block boundary vertically
-				ds.b	6	; $FFFFEE4A-$FFFFEE4F ; seems unused
+				ds.b	4	; $FFFFEE4A-$FFFFEE4D ; seems unused
 Scroll_flags:			ds.w	1	; bitfield ; bit 0 = redraw top row, bit 1 = redraw bottom row, bit 2 = redraw left-most column, bit 3 = redraw right-most column
 Scroll_flags_BG:		ds.w	1	; bitfield ; bits 0-3 as above, bit 4 = redraw top row (except leftmost block), bit 5 = redraw bottom row (except leftmost block), bits 6-7 = as bits 0-1
 Scroll_flags_BG2:		ds.w	1	; bitfield ; essentially unused; bit 0 = redraw left-most column, bit 1 = redraw right-most column
@@ -1427,7 +1427,7 @@ Demo_button_index_2P:		ds.w	1	; index into button press demo data, for player 2
 Demo_press_counter_2P:		ds.w	1	; frames remaining until next button press, for player 2
 Tornado_Velocity_X:		ds.w	1	; speed of tails' plane in scz ($FFFFF736)
 Tornado_Velocity_Y:		ds.w	1
-Save_pointer:			ds.l	1	; $FFFFF73A-$FFFFF73D
+			ds.l	1	; $FFFFF73A-$FFFFF73D
 ScreenShift:			ds.b	1
 Boss_CollisionRoutine:		ds.b	1
 Boss_AnimationArray:		ds.b	$10	; up to $10 bytes; 2 bytes per entry
@@ -1616,8 +1616,14 @@ Ring_spill_anim_frame:		ds.b	1
 Ring_spill_anim_accum:		ds.w	1
 				ds.b	6	; $FFFFFEA9-$FFFFFEAF ; seems unused, but cleared once
 Oscillating_variables_End
-				ds.b	$10	; $FFFFFEB0-$FFFFFEBF ; seems unused
-
+Save_pointer:				   ds.l    1 
+                               ds.b    3    ; $FFFFFEB0-$FFFFFEBF ; seems unused
+        ds.b    1
+               ds.b    1
+                ds.b     1
+             ds.l     1
+                                ds.b    1
+                                ds.b     1
 ; values for the second player (some of these only apply to 2-player games)
 Tails_top_speed:		ds.w	1	; Tails_max_vel
 Tails_acceleration:		ds.w	1
@@ -1761,8 +1767,10 @@ SFX_to_play:			ds.b	1	; normal
 SFX_to_play_2:			ds.b	1	; alternating stereo
 unk_FFE3:			ds.b	1
 Music_to_play_2:		ds.b	1	; alternate (higher priority?) slot
-				ds.b	$B	; $FFFFFFE5-$FFFFFFEF ; seems unused
+				ds.b	$1	; $FFFFFFE5-$FFFFFFEF ; seems unused
 
+                                ds.l    1
+                           ds.b    $6
 Demo_mode_flag:			ds.w	1 ; 1 if a demo is playing (2 bytes)
 Demo_number:			ds.w	1 ; which demo will play next (2 bytes)
 Ending_demo_number:		ds.w	1 ; zone for the ending demos (2 bytes, unused)
@@ -2027,7 +2035,13 @@ Z80_Reset =			$A11200
 
 Security_Addr =			$A14000
 SRAM_access_flag =		$A130F1 ; 1 for saving something in s ram 0 is for no saving simple ?
-
+General_SRAM =          $200011 ;$200011
+Backup_SRAM =           $2000BD ;$2000BD
+Game_SRAM =             $200281 ;$200281
+Game_Backup_SRAM =      $20032D ;$20032D
+Unk_SRAM =              $200169 ;$200169
+Unk_SRAM_2 =            $2001F5 ;$2001F5
+S3_SRAM_Data =          $FF0000
 ; ---------------------------------------------------------------------------
 ; I/O Area 
 HW_Version =				$A10001

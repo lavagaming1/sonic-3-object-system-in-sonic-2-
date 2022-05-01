@@ -23,7 +23,7 @@ gameRevision = 2
 ;	| If 0, a REV00 ROM is built
 ;	| If 1, a REV01 ROM is built, which contains some fixes
 ;	| If 2, a (probable) REV02 ROM is built, which contains even more fixes
-padToPowerOfTwo = 0
+padToPowerOfTwo = 1
 ;	| If 1, pads the end of the ROM to the next power of two bytes (for real hardware)
 ;
 allOptimizations = 0
@@ -25837,11 +25837,14 @@ loc_141D6:
 	subi.w	#10,(Bonus_Countdown_3).w
 
 loc_141E6:
+
 	add.w	d0,(Total_Bonus_Countdown).w
 	tst.w	d0
 	bne.s	loc_14256
 	move.w	#SndID_TallyEnd,d0
 	jsr	(PlaySound).l
+        st	(SRAM_mask_interrupts_flag).w		; If in act 2 or Sky Sanctuary, save the game
+	jsr	(SaveGame).l
 	addq.b	#2,routine(a0)
 	move.w	#$B4,anim_frame_duration(a0)
 	cmpi.w	#1000,(Total_Bonus_Countdown).w
