@@ -18289,6 +18289,7 @@ FixBlocksIn2Pmode:
 +
 	movem.l  (sp)+,d0-d1/d2-d3/a1
 	rts
+CnzCopressionBufferStart = Chunk_Table+$7800
 loadZoneBlockMaps:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
@@ -18306,6 +18307,15 @@ loadZoneBlockMaps:
 
 
         move.l  (BlocksAddr).w,a1
+        cmpi.b  #casino_night_zone,(Current_Zone).w
+        bne.s   +
+        movea.l $1000(a1),a3
+        move.w  #(Chunk_Table_End-CnzCopressionBufferStart)/4,d0; store the last 800 bytes in RAM
+        lea     (CnzCopressionBufferStart).l,a1
+.loop:
+        move.l  (a3)+,(a1)+
+        dbf     d0,.loop
++
       ;  jsr    FixBlocksIn2Pmode
 
        ; bsr.w   Correct_AnimatedTiles
@@ -21207,7 +21217,7 @@ Obj17_Index:	offsetTable
 		offsetTableEntry.w Obj17_Main		; 2
 		offsetTableEntry.w Obj17_Display	; 4
 ; ===========================================================================
-; loc_10324: Obj17_Main:
+; loc_10324: Obj17_Main:    
 Obj17_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Obj17_MapUnc_10452,mappings(a0)
@@ -42796,6 +42806,8 @@ loc_1FB02:
 	lea	(MainCharacter).w,a1 ; a1=character
 	bsr.s	loc_1FB0C
 	lea	(Sidekick).w,a1 ; a1=character
+	bra.w   TailsInhaleCollsionDetect
+
 
 loc_1FB0C:
 	tst.b	obj_control(a1)
@@ -42824,6 +42836,7 @@ loc_1FB0C:
 	move.b	#AniIDSonAni_Bubble,anim(a1)
 	move.w	#$23,move_lock(a1)
 	move.b	#0,jumping(a1)
+
 	bclr	#5,status(a1)
 	bclr	#4,status(a1)
 	btst	#2,status(a1)
@@ -42843,12 +42856,42 @@ loc_1FBA8:
 	subq.w	#1,y_pos(a1)
 
 loc_1FBB8:
+
 	cmpi.b	#6,routine(a0)
 	beq.s	return_1FBCA
 	move.b	#6,routine(a0)
 	addq.b	#3,anim(a0)
 
 return_1FBCA:
+	rts
+TailsInhaleCollsionDetect:
+        subq.w  #1,objoff_3E(a0)
+        bpl.s   return_1FBCA
+       	move.w	x_pos(a1),d0
+	move.w	x_pos(a0),d1
+	subi.w	#$10,d1
+	cmp.w	d0,d1
+	bhs.w	return_1FBCA
+	addi.w	#$20,d1
+	cmp.w	d0,d1
+	blo.w	return_1FBCA
+	move.w	y_pos(a1),d0
+	move.w	y_pos(a0),d1
+	cmp.w	d0,d1
+	bhs.w	return_1FBCA
+	addi.w	#$10,d1
+	cmp.w	d0,d1
+	blo.w	return_1FBCA
+	move.w	#SndID_InhalingBubble,d0
+	jsr	(PlaySound).l
+	clr.w	x_vel(a1)
+	clr.w	y_vel(a1)
+	clr.w	inertia(a1)
+	move.b	#AniIDSonAni_Bubble,anim(a1)
+	move.w	#$23,move_lock(a1)
+	move.b	#0,jumping(a1)
+	move.w  #$20,objoff_3E(a0)
+	move.b	#$1E,air_left(a1)
 	rts
 ; ===========================================================================
 ; -------------------------------------------------------------------------------
@@ -57656,8 +57699,7 @@ SlotMachine_Subroutine2:
 ; ---------------------------------------------------------------------------
 +
 	bsr.w	SlotMachine_GetPixelRow	; Get pointer to pixel row
-	movea.l	(BlocksAddr).w,a1	; Destination for pixel rows
-	adda.w  #$1000,a1
+	lea	Chunk_Table+$7800.l,a1	; Destination for pixel rows
 
 	move.w	#4*8-1,d1				; Slot picture is 4 tiles
 -	move.l	$80(a2),$80(a1)			; Copy pixel row for second column
@@ -57674,8 +57716,7 @@ SlotMachine_Subroutine2:
 
 
 	;move.l	a1,d1	; Source
-	moveq   #0,d1
-	addi.l  #ArtUnc_CNZSlotPics,d1 ; :T
+	move.l	#(Chunk_Table+$7800)&$FFFFFF,d1 ; :T
 	tst.w	(Two_player_mode).w
 	beq.s	+
 	addi.w	#tiles_to_bytes(ArtTile_ArtUnc_CNZSlotPics_1_2p-ArtTile_ArtUnc_CNZSlotPics_1),d2

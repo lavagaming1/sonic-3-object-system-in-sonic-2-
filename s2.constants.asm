@@ -35,7 +35,7 @@ height_pixels =		  6 ; byte
 width_pixels =		  7 ; byte
 priority =		  8 ; word ; in units of $80
 art_tile =		 $A ; word ; PCCVH AAAAAAAAAAA ; P = priority, CC = palette line, V = y-flip; H = x-flip, A = starting cell index of art
-mappings =		 $C ; long
+mappings =		 $C ; long  
 x_pos =			$10 ; word, or long when extra precision is required
 y_pos =			$14 ; word, or long when extra precision is required
 x_sub =			  $12 ; and
@@ -1059,9 +1059,11 @@ Chunk_Table_End:
 Level_Layout:			ds.b	$1000
 Level_Layout_End:
 
-Block_Table:			ds.b	$17FC
-ApmAddr:                                ds.l    1
-Block_Table_End:
+			ds.b	$1000 ; this is 80% is unused so go nuts but make sure S2 ss is fine when you do so it wont glitch out you can give it dynamic ram banks
+CompressionBuffer:         ; in conquest this is used to decompress exploation art and sonic 3 save in here its used by CNZ and s3 save screen (its hardcoded here for somereason)
+                        ds.b    $800
+CompressionBuffer_End
+
 
 TempArray_LayerDef:		ds.b	$200	; used by some layer deformation routines
 Decomp_Buffer:			ds.b	$200
