@@ -25984,11 +25984,11 @@ loc_142E2:
 ; -------------------------------------------------------------------------------
 ;word_142F8:
 LevelOrder: zoneOrderedTable 2,2	; WrdArr_LevelOrder
-	zoneTableEntry.w  emerald_hill_zone_act_2
+	zoneTableEntry.w  emerald_hill_zone_act_2   ; 0
 	zoneTableEntry.w  chemical_plant_zone_act_1	; 1
 	zoneTableEntry.w  emerald_hill_zone_act_1	; 2
 	zoneTableEntry.w  emerald_hill_zone_act_1	; 3
-	zoneTableEntry.w  wood_zone_act_2		; 4
+	zoneTableEntry.w  wood_zone_act_2		    ; 4
 	zoneTableEntry.w  metropolis_zone_act_1		; 5
 	zoneTableEntry.w  emerald_hill_zone_act_1	; 6
 	zoneTableEntry.w  emerald_hill_zone_act_1	; 7
@@ -26012,7 +26012,7 @@ LevelOrder: zoneOrderedTable 2,2	; WrdArr_LevelOrder
 	zoneTableEntry.w  hill_top_zone_act_1		; 25
 	zoneTableEntry.w  chemical_plant_zone_act_2	; 26
 	zoneTableEntry.w  aquatic_ruin_zone_act_1	; 27
-	zoneTableEntry.w  $FFFF				; 28
+	zoneTableEntry.w  $FFFF				        ; 28
 	zoneTableEntry.w  emerald_hill_zone_act_1	; 29
 	zoneTableEntry.w  aquatic_ruin_zone_act_2	; 30
 	zoneTableEntry.w  casino_night_zone_act_1	; 31
@@ -86693,8 +86693,9 @@ dbglistobj macro   obj, mapaddr, subtype, frame, vram
     endm
 
 DbgObjList_Test: dbglistheader
-       	dbglistobj Obj25,		Obj25_MapUnc_12382,   0,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0) ; obj25 = ring
+    dbglistobj Obj25,		Obj25_MapUnc_12382,   0,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0) ; obj25 = ring
 	dbglistobj Obj26,	Obj26_MapUnc_12D36,   8,   0, make_art_tile(ArtTile_ArtNem_Powerups,0,0) ; obj26 = monitor
+	dbglistobj Obj3E,	Obj3E_MapUnc_3F436,   0,   0, make_art_tile(ArtTile_ArtNem_Capsule,1,0)
 DbgObjList_Test_End
 
 DbgObjList_MCZ: dbglistheader

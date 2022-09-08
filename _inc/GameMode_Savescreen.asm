@@ -1540,22 +1540,40 @@ loc_DA62:
 locret_DA6C:
 		rts
 ; End of function sub_DA4E
-
+EHZ  =  0
+ID1  =  $100
+ID2  =  $200
+ID3  =  $300
+MTZ  =  $400
+MTZ3 =  $500
+WFZ  =  $600
+HTZ  =  $700
+HPZ  =  $800
+ID9  =  $900
+OOZ  =  $A00
+MCZ  =  $B00
+CNZ  =  $C00
+CPZ  =  $D00
+DEZ  =  $E00
+ARZ  =  $F00
+SCZ  =  $1000
 ; ---------------------------------------------------------------------------
-LevelList_DA6E:	dc.w 0
-		dc.w $100
-		dc.w $200
-		dc.w $300
-		dc.w $500
-		dc.w $600
-		dc.w $700
-		dc.w $400
-		dc.w $800
-		dc.w $900
+LevelList_DA6E:	
+        dc.w EHZ
+		dc.w CPZ
+		dc.w ARZ
+		dc.w CNZ
+		dc.w HTZ
+		dc.w MCZ
+		dc.w OOZ
+		dc.w MTZ
+		dc.w SCZ
+		dc.w DEZ
 		dc.w $1601
 		dc.w $A00
 		dc.w $B00
 		dc.w $C00
+		even 
 word_DA8A:	dc.w $8000
 		dc.w $8000
 		dc.w $8000
