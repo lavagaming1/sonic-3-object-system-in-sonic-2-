@@ -206,21 +206,22 @@ objoff_2C =		$2C ; overlaps subtype, but a few objects use it for other things a
 ; ---------------------------------------------------------------------------
 ; Special Stage object properties:
 ss_dplc_timer = $25 ;s2 => 23
-ss_x_pos = $2E;objoff_2A
-ss_x_sub = $30 ;objoff_2C
-ss_y_pos = $32 ;objoff_2E
-ss_y_sub = $34 ;objoff_30
-ss_init_flip_timer = $36 ;objoff_32
-ss_flip_timer = $37 ;objoff_33
-ss_z_pos = $38 ;objoff_34
-ss_hurt_timer = $3A ;objoff_36
-ss_slide_timer = $3B ;objoff_37
-ss_parent = parent3 ;objoff_38 (used as long word in the orignals but in here its a word )
-ss_rings_base = $3E ;objoff_3C	; word
-ss_rings_hundreds = $3E ;objoff_3C
-ss_rings_tens = $3F ;objoff_3D
-ss_rings_units = $40 ;objoff_3E
-ss_last_angle_index = $41 ;objoff_3F
+SSTestRoutineSec = angle+1 ;flag for your hurt state
+ss_x_pos = objoff_2C
+ss_x_sub = objoff_2E
+ss_y_pos = objoff_30
+ss_y_sub = objoff_32
+ss_init_flip_timer = objoff_34
+ss_flip_timer = objoff_35
+ss_z_pos = objoff_36
+ss_hurt_timer = objoff_3A
+ss_slide_timer = objoff_3B
+ss_parent = objoff_3C
+ss_rings_base = objoff_3E	; word
+ss_rings_hundreds = objoff_3E
+ss_rings_tens = objoff_3F
+ss_rings_units = objoff_40
+ss_last_angle_index = objoff_41
 ; ---------------------------------------------------------------------------
 ; property of all objects:
 object_size =		$4A ; the size of an object

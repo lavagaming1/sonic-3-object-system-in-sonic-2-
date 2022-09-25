@@ -67967,7 +67967,7 @@ Obj09_Init:
 ; ===========================================================================
 
 Obj09_MdNormal:
-	tst.b	routine_secondary(a0)
+	tst.b	SSTestRoutineSec(a0)
 	bne.s	Obj09_Hurt
 	lea	(Ctrl_1_Held_Logical).w,a2
 	bsr.w	SSPlayer_Move
@@ -67997,7 +67997,7 @@ SSHurt_Animation:
 	addi.b	#8,d0
 	move.b	d0,ss_hurt_timer(a0)
 	bne.s	+
-	move.b	#0,routine_secondary(a0)
+	move.b	#0,SSTestRoutineSec(a0)
 	move.b	#$1E,ss_dplc_timer(a0)
 +
 	add.b	angle(a0),d0
@@ -68012,7 +68012,7 @@ SSHurt_Animation:
 	subi.b	#8,d0
 	bne.s	return_33A90
 	move.b	d0,collision_property(a0)
-	cmpa.l	#MainCharacter,a0
+	cmpa.w	#MainCharacter,a0
 	bne.s	+
 	tst.w	(Ring_count).w
 	beq.s	return_33A90
@@ -68178,19 +68178,17 @@ Obj09_MdAir:
 ; ===========================================================================
 
 SSObjectMoveAndFall:
-	move.l	ss_x_pos(a0),d2
-	move.l	ss_y_pos(a0),d3
-	move.w	x_vel(a0),d0
-	ext.l	d0
-	asl.l	#8,d0
-	add.l	d0,d2
-	move.w	y_vel(a0),d0
-	addi.w	#$A8,y_vel(a0)	; Apply gravity
-	ext.l	d0
-	asl.l	#8,d0
-	add.l	d0,d3
-	move.l	d2,ss_x_pos(a0)
-	move.l	d3,ss_y_pos(a0)
+        addi.w	#$A8,y_vel(a0)	; App
+	move.l  x_vel(a0),d0  ;12 cycles (x vel+yvel)
+        move.w  d0,d1       ; 4 cycles  (d1 y vel into y pos)
+	swap    d0  ; swap to the first word (4 cycles)
+	ext.l   d1
+	asl.l	#$8,d1 ; multyply by $80  (whatever pixels) (depends on value)
+	add.l	d1,ss_y_pos(a0) ; add our x value  (y pos)
+	; and now d1 contains y vel !  ; (20 cycles)
+	ext.l   d0    ;(4 cycles)
+	asl.l	#$8,d0  ;depends on value)
+	add.l	d0,ss_x_pos(a0)    ;20 cycles
 	rts
 ; ===========================================================================
 
@@ -68384,7 +68382,7 @@ SSPlayer_Collision:
 	jsr	(PlaySound).l
 
 loc_33E38:
-	move.b	#2,routine_secondary(a0)		; hurt state
+	move.b	#2,SSTestRoutineSec(a0)		; hurt state
 	clr.b	ss_hurt_timer(a0)
 
 return_33E42:
@@ -68879,7 +68877,7 @@ loc_34864:
 ; ===========================================================================
 
 Obj10_MdNormal:
-	tst.b	routine_secondary(a0)
+	tst.b	SSTestRoutineSec(a0)
 	bne.s	Obj10_Hurt
 	bsr.w	SSTailsCPU_Control
 	lea	(Ctrl_2_Held_Logical).w,a2
@@ -69313,8 +69311,8 @@ loc_350A0:
 	beq.s	loc_350DC
 	lea	(MainCharacter).w,a2 ; a2=object (special stage sonic)
 	lea	(Sidekick).w,a3 ; a3=object (special stage tails)
-	move.w	objoff_38(a2),d0
-	cmp.w	objoff_38(a3),d0
+	move.w	ss_z_pos(a2),d0
+	cmp.w	ss_z_pos(a3),d0
 	blo.s	loc_350CE
 	movea.l	a3,a1
 	bsr.w	loc_350E2
@@ -69343,7 +69341,7 @@ loc_350E2:
 	beq.s	loc_3511A
 	cmpi.b	#2,routine(a1)
 	bne.s	loc_3511A
-	tst.b	routine_secondary(a1)
+	tst.b	SSTestRoutineSec(a1)
 	bne.s	loc_3511A
 	move.b	angle(a1),d0
 	move.b	angle(a0),d1
