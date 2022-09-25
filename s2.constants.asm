@@ -1840,56 +1840,25 @@ TtlScr_Object_RAM_End:
 
 ; RAM variables - Special stage
 	phase	RAM_Start	; Move back to start of RAM
-SSRAM_ArtNem_SpecialSonicAndTails:
-				ds.b	$353*$20	; $353 art blocks
+;SSRAM_ArtNem_SpecialSonicAndTails:
+
+				ds.b	$3484 ;$353*$20	; $353 art blocks (6A60 bytes)  this is unused now
 SSRAM_MiscKoz_SpecialPerspective:
-				ds.b	$1AFC
+                                ds.b	$1AFC
 SSRAM_MiscNem_SpecialLevelLayout:
 				ds.b	$180
 				ds.b	$9C	; padding
 SSRAM_MiscKoz_SpecialObjectLocations:
 				ds.b	$1AE0
 
-	phase	Sprite_Table_Input
-SS_Sprite_Table_Input:		ds.b	$400	; in custom format before being converted and stored in Sprite_Table
-SS_Sprite_Table_Input_End:
-
-	phase	Object_RAM	; Move back to the object RAM
-SS_Object_RAM:
-SS_Sonic:			ds.b	object_size
-SS_Tails:			ds.b	object_size
-SpecialStageHUD:		; HUD in the special stage
-				ds.b	object_size
-SpecialStageStartBanner:
-				ds.b	object_size
-SpecialStageNumberOfRings:
-				ds.b	object_size
-SpecialStageShadow_Sonic:
-				ds.b	object_size
-SpecialStageShadow_Tails:
-				ds.b	object_size
-SpecialStageTails_Tails:
-				ds.b	object_size
-SS_Dynamic_Object_RAM:
-				ds.b	$17*object_size
-SpecialStageResults:
-				ds.b	object_size
-				ds.b	$C*object_size
-SpecialStageResults2:
-				ds.b	object_size
-				ds.b	$40*object_size
-SS_Dynamic_Object_RAM_End:
-				ds.b	object_size
-SS_Object_RAM_End:                   ;$FFFFFCFCC end of obj ram
-				; The special stage mode also uses the rest of the RAM for
-				; different purposes.
-
-SS_Misc_Variables:
-PNT_Buffer:			ds.b	$700
+				ds.b	$1AE0     ; UNUSED
+                                ds.b	$F00 ; unused
+SSRAMMiscStart:
+PNT_Buffer:
+		           	ds.b	$700
 PNT_Buffer_End:
 SS_Horiz_Scroll_Buf_2:		ds.b	$380
                                 ds.b $80
-
 SSTrack_mappings_bitflags:				ds.l	1
 SSTrack_mappings_uncompressed:			ds.l	1
 SSTrack_anim:							ds.b	1
@@ -1952,17 +1921,55 @@ SS_NoRingsTogoLifetime:	ds.w	1
 SS_RingsToGoBCD:		ds.w	1
 SS_HideRingsToGo:	ds.b	1
 SS_TriggerRingsToGo:	ds.b	1
-			ds.b	$58	; unused
-SS_Misc_Variables_End:
+			ds.b	$52	; unused
+SS_Offset_X:			ds.w	1
+SS_Offset_Y:			ds.w	1
+                        ds.b    1
+SS_Swap_Positions_Flag:	ds.b	1
+SSRAMMiscEnd:
+	phase	Sprite_Table_Input
+SS_Sprite_Table_Input:		ds.b	$400	; in custom format before being converted and stored in Sprite_Table
+SS_Sprite_Table_Input_End:
+
+	phase	Object_RAM	; Move back to the object RAM
+SS_Object_RAM:
+SS_Sonic:
+				ds.b	object_size
+SS_Tails
+				ds.b	object_size
+SpecialStageHUD:
+                		ds.b    object_size	; during a level, an object whose sole purpose is to clear the collision response list is stored here
+SpecialStageStartBanner:
+                		ds.b	object_size
+SpecialStageNumberOfRings:
+				ds.b	object_size
+SpecialStageShadow_Sonic:
+				ds.b	object_size
+SpecialStageShadow_Tails:
+				ds.b	object_size
+SpecialStageTails_Tails:
+				ds.b	object_size
+				ds.b	object_size    ; also unused in ss   (used in levels unused in ss)
+
+
+				ds.b	object_size  ; unused object slot (used in levels unused in ss)
+
+
+                        	ds.b    object_size  ; unused object slot (used in levels unused in ss)
+SpecialStageResults:
+SS_Dynamic_Object_RAM:
+SpecialStageResults2:           ds.b object_size*$18 ;(slots unused in SS but used by the results game mode and doesnt effect ss main gameplay)
+	                        ds.b object_size*$38	; $1A04 bytes ; 90 objects
+SS_Dynamic_Object_RAM_End:
+SS_Object_RAM_End:
+            phase Object_RAM_End ; assume pretend we are in the end of obj ram location
+
 
 	phase	ramaddr(Horiz_Scroll_Buf)	; Still in SS RAM
 SS_Horiz_Scroll_Buf_1:		ds.b	$400
 SS_Horiz_Scroll_Buf_1_End:
 
-	phase	ramaddr(Boss_CollisionRoutine-$1)	; Still in SS RAM
-SS_Offset_X:			ds.w	1
-SS_Offset_Y:			ds.w	1
-SS_Swap_Positions_Flag:	ds.b	1
+
 
 	phase	ramaddr(Sprite_Table)	; Still in SS RAM
 SS_Sprite_Table:			ds.b	$280	; Sprite attribute table buffer

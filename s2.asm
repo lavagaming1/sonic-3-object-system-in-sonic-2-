@@ -6063,7 +6063,7 @@ SpecialStage:
 	; Bug: These '+4's shouldn't be here; clearRAM accidentally clears an additional 4 bytes
 	clearRAM SS_Sprite_Table,SS_Sprite_Table_End
 	clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1_End
-	clearRAM SS_Misc_Variables,SS_Misc_Variables_End
+	clearRAM SSRAMMiscStart,SSRAMMiscEnd
 	clearRAM SS_Sprite_Table_Input,SS_Sprite_Table_Input_End
 	clearRAM SS_Object_RAM,SS_Object_RAM_End
 
@@ -6080,8 +6080,8 @@ SpecialStage:
 	; clean way after branching to ClearScreen (see below). But they messed up by doing it
 	; after several WaitForVint calls.
 	; You can uncomment the two lines below to clear the VDP_Command_Buffer queue intentionally.
-	;clr.w	(VDP_Command_Buffer).w
-	;move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
+	clr.w	(VDP_Command_Buffer).w
+	move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
 
 	move	#$2300,sr
 	lea	(VDP_control_port).l,a6
@@ -6108,7 +6108,7 @@ SpecialStage:
 	move.w	#$80,(SS_Offset_X).w
 	move.w	#$36,(SS_Offset_Y).w
 	bsr.w	SSPlaneB_Background
-	bsr.w	SSDecompressPlayerArt
+;	bsr.w	SSDecompressPlayerArt
 	bsr.w	SSInitPalAndData
 	move.l	#$C0000,(SS_New_Speed_Factor).w
 	clr.w	(Ctrl_1_Logical).w
@@ -8617,10 +8617,10 @@ ssLdComprsdData:
 	lea	(SSRAM_MiscKoz_SpecialPerspective).l,a1
 	bsr.w	KosDec
 	lea	(MiscKoz_SpecialLevelLayout).l,a0
-	lea	(SSRAM_MiscNem_SpecialLevelLayout).w,a4
+	lea	(SSRAM_MiscNem_SpecialLevelLayout).l,a4
 	bsr.w	NemDecToRAM
 	lea	(MiscKoz_SpecialObjectLocations).l,a0
-	lea	(SSRAM_MiscKoz_SpecialObjectLocations).w,a1
+	lea	(SSRAM_MiscKoz_SpecialObjectLocations).l,a1
 	bsr.w	KosDec
 	rts
 ; End of function ssLdComprsdData
@@ -8669,10 +8669,10 @@ SSPlaneB_Background:
 
 
 ;sub_6DD4
-SSDecompressPlayerArt:
-	lea	(ArtNem_SpecialSonicAndTails).l,a0
-	lea	(SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF).l,a4
-	bra.w	NemDecToRAM
+;SSDecompressPlayerArt:
+;	lea	(ArtNem_SpecialSonicAndTails).l,a0
+;	lea	(SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF).l,a4
+;	bra.w	NemDecToRAM
 ; End of function SSDecompressPlayerArt
 
 
@@ -9692,10 +9692,10 @@ SSInitPalAndData:
 +
 	move.w	(a1,d0.w),d0
 	bsr.w	PalLoad_ForFade
-	lea	(SSRAM_MiscKoz_SpecialObjectLocations).w,a0
+	lea	(SSRAM_MiscKoz_SpecialObjectLocations).l,a0
 	adda.w	(a0,d1.w),a0
 	move.l	a0,(SS_CurrentLevelObjectLocations).w
-	lea	(SSRAM_MiscNem_SpecialLevelLayout).w,a0
+	lea	(SSRAM_MiscNem_SpecialLevelLayout).l,a0
 	adda.w	(a0,d1.w),a0
 	move.l	a0,(SS_CurrentLevelLayout).w
 	rts
@@ -68040,10 +68040,10 @@ byte_33A92:
 	dc.b   4,  3	; 12
 	dc.b  $C,  1	; 14
 dword_33AA2:
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($000)		; Sonic in upright position, $58 tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($058)		; Sonic in diagonal position, $CC tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($124)		; Sonic in horizontal position, $4D tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($171)		; Sonic in ball form, $12 tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+ tiles_to_bytes($000)		; Sonic in upright position, $58 tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+ tiles_to_bytes($058)		; Sonic in diagonal position, $CC tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+ tiles_to_bytes($124)		; Sonic in horizontal position, $4D tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+ tiles_to_bytes($171)		; Sonic in ball form, $12 tiles
 ; ===========================================================================
 
 LoadSSSonicDynPLC:
@@ -68947,10 +68947,10 @@ SSTailsCPU_Control:
 	rts
 ; ===========================================================================
 dword_349B8:
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($183)		; Tails in upright position, $3D tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($1C0)		; Tails in diagonal position, $A4 tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($264)		; Tails in horizontal position, $3A tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($29E)		; Tails in ball form, $10 tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($183)		; Tails in upright position, $3D tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($1C0)		; Tails in diagonal position, $A4 tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($264)		; Tails in horizontal position, $3A tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($29E)		; Tails in ball form, $10 tiles
 ; ===========================================================================
 
 LoadSSTailsDynPLC:
@@ -69030,9 +69030,9 @@ return_34A9E:
 	rts
 ; ===========================================================================
 dword_34AA0:
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($2AE)		; Tails' tails when he is in upright position, $35 tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($2E3)		; Tails' tails when he is in diagonal position, $3B tiles
-	dc.l   (SSRAM_ArtNem_SpecialSonicAndTails & $FFFFFF) + tiles_to_bytes($31E)		; Tails' tails when he is in horizontal position, $35 tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($2AE)		; Tails' tails when he is in upright position, $35 tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($2E3)		; Tails' tails when he is in diagonal position, $3B tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($31E)		; Tails' tails when he is in horizontal position, $35 tiles
 ; ===========================================================================
 
 LoadSSTailsTailsDynPLC:
@@ -89814,8 +89814,9 @@ ArtNem_SpecialMessages:	BINCLUDE	"art/nemesis/Special stage messages and icons.b
 ; Nemesis compressed art (851 blocks)
 ; Sonic and Tails animation frames from special stage
 ; Art for Obj09 and Obj10 and Obj88	; ArtNem_DEEAE:
-	even
-ArtNem_SpecialSonicAndTails:	BINCLUDE	"art/nemesis/Sonic and Tails animation frames in special stage.bin"
+	even  ; even the rom if there is something odd
+	align $10000  ;align to 64ks
+ArtUnc_SpecialSonicAndTails:	BINCLUDE	"art/uncompressed/Sonic and Tails animation frames in special stage.unc"
 ;--------------------------------------------------------------------------------------
 ; Nemesis compressed art (5 blocks)
 ; "Tails" patterns from special stage	; ArtNem_E247E:
