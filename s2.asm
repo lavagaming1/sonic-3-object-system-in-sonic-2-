@@ -67962,7 +67962,7 @@ Obj09_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_SpecialFlatShadow,3,0),art_tile(a1)
 	move.b	#4,render_flags(a1)
 	move.b	#4,priority(a1)
-	move.l	a0,ss_parent(a1)
+	move.w	a0,ss_parent(a1)
 	bra.w	LoadSSSonicDynPLC
 ; ===========================================================================
 
@@ -68024,7 +68024,7 @@ SSHurt_Animation:
 +
 	jsrto	(SSSingleObjLoad).l, JmpTo_SSSingleObjLoad
 	bne.s	return_33A90
-	move.l	a0,ss_parent(a1)
+	move.w	a0,ss_parent(a1)
 	move.l	#Obj5B,(a1)  ; load obj5B
 
 return_33A90:
@@ -68643,16 +68643,16 @@ SSAnglePos:
 ; ----------------------------------------------------------------------------
 ; Sprite_340A4:
 Obj63:
-	movea.l	ss_parent(a0),a1 ; a1=object
-	cmpa.l	#MainCharacter,a1
+	movea.w	ss_parent(a0),a1 ; a1=object
+	cmpa.w	#MainCharacter,a1
 	bne.s	loc_340BC
-	movea.l	#MainCharacter,a1 ; a1=character
+	movea.w	#MainCharacter,a1 ; a1=character
 	bsr.s	loc_340CC
 	jmpto	(DisplaySprite).l, JmpTo42_DisplaySprite
 ; ===========================================================================
 
 loc_340BC:
-	movea.l	#Sidekick,a1 ; a1=object
+	movea.w	#Sidekick,a1 ; a1=object
 	bsr.s	loc_340CC
 	bsr.w	loc_341BA
 	jmpto	(DisplaySprite).l, JmpTo42_DisplaySprite
@@ -68822,6 +68822,7 @@ Obj10_Index:	offsetTable
 ; ===========================================================================
 ; loc_34804:
 Obj10_Init:
+        clr.b	ss_dplc_timer(a0)
 	addq.b	#2,routine(a0)
 	moveq	#0,d0
 	move.w	d0,ss_x_pos(a0)
@@ -68850,30 +68851,30 @@ loc_34864:
 	clr.b	collision_property(a0)
 	clr.b	ss_dplc_timer(a0)
 	bsr.w	LoadSSTailsDynPLC
-	movea.l	#SpecialStageShadow_Tails,a1
+	lea	SpecialStageShadow_Tails.w,a1
 	move.l	#Obj63,(a1)  ; load obj63 (shadow) at $FFFFB180
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	addi.w	#$18,y_pos(a1)
 	move.l	#Obj63_MapUnc_34492,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_SpecialFlatShadow,3,0),art_tile(a1)
-	move.b	#4,render_flags(a1)
+	ori.b	#4,render_flags(a1)
 	move.b	#4,priority(a1)
-	move.l	a0,ss_parent(a1)
-	movea.l	#SpecialStageTails_Tails,a1
+	move.w	a0,ss_parent(a1)
+
+	lea	SpecialStageTails_Tails.w,a1
 	move.l	#Obj88,(a1)  ; load obj88
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	move.l	#Obj88_MapUnc_34DA8,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_SpecialTails_Tails,2,0),art_tile(a1)
-	move.b	#4,render_flags(a1)
+	ori.b	#4,render_flags(a1)
 	move.b	priority(a0),priority(a1)
-	subi.b	#1,priority(a1)
-	move.l	a0,ss_parent(a1)
-	movea.l	a1,a0
+	subq.b	#1,priority(a1)
+;	move.w	a0,ss_parent(a1)
+;	movea.w	a1,a0 ;a1 is now a0
 	move.b	#1,(TailsTails_LastLoadedDPLC).w
-	clr.b	ss_dplc_timer(a0)
-	movea.l	ss_parent(a0),a0 ; load 0bj address
+;	movea.w	ss_parent(a0),a0 ; load 0bj address
 	rts
 ; ===========================================================================
 
@@ -69010,7 +69011,8 @@ Obj10_MdAir:
 ; ----------------------------------------------------------------------------
 ; Sprite_34A5C:
 Obj88:
-	movea.l	ss_parent(a0),a1 ; load obj address of Tails
+	;movea.w	ss_parent(a0),a1 ; load obj address of Tails
+	lea     SS_Tails.w,a1
 	move.w	x_pos(a1),x_pos(a0)
 	move.w	y_pos(a1),y_pos(a0)
 	move.b	render_flags(a1),render_flags(a0)
@@ -69020,23 +69022,10 @@ Obj88:
 	subq.b	#1,d0
 	move.b	d0,priority(a0)
 	cmpi.b	#3,anim(a0)
-	bhs.s	return_34A9E
-	lea	(Ani_obj88).l,a1
-	jsrto	(AnimateSprite).l, JmpTo23_AnimateSprite
-	bra.w	LoadSSTailsTailsDynPLC
-; ===========================================================================
-
-return_34A9E:
-	rts
-; ===========================================================================
-dword_34AA0:
-	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($2AE)		; Tails' tails when he is in upright position, $35 tiles
-	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($2E3)		; Tails' tails when he is in diagonal position, $3B tiles
-	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($31E)		; Tails' tails when he is in horizontal position, $35 tiles
-; ===========================================================================
-
-LoadSSTailsTailsDynPLC:
-	movea.l	ss_parent(a0),a1 ; load obj address of Tails
+	bhs.s	return_34B1A
+	lea	Ani_obj88(pc),a1
+	jsr	(AnimateSprite).l
+	lea      SS_Tails.w,a1
 	move.b	ss_dplc_timer(a1),d0
 	beq.s	+
 	andi.b	#1,d0
@@ -69044,7 +69033,7 @@ LoadSSTailsTailsDynPLC:
 	rts
 ; ===========================================================================
 +
-	jsrto	(DisplaySprite).l, JmpTo43_DisplaySprite
+        jsr	(DisplaySprite).l
 	moveq	#0,d0
 	move.b	mapping_frame(a0),d0
 	cmp.b	(TailsTails_LastLoadedDPLC).w,d0
@@ -69078,6 +69067,14 @@ loc_34AE4:
 
 return_34B1A:
 	rts
+
+dword_34AA0:
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($2AE)		; Tails' tails when he is in upright position, $35 tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($2E3)		; Tails' tails when he is in diagonal position, $3B tiles
+	dc.l   ArtUnc_SpecialSonicAndTails+tiles_to_bytes($31E)		; Tails' tails when he is in horizontal position, $35 tiles
+; ===========================================================================
+
+
 ; ===========================================================================
 off_34B1C:	offsetTable
 		offsetTableEntry.w byte_34B24	; 0
@@ -69709,19 +69706,19 @@ byte_353F4:
 ; ----------------------------------------------------------------------------
 ; Sprite_353FE:
 Obj5B:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj5B_Index(pc,d0.w),d1
-	jmp	Obj5B_Index(pc,d1.w)
-; ===========================================================================
+;	moveq	#0,d0
+;	move.b	routine(a0),d0
+;	move.w	Obj5B_Index(pc,d0.w),d1
+;	jmp	Obj5B_Index(pc,d1.w)
+;; ===========================================================================
 ; off_3540C:
-Obj5B_Index:	offsetTable
-		offsetTableEntry.w Obj5B_Init	; 0
-		offsetTableEntry.w Obj5B_Main	; 2
+;Obj5B_Index:	offsetTable
+;		offsetTableEntry.w Obj5B_Init	; 0
+;		offsetTableEntry.w Obj5B_Main	; 2
 ; ===========================================================================
 ; loc_35410:
-Obj5B_Init:
-	movea.l	ss_parent(a0),a3
+;Obj5B_Init:
+	movea.w	ss_parent(a0),a3
 	moveq	#0,d1
 	move.b	ss_rings_tens(a3),d1
 	beq.s	loc_35428
@@ -69774,8 +69771,8 @@ loc_35478:
 	bne.s	loc_354DE
 
 loc_3547E:
-	move.l	#Obj5B,(a1)  ; load obj5B
-	move.b	#2,routine(a1)
+	move.l	#Obj5B_Main,(a1)  ; load obj5B
+	;move.l	#2,routine(a1)
 	move.l	#Obj5A_Obj5B_Obj60_MapUnc_3632A,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_SpecialRings,3,0),art_tile(a1)
 	move.b	#4,render_flags(a1)

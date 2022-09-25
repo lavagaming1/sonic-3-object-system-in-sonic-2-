@@ -35,7 +35,7 @@ height_pixels =		  6 ; byte
 width_pixels =		  7 ; byte
 priority =		  8 ; word ; in units of $80
 art_tile =		 $A ; word ; PCCVH AAAAAAAAAAA ; P = priority, CC = palette line, V = y-flip; H = x-flip, A = starting cell index of art
-mappings =		 $C ; long  
+mappings =		 $C ; long
 x_pos =			$10 ; word, or long when extra precision is required
 y_pos =			$14 ; word, or long when extra precision is required
 x_sub =			  $12 ; and
@@ -201,11 +201,11 @@ objoff_2C =		$2C ; overlaps subtype, but a few objects use it for other things a
 
  enum objoff_34=$34,objoff_35=$35,objoff_36=$36,objoff_37=$37,objoff_38=$38,objoff_39=$39,objoff_3A=$3A,objoff_3B=$3B
 
- enum objoff_3C=$3C,objoff_3D=$3D,objoff_3E=$3E,objoff_3F=$3F,objoff_40=$40,objoff_41,objoff_42=$42,objoff_43=$43,objoff_44=$44
+ enum objoff_3C=$3C,objoff_3D=$3D,objoff_3E=$3E,objoff_3F=$3F,objoff_40=$40,objoff_41,objoff_42=$42,objoff_43=$43,objoff_44=$44,objoff_46=$46,objoff_48=$48
 
 ; ---------------------------------------------------------------------------
 ; Special Stage object properties:
-ss_dplc_timer = $49 ;s2 => 23
+ss_dplc_timer = $25 ;s2 => 23
 ss_x_pos = $2E;objoff_2A
 ss_x_sub = $30 ;objoff_2C
 ss_y_pos = $32 ;objoff_2E
@@ -215,7 +215,7 @@ ss_flip_timer = $37 ;objoff_33
 ss_z_pos = $38 ;objoff_34
 ss_hurt_timer = $3A ;objoff_36
 ss_slide_timer = $3B ;objoff_37
-ss_parent = $3C ;objoff_38
+ss_parent = parent3 ;objoff_38 (used as long word in the orignals but in here its a word )
 ss_rings_base = $3E ;objoff_3C	; word
 ss_rings_hundreds = $3E ;objoff_3C
 ss_rings_tens = $3F ;objoff_3D
@@ -1618,7 +1618,7 @@ Ring_spill_anim_frame:		ds.b	1
 Ring_spill_anim_accum:		ds.w	1
 				ds.b	6	; $FFFFFEA9-$FFFFFEAF ; seems unused, but cleared once
 Oscillating_variables_End
-Save_pointer:				   ds.l    1 
+Save_pointer:				   ds.l    1
                                ds.b    3    ; $FFFFFEB0-$FFFFFEBF ; seems unused
         ds.b    1
                ds.b    1
@@ -1961,9 +1961,8 @@ SS_Dynamic_Object_RAM:
 SpecialStageResults2:           ds.b object_size*$18 ;(slots unused in SS but used by the results game mode and doesnt effect ss main gameplay)
 	                        ds.b object_size*$38	; $1A04 bytes ; 90 objects
 SS_Dynamic_Object_RAM_End:
-SS_Object_RAM_End:
             phase Object_RAM_End ; assume pretend we are in the end of obj ram location
-
+SS_Object_RAM_End:
 
 	phase	ramaddr(Horiz_Scroll_Buf)	; Still in SS RAM
 SS_Horiz_Scroll_Buf_1:		ds.b	$400
