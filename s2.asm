@@ -4,7 +4,7 @@
 ; Aurochs,   2005: Translated to AS and annotated
 ; Xenowhirl, 2007: More annotation, overall cleanup, Z80 disassembly
 ; ---------------------------------------------------------------------------
-; NOTES:
+; NOTES:                                 
 ;
 ; Set your editor's tab width to 8 characters wide for viewing this file.
 ;
@@ -20092,7 +20092,10 @@ LoadPLC_AnimalExplosion:
 	move.b	(Current_Zone).w,d0
 	lea	(Animal_PLCTable).l,a2
 	move.b	(a2,d0.w),d0
-	jmp	(LoadPLC).l
+	jsr	(LoadPLC).l
+	lea    (ArtKosM_Explosion).l,a1
+        move.w  #tiles_to_bytes(ArtTile_ArtKosM_Explosion),d2
+        jmp    (Queue_Kos_Module).l
 
 ; ===========================================================================
 
@@ -62793,9 +62796,10 @@ loc_2F4EE:	;	boss defeated
 	move.b	#4,anim(a1)	; flying off animation
 	move.b	#6,mapping_frame(a1)
 	moveq	#PLCID_Capsule,d0
-	jmpto	(LoadPLC).l, JmpTo6_LoadPLC	; load egg prison
+	jmp	(LoadPLC).l	; load egg prison
+
 ; ===========================================================================
-	rts
+
 ; ===========================================================================
 
 loc_2F52A:	; Obj56_PropellerReloaded:	; Propeller after defeat
@@ -63705,8 +63709,8 @@ Obj52_Defeat:
 	move.w	#$B3,(Boss_Countdown).w
 	move.b	#8,angle(a0)
 	moveq	#PLCID_Capsule,d0
-	jsrto	(LoadPLC).l, JmpTo7_LoadPLC
-	rts
+	jmp	(LoadPLC).l	; load egg prison
+
 ; ===========================================================================
 
 ; loc_30106:
@@ -64233,7 +64237,8 @@ Obj89_Main_KillBoss:
 	move.b	#5,1*2(a1)			; use defeated animation
 	move.b	#0,1*2+1(a1)			; reset animation
 	moveq	#PLCID_Capsule,d0
-	jsrto	(LoadPLC).l, JmpTo8_LoadPLC
+	jsr	(LoadPLC).l	; load egg prison
+
 	move.b	#5,sub2_mapframe(a0)
 	rts
 ; ===========================================================================
@@ -65205,8 +65210,8 @@ Obj57_FinalDefeat:
 	move.w	#$B3,(Boss_Countdown).w
 	move.b	#8,MCZ_boss_routine(a0)	; routine boss defeated
 	moveq	#PLCID_Capsule,d0
-	jsrto	(LoadPLC).l, JmpTo9_LoadPLC
-	rts
+	jmp	(LoadPLC).l	; load egg prison
+
 ; ===========================================================================
 ;loc_314D2:
 Obj57_Main_Sub8: ; boss defeated, standing still, exploding
@@ -65759,8 +65764,8 @@ loc_31D42:
 	move.w	#$B3,(Boss_Countdown).w
 	move.b	#6,CNZBossRoutine_Angle(a0)
 	moveq	#PLCID_Capsule,d0
-	jsrto	(LoadPLC).l, JmpTo10_LoadPLC
-	rts
+	jmp	(LoadPLC).l	; load egg prison
+
 ; ===========================================================================
 
 loc_31D5C:
@@ -66662,8 +66667,8 @@ Obj54_Defeated:
 	move.w	#$EF,(Boss_Countdown).w
 	move.b	#$10,angle(a0)		; => Obj54_MainSub10
 	moveq	#PLCID_Capsule,d0
-	jsrto	(LoadPLC).l, JmpTo11_LoadPLC
-	rts
+	jmp (LoadPLC).l	; load egg prison
+
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 53 - Shield orbs that surround MTZ boss
@@ -68177,7 +68182,7 @@ Obj09_MdAir:
 	bra.w	LoadSSSonicDynPLC
 ; ===========================================================================
 
-SSObjectMoveAndFall:
+SSObjectMoveAndFall:                                 
         addi.w	#$A8,y_vel(a0)	; App
 	move.l  x_vel(a0),d0  ;12 cycles (x vel+yvel)
         move.w  d0,d1       ; 4 cycles  (d1 y vel into y pos)
@@ -83351,63 +83356,79 @@ JmpTo65_Adjust2PArtPointer ; JmpTo
 
 
 
-
+ObjCapsuleFlag = objoff_44
+ObjCapsuleTimer = objoff_38
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 3E - Egg prison
 ; ----------------------------------------------------------------------------
 ; Sprite_3F1E4:
+Obj3E_ObjLoadData:
+        ; addr,childdy,width,prio,frame
+        dc.l   loc_3F278
+	dc.b   0        ;child dy
+        dc.b   $20,  4,  0 ;0
+
+        dc.l   ObjCapsuleButton
+        dc.b   $28
+        dc.b   $10,  5,  4 ; 1
+
+        dc.l   Obj_CapsuleFlyingPartical
+        dc.b   $18
+        dc.b    8,  3,  5 ;2
+
+        dc.l   loc_3F3A8
+        dc.b   0
+        dc.b   $20,  4,  0 ; 3
+Obj3E_ObjLoadData_End:
 Obj3E:
-	moveq	#0,d0
-	move.b	routine(a0),d0
-	move.w	Obj3E_Index(pc,d0.w),d1
-	jmp	Obj3E_Index(pc,d1.w)
+;	moveq	#0,d0
+;	move.b	routine(a0),d0
+;	move.w	Obj3E_Index(pc,d0.w),d1
+;	jmp	Obj3E_Index(pc,d1.w)
 
 ; ===========================================================================
 ; off_3F1F2:
-Obj3E_Index:	offsetTable
-		offsetTableEntry.w loc_3F212	;  0
-		offsetTableEntry.w loc_3F278	;  2
-		offsetTableEntry.w ObjCapsuleButton	;  4
-		offsetTableEntry.w Obj_CapsuleFlyingPartical	;  6
-		offsetTableEntry.w loc_3F3A8	;  8
-		offsetTableEntry.w loc_3F406	; $A
+;Obj3E_Index:	offsetTable
+;		offsetTableEntry.w loc_3F212	;  0
+;		offsetTableEntry.w loc_3F278	;  2
+;		offsetTableEntry.w ObjCapsuleButton	;  4
+;		offsetTableEntry.w Obj_CapsuleFlyingPartical	;  6
+;		offsetTableEntry.w loc_3F3A8	;  8
+;		offsetTableEntry.w loc_3F406	; $A
 ; ----------------------------------------------------------------------------
 ; byte_3F1FE:
-Obj3E_ObjLoadData:
-        ; child_dy,routine,width,prio,frame
-	dc.b   0,  2,$20,  4,  0
-	dc.b $28,  4,$10,  5,  4	; 5
-	dc.b $18,  6,  8,  3,  5	; 10  ; flying partical object ( when you hit the button)
-	dc.b   0,  8,$20,  4,  0	; 15  ; unused ?
+
+;	dc.b $28,  4,$10,  5,  4	; 5
+;	dc.b $18,  6,  8,  3,  5	; 10  ; flying partical object ( when you hit the button)
+;	dc.b   0,  8,$20,  4,  0	; 15  ; unused ?
 ; ===========================================================================
 
 loc_3F212:
 	movea.l	a0,a1
-	lea	objoff_42(a0),a3 ; then objoff_44 is a parent and parent 3 is a child and then parent 2 is a child then you hit $4A then death
+	lea	objoff_2C(a0),a3 ; then objoff_44 is a parent and parent 3 is a child and then parent 2 is a child then you hit $4A then death
 	lea	Obj3E_ObjLoadData(pc),a2
-	moveq	#3,d1
+	moveq	#(Obj3E_ObjLoadData_End-Obj3E_ObjLoadData)/$8-1,d1
 	bra.s	loc_3F228
 ; ===========================================================================
 
 loc_3F220:
-	jsrto	(SingleObjLoad).l, JmpTo20_SingleObjLoad
+	jsr	(SingleObjLoad).l
 	bne.s	loc_3F272
 	move.w	a1,(a3)+
 
 loc_3F228:
-	move.l	(a0),(a1) ; load obj
+        move.l	(a2)+,(a1)
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
-	move.w	y_pos(a0),objoff_30(a1)
+	move.w	y_pos(a0),objoff_46(a1)
 	move.l	#Obj3E_MapUnc_3F436,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Capsule,1,0),art_tile(a1)
 	move.b	#$84,render_flags(a1)
 	moveq	#0,d0
 	move.b	(a2)+,d0
 	sub.w	d0,y_pos(a1)
-	move.w	y_pos(a1),objoff_30(a1)
-	move.b	(a2)+,routine(a1)
+	move.w	y_pos(a1),objoff_46(a1)
 	move.b	(a2)+,width_pixels(a1)
 	move.b	(a2)+,priority(a1)
 	move.b	(a2)+,mapping_frame(a1)
@@ -83438,10 +83459,10 @@ off_3F2AE:	offsetTable
 ; ===========================================================================
 
 loc_3F2B4:
-	movea.w	objoff_42(a0),a1 ; a1=object
-	tst.b	objoff_32(a1)
+	movea.w	objoff_2C(a0),a1 ; a1=object
+	tst.b	ObjCapsuleFlag(a1)
 	beq.s	++	; rts
-	movea.w	objoff_44(a0),a2 ; a2=object
+	movea.w	objoff_2E(a0),a2 ; a2=object
 	jsr	(SingleObjLoad).l
 	bne.s	+
 	move.l	#Obj27,(a1) ; load obj
@@ -83452,14 +83473,14 @@ loc_3F2B4:
 	move.w	#-$400,y_vel(a2)
 	move.w	#$800,x_vel(a2)
 	addq.b	#2,routine_secondary(a2) ; go to return_3F352
-	move.w	#$1D,objoff_34(a0)
+	move.w	#$1D,ObjCapsuleTimer(a0)
 	addq.b	#2,routine_secondary(a0) ; go to loc_3F2FC
 +
 	rts
 ; ===========================================================================
 
 loc_3F2FC:
-	subq.w	#1,objoff_34(a0)
+	subq.w	#1,ObjCapsuleTimer(a0)
 	bpl.s	return_3F352
 	move.b	#1,anim(a0)
 	moveq	#7,d6
@@ -83472,16 +83493,14 @@ loc_3F2FC:
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	add.w	d4,x_pos(a1)
-	move.b	#1,animal_ground_x_vel(a1) ; 38
+	move.b	#1,objoff_3C(a1) ; 38
 	addq.w	#7,d4
-	move.w	d5,animal_ground_y_vel(a1) ;36
+	move.w	d5,objoff_3A(a1) ;36
 	subq.w	#8,d5
 	dbf	d6,-
 +
-	movea.w	parent3(a0),a2 ; a2=object
-;	move.l  #DeleteObject,(a2)
-;	move.l  #DeleteObject,(a1)
-	move.b	#$B4,anim_frame_duration(a2)
+	movea.w	objoff_30(a0),a2 ; a2=object
+	move.w	#$B4,anim_frame_duration(a2)
 	addq.b	#2,routine_secondary(a2)
 	addq.b	#2,routine_secondary(a0)
 
@@ -83495,13 +83514,13 @@ ObjCapsuleButton:
 	move.w	#8,d3
 	move.w	x_pos(a0),d4
 	jsr	(SolidObject).l
-	move.w	objoff_30(a0),y_pos(a0)
+	move.w	objoff_46(a0),y_pos(a0)
 	move.b	status(a0),d0
 	andi.b	#standing_mask,d0
 	beq.s	+
 	addq.w	#8,y_pos(a0)
 	clr.b	(Update_HUD_timer).w
-	move.b	#1,objoff_32(a0)
+	move.b	#1,ObjCapsuleFlag(a0)
 +
 	jmp	(MarkObjGone).l
 ; ===========================================================================
@@ -83541,13 +83560,13 @@ loc_3F3A8:
 	neg.w	d0
 +
 	add.w	d0,x_pos(a1)
-	move.b	#1,animal_ground_x_vel(a1)  ; 38
-	move.w	#$C,animal_ground_y_vel(a1) ; 36
+	move.b	#1,objoff_3C(a1)  ; 38
+	move.w	#$C,objoff_3A(a1) ; 36
 
 loc_3F3F4:
 	subq.b	#1,anim_frame_duration(a0)
 	bne.s	return_3F404
-	addq.b	#2,routine(a0) ; go to loc_3F406
+	move.l	#loc_3F406,(a0) ; go to loc_3F406
 	move.b	#$B4,anim_frame_duration(a0)
 
 return_3F404:
@@ -86832,40 +86851,46 @@ loc_2F7AE:
 locret_2F7BC:
 		rts
 ; End of function LoadEnemyArt
-off_2F7BE:	dc.w PLCKosM_Standard-off_2F7BE
+off_2F7BE:	dc.w PLCKosM_Standard-off_2F7BE     ;0
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE    ;1
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE    ;2
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE    ;3
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE     ;4
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE      ;5
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE      ;6
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE      ;7
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE      ;8
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE      ;9
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE      ;$A
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE       ;$B
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE       ;$C
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE       ;$D
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE       ;$E
 		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE       ;$F
 		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
-		dc.w PLCKosM_Standard-off_2F7BE
+		dc.w PLCKosM_Standard-off_2F7BE       ;$10
 		dc.w PLCKosM_Standard-off_2F7BE
 ; ===========================================================================
-PLCKosM_Standard:	dc.w 0
+PLCKosM_Standard:
+          	dc.w (PLCKosM_Standard_End-PLCKosM_Standard)/$6-1
 		dc.l ArtKosM_Explosion
-		dc.w $B480
+		dc.w tiles_to_bytes(ArtTile_ArtKosM_Explosion)
+PLCKosM_Standard_End:
                 even
 
 
