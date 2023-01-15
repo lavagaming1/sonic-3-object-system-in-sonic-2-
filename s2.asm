@@ -61666,15 +61666,15 @@ Go_Delete_Sprite:
 		rts
 Set_IndexedVelocity:
 		moveq	#0,d1
-		move.b	$2C(a0),d1
+		move.b	subtype(a0),d1
 		add.w	d1,d1
 		add.w	d1,d0
 		lea	Obj_VelocityIndex(pc,d0.w),a1
-		move.w	(a1)+,$18(a0)
-		move.w	(a1)+,$1A(a0)
-		btst	#0,4(a0)
+		move.w	(a1)+,x_vel(a0)
+		move.w	(a1)+,y_vel(a0)
+		btst	#0,render_flags(a0)
 		beq.s	locret_852F2
-		neg.w	$18(a0)
+		neg.w	x_vel(a0)
 
 locret_852F2:
 		rts
@@ -73815,11 +73815,48 @@ loc_37ED4:
 	neg.w	y_vel(a0)
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ===========================================================================
+CrawltonFallBreakApart:
+
+        moveq	#6,d6
+        lea	sub2_x_pos(a0),a2
+        moveq   #0,d2
+        moveq   #0,d3
+        clr.b   subtype(a0)
+
+ .loop:
+        jsr	(SingleObjLoad).l
+        bne.s	.Return	; rts
+        ori.b   #4,render_flags(a1)
+        move.l  mappings(a0),mappings(a1)
+        move.w  art_tile(a0),art_tile(a1)
+	move.l	#CrawlTonSetVels,(a1) ; load obj9E
+	move.w  (a2)+,x_pos(a1)
+	move.w  (a2)+,y_pos(a1)
+        addq.w   #2,d2
+        move.b   d2,subtype(a1)
+	addq.w   #1,a2
+	move.b  (a2)+,mapping_frame(a1)
+	move.b  #$5,priority(a1)
+	dbf     d6,.loop
+	jsr     DeleteObject
+ .Return:
+           rts
+CrawlTonSetVels:
+         moveq #0,d0
+         jsr   Set_IndexedVelocity
+         move.l	#DisplayAndFall,(a0)
+DisplayAndFall:
+         addi.b  #$7F,routine(a0)
+         bpl.s  +
+         jmp   ObjectMoveAndFall
++
+         jsr   ObjectMoveAndFall
+         jmp   DisplaySprite
 
 loc_37EFC:
 	movea.w	parent(a0),a1 ; a1=object
 	cmpi.l	#Obj9E,(a1)
-	bne.w	JmpTo65_DeleteObject
+	bne.w	CrawltonFallBreakApart
 	bclr	#0,render_flags(a0)
 	btst	#0,render_flags(a1)
 	beq.s	+
