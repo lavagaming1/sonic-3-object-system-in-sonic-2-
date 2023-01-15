@@ -18284,7 +18284,6 @@ FixBlocksIn2Pmode:
 	dbf	d2,-
 	tst.w   (Two_player_mode).w
 	beq.s    +
-
 	rts
 +
 	movem.l  (sp)+,d0-d1/d2-d3/a1
