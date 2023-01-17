@@ -20787,14 +20787,15 @@ sub_FE70:
 	move.b	subtype(a0),d1
 	beq.s	loc_FEC2
 	cmpi.b	#$10,d1
-	bne.s	.SwingSineUnk1
+	bne.s	.CheckSubstypesSwinginPlatforms
 	cmpi.b	#$3F,d0
-	beq.s	.CheckSubstypesSwinginPlatforms
+	beq.s	.PlayPtfmKnock
 	bhs.s	loc_FEC2
 	moveq	#$40,d0
 	bra.s	loc_FEC2
 ; ===========================================================================
 ;/                dummied out code
+ .PlayPtfmKnock:
 	move.w	#SndID_PlatformKnock,d0
 	jsr	(PlaySoundLocal).l
 	moveq	#$40,d0
@@ -20806,7 +20807,7 @@ sub_FE70:
 	cmpi.b	#$30,d1
 	bne.s	.SwingSineUnk1
 	cmpi.b	#$41,d0
-	beq.s	SwingPlatofmrOT_SetSubSprs ;-
+	beq.s	.PlayPtfmKnock ;-
 	blo.s	loc_FEC2
 	moveq	#$40,d0
 	bra.s	loc_FEC2
@@ -20886,11 +20887,10 @@ SwingPlatofmrOT_SetSubSprs:
 ; ===========================================================================
 
 loc_FF6E:
-;	tst.w	ARZSwingingPLatformTimer(a0)
-;	beq.s	+
-;	subq.w	#1,ARZSwingingPLatformTimer(a0)
-        subq.w	#1,ARZSwingingPLatformTimer(a0)
-        beq.s   .keepswinging
+	tst.w	ARZSwingingPLatformTimer(a0)
+	beq.s	.keepswinging
+	subq.w	#1,ARZSwingingPLatformTimer(a0)
+
 	bra.w	loc_10006
 ; ===========================================================================
  .keepswinging:
@@ -21005,7 +21005,7 @@ Obj15_State4:
 	move.b	Dvisiton_4a(pc,d0.w),d0
 	bmi.s	Fail_Divisiton
 
-	andi.w	#$7F,d0
+	andi.w	#(Object_RAM_End-Object_RAM)/object_size-1,d0
 	move.w	a1,d1
 	subi.w	#Object_RAM,d1
 
@@ -21013,7 +21013,7 @@ Obj15_State4:
 	move.b	Dvisiton_4a(pc,d1.w),d1		; load the right number of objects from table
 	bmi.s	Fail_Divisiton			; if negative, we have failed!
 
-	andi.w	#$7F,d1
+	andi.w	#(Object_RAM_End-Object_RAM)/object_size-1,d1
 	lea     (MainCharacter).w,a2
 	cmp.w	interact(a2),a0
 	bne.s	.NotSonicINteraction
@@ -73756,7 +73756,7 @@ loc_37E42:
 	cmpi.w	#$100,d3
 	blo.s	loc_37E62
 +
-	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
+	jmp	(MarkObjGone).l
 ; ===========================================================================
 
 loc_37E62:
@@ -73846,17 +73846,32 @@ CrawlTonSetVels:
          jsr   Set_IndexedVelocity
          move.l	#DisplayAndFall,(a0)
 DisplayAndFall:
+         move.w  y_pos(a0),d0
+         sub.w   (MainCharacter+y_pos).w,d0
+         bpl.s   .Mirror
+         neg.w   d0
+  .Mirror:
+         cmp.w    #$E0,d0
+         blo.s   .DisplayFlicker
+         jmp     DeleteObject
+ .DisplayFlicker:
          addi.b  #$7F,routine(a0)
-         bpl.s  +
+         bpl.s   .FallAndDisplay
          jmp   ObjectMoveAndFall
-+
+ .FallAndDisplay:
          jsr   ObjectMoveAndFall
          jmp   DisplaySprite
+DeleteCrawlton:
+          jmp  DeleteObject
 
 loc_37EFC:
 	movea.w	parent(a0),a1 ; a1=object
-	cmpi.l	#Obj9E,(a1)
-	bne.w	CrawltonFallBreakApart
+	tst.b   status(a1)   ; is crawlton destroyed ? (bit 7 in status being set in touch response
+	bmi.w   CrawltonFallBreakApart
+	tst.l   (a1)
+        beq.s   DeleteCrawlton
+	;cmpi.l	#Obj9E,(a1)
+	;bne.w	CrawltonFallBreakApart
 	bclr	#0,render_flags(a0)
 	btst	#0,render_flags(a1)
 	beq.s	+
