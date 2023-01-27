@@ -48573,11 +48573,11 @@ JmpTo6_SolidObject ; JmpTo
     endif
 
 
-BlockTHingLaunchBits = $44
-SonicStoredAnim = $32
-TailsStoredAnim = $33
-SonicLastSpeed_3D = $34
-TailsLastSpeed_3D = $36 
+BlockTHingLaunchBits = $2E
+SonicStoredAnim = $30
+TailsStoredAnim = $31
+SonicLastSpeed_3D = $32
+TailsLastSpeed_3D = $34
 Launcher_Bits = $36
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -48695,7 +48695,7 @@ loc_24F04:
 	jsrto	(SingleObjLoad2).l, JmpTo9_SingleObjLoad2
 	bne.s	loc_24F28
 	moveq	#0,d0
-	move.w	#$A,d1
+	move.w	#bytesToLcnt(objoff_30),d1 ; copys obj ram from og slot to new ones copies only the first $2E ssts
 
 loc_24F16:
 	move.l	(a0,d0.w),(a1,d0.w)
@@ -48727,7 +48727,7 @@ Obj3D_InvisibleLauncher:
 	lea	Launcher_Bits(a0),a4
 	bsr.s	loc_24F74
 	move.b	BlockTHingLaunchBits(a0),d0
-	add.b	TailsLastSpeed_3D(a0),d0
+	add.b	Launcher_Bits(a0),d0
 	beq.w	JmpTo3_MarkObjGone3
 	rts
 ; ===========================================================================
@@ -48769,7 +48769,7 @@ loc_24FC2:
 	move.b	#AniIDSonAni_Roll,anim(a1)
 	move.w	#$800,inertia(a1)
 	tst.b	subtype(a0)
-	bne.s	loc_24FF0   ; beq
+	beq.s	loc_24FF0   ; beq
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	#0,x_vel(a1)
 	move.w	#-$800,y_vel(a1)
@@ -48882,7 +48882,7 @@ JmpTo26_DeleteObject ; JmpTo
     endif
 
 
-RoundBall_BitField = $44
+RoundBall_BitField = BlockTHingLaunchBits
 
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
@@ -48894,8 +48894,8 @@ Obj48:
 	move.b	routine(a0),d0
 	move.w	Obj48_Index(pc,d0.w),d1
 	jsr	Obj48_Index(pc,d1.w)
-	move.b	RoundBall_BitField(a0),d0
-	add.b	objoff_36(a0),d0
+	move.b	BlockTHingLaunchBits(a0),d0
+	add.b	Launcher_Bits(a0),d0
 	beq.w	JmpTo14_MarkObjGone
 	jmpto	(DisplaySprite).l, JmpTo15_DisplaySprite
 
@@ -48950,8 +48950,8 @@ Obj48_Main:
 	moveq	#RoundBall_BitField,d2 ;aurora feilds said this is fine so :P
 	bsr.s	loc_252DC
 	lea	(Sidekick).w,a1 ; a1=character
-	lea	objoff_36(a0),a4
-	moveq	#objoff_36,d2
+	lea	Launcher_Bits(a0),a4
+	moveq	#Launcher_Bits,d2
 
 loc_252DC:
 	moveq	#0,d0
@@ -49092,7 +49092,7 @@ loc_25474:
 loc_25492:
 	cmpi.b	#2,RoundBall_BitField(a0)
 	beq.s	Obj48_MoveCharacter
-	cmpi.b	#2,objoff_36(a0)
+	cmpi.b	#2,Launcher_Bits(a0)
 	beq.s	Obj48_MoveCharacter
 	subq.w	#1,anim_frame_duration(a0)
 	bpl.s	Obj48_MoveCharacter
