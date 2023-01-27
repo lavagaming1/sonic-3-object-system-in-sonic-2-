@@ -18323,7 +18323,7 @@ FixBlocksIn2Pmode:
 +
 	movem.l  (sp)+,d0-d1/d2-d3/a1
 	rts
-CnzCopressionBufferStart = Chunk_Table+$7800
+CnzCopressionBufferStart = Level_Layout_End
 loadZoneBlockMaps:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
@@ -18344,8 +18344,8 @@ loadZoneBlockMaps:
         cmpi.b  #casino_night_zone,(Current_Zone).w
         bne.s   +
         movea.l $1000(a1),a3
-        move.w  #(Chunk_Table_End-CnzCopressionBufferStart)/4,d0; store the last 800 bytes in RAM
-        lea     (CnzCopressionBufferStart).l,a1
+        move.w  #(CnzCopressionBufferStart+$800-CnzCopressionBufferStart)/4-1,d0; store the last 800 bytes in RAM
+        lea     (CnzCopressionBufferStart).w,a1
 .loop:
         move.l  (a3)+,(a1)+
         dbf     d0,.loop
@@ -57736,7 +57736,7 @@ SlotMachine_Subroutine2:
 ; ---------------------------------------------------------------------------
 +
 	bsr.w	SlotMachine_GetPixelRow	; Get pointer to pixel row
-	lea	Chunk_Table+$7800.l,a1	; Destination for pixel rows
+	lea	(CnzCopressionBufferStart).w,a1	; Destination for pixel rows
 
 	move.w	#4*8-1,d1				; Slot picture is 4 tiles
 -	move.l	$80(a2),$80(a1)			; Copy pixel row for second column
@@ -57753,7 +57753,7 @@ SlotMachine_Subroutine2:
 
 
 	;move.l	a1,d1	; Source
-	move.l	#(Chunk_Table+$7800)&$FFFFFF,d1 ; :T
+	move.l	#(CnzCopressionBufferStart)&$FFFFFF,d1 ; :T
 	tst.w	(Two_player_mode).w
 	beq.s	+
 	addi.w	#tiles_to_bytes(ArtTile_ArtUnc_CNZSlotPics_1_2p-ArtTile_ArtUnc_CNZSlotPics_1),d2
