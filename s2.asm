@@ -4011,8 +4011,9 @@ TitleScreen:
 	move.b	#2,(IntroSonic+subtype).w				; Sonic
 	jsr	(RunObjects).l
 	jsr	(BuildSprites).l
-	moveq	#PLCID_Std1,d0
-	bsr.w	LoadPLC2
+	
+;	moveq	#PLCID_Std1,d0
+;	bsr.w	LoadPLC2
 	move.w	#0,(Correct_cheat_entries).w
 	move.w	#0,(Correct_cheat_entries_2).w
 	nop
@@ -4314,7 +4315,30 @@ MusicList2: zoneOrderedTable 1,1
     zoneTableEnd
 	even
 ; ===========================================================================
+Std1PLCload: dc.w (Std1PLCload_End-Std1PLCload)/$8-1
+                                                              ; this goes from smallest tile id to biggest in terms of loading
+             dc.l  vdpComm(tiles_to_bytes(ArtTile_ArtNem_Numbers),VRAM,WRITE) ; 4AC
+             dc.l  ArtNem_Numbers
+             dc.l  vdpComm(tiles_to_bytes(ArtTile_ArtNem_Ring),VRAM,WRITE)  ;6BC
+             dc.l  ArtNem_Ring
+             dc.l  vdpComm(tiles_to_bytes(ArtTile_ArtNem_HUD),VRAM,WRITE)  ;6CA
+             dc.l  ArtNem_HUD
+             dc.l  vdpComm(tiles_to_bytes(ArtTile_ArtNem_life_counter),VRAM,WRITE) ;$7D4
+             dc.l  ArtNem_Sonic_life_counter
+Std1PLCload_End:
 
+SubLoopPLCentry:
+        move.w  (a2)+,d6
+-
+        move.w  d6,-(sp)
+        move.l  (a2)+,(VDP_control_port).l ; v ram vest
+        move.l  (a2)+,a0
+        move.l   a2,-(sp)
+        jsr	(NemDec).l
+        move.l   (sp)+,a2
+        move.w  (sp)+,d6
+        dbf     d6,-
+        rts
 ; ---------------------------------------------------------------------------
 ; Level
 ; DEMO AND ZONE LOOP (MLS values $08, $0C; bit 7 set indicates that load routine is running)
@@ -4334,14 +4358,17 @@ Level:
 loc_5FD6:
 	move.l	d0,(a1)+				; Clear the KosM bytes
 	dbf	d1,loc_5FD6
+
 	bsr.w	ClearPLC
 	bsr.w	Pal_FadeToBlack
 	tst.w	(Demo_mode_flag).w
 	bmi.s	Level_ClrRam
 	move	#$2700,sr
 	bsr.w	ClearScreen
+	lea     (Std1PLCload).l,a2  ; cannot be used if you are not setting sr in 2700
+        jsr     SubLoopPLCentry
 	jsr	(LoadTitleCard).l ; load title card patterns
-	move	#$2300,sr
+
 
 	moveq	#0,d0
 	move.w	d0,(Timer_frames).w
@@ -4363,6 +4390,7 @@ loc_5FD6:
 +
 	moveq	#PLCID_Std2,d0
 	bsr.w	LoadPLC
+
 	bsr.w	Level_SetPlayerMode
 	moveq	#PLCID_Miles1up,d0
 	tst.w	(Two_player_mode).w
@@ -4495,8 +4523,8 @@ Level_TtlCard:
 	bne.s	Level_TtlCard		; if not, branch
 	tst.l	(Plc_Buffer).w		; are there any items in the pattern load cue?
 	bne.s	Level_TtlCard		; if yes, branch
-	move.b	#VintID_TitleCard,(Vint_routine).w
-	bsr.w	WaitForVint
+	tst.b   Kos_modules_left.w
+	bne.s   Level_TtlCard
 	jsr	(Hud_Base).l
 +
 	moveq	#PalID_BGND,d0
@@ -4621,8 +4649,7 @@ Level_FromCheckpoint:
 	move.w	#-1,(TitleCard_ZoneName+titlecard_leaveflag).w
 	move.b	#$E,(TitleCard_Left+routine).w	; make the left part move offscreen
 	move.w	#$A,(TitleCard_Left+titlecard_location).w
-	moveq	#PLCID_Std1,d0
-       	jsr	LoadPLC
+
 
 -	move.b	#VintID_TitleCard,(Vint_routine).w
 	bsr.w	WaitForVint
@@ -6234,8 +6261,12 @@ SpecialStage:
 	move	#$2300,sr
 	moveq	#PalID_Result,d0
 	bsr.w	PalLoad_Now
-	moveq	#PLCID_Std1,d0
-	bsr.w	LoadPLC2
+	move	#$2700,sr
+	lea     (Std1PLCload).l,a2
+        jsr     SubLoopPLCentry
+	move	#$2300,sr
+;	moveq	#PLCID_Std1,d0
+;	bsr.w	LoadPLC2
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_VRAM_Start+2),VRAM,WRITE),d0
 	lea	SpecialStage_ResultsLetters(pc),a0
 	jsrto	(LoadTitleCardSS).l, JmpTo_LoadTitleCardSS
@@ -10201,8 +10232,12 @@ TwoPlayerResults:
 	clr.w	(Anim_Counters).w
 	lea	(Anim_SonicMilesBG).l,a2
 	jsrto	(Dynamic_Normal).l, JmpTo_Dynamic_Normal
-	moveq	#PLCID_Std1,d0
-	bsr.w	LoadPLC2
+	move	#$2700,sr
+	lea     (Std1PLCload).l,a2
+        jsr     SubLoopPLCentry
+	move	#$2300,sr
+;	moveq	#PLCID_Std1,d0
+;	bsr.w	LoadPLC2
 	moveq	#PalID_Menu,d0
 	bsr.w	PalLoad_ForFade
 	moveq	#0,d0
@@ -86975,7 +87010,7 @@ PLCKosM_Standard_End:
 ;---------------------------------------------------------------------------------------
 ; word_42660 ; OffInd_PlrLists:
 ArtLoadCues:		offsetTable
-PLCptr_Std1:		offsetTableEntry.w PlrList_Std1			; 0
+PLCptr_Std1:		dc.w 0			; 0       ; unused
 PLCptr_Std2:		offsetTableEntry.w PlrList_Std2			; 1
 PLCptr_StdWtr:		offsetTableEntry.w PlrList_StdWtr		; 2
 PLCptr_GameOver:	offsetTableEntry.w PlrList_GameOver		; 3
@@ -87058,16 +87093,7 @@ plreq macro toVRAMaddr,fromROMaddr
 	dc.w	tiles_to_bytes(toVRAMaddr)
     endm
 
-;---------------------------------------------------------------------------------------
-; PATTERN LOAD REQUEST LIST
-; Standard 1 - loaded for every level
-;---------------------------------------------------------------------------------------
-PlrList_Std1: plrlistheader
-	plreq ArtTile_ArtNem_HUD, ArtNem_HUD
-	plreq ArtTile_ArtNem_life_counter, ArtNem_Sonic_life_counter
-	plreq ArtTile_ArtNem_Ring, ArtNem_Ring
-	plreq ArtTile_ArtNem_Numbers, ArtNem_Numbers
-PlrList_Std1_End
+
 ;---------------------------------------------------------------------------------------
 ; PATTERN LOAD REQUEST LIST
 ; Standard 2 - loaded for every level
