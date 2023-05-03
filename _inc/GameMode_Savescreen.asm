@@ -1136,7 +1136,7 @@ sub_D6D0:
 		bcc.s	loc_D6EE
 		moveq	#sfx_Switch,d2
 		addq.w	#1,d0
-		cmpi.w	#3,d0
+		cmpi.w	#2,d0
 		bls.s	loc_D6FA
 		moveq	#0,d0
 		bra.s	loc_D6FA
@@ -1148,7 +1148,7 @@ loc_D6EE:
 		moveq	#sfx_Switch,d2
 		subq.w	#1,d0
 		bpl.s	loc_D6FA
-		moveq	#3,d0
+		moveq	#2,d0
 
 loc_D6FA:
 		tst.w	d2
