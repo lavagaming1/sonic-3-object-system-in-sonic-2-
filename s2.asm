@@ -1400,10 +1400,11 @@ Pause_Loop:
 ; ===========================================================================
 ; loc_13D4:
 Pause_ChkBC:
-	btst	#button_B,(Ctrl_1_Held).w ; is button B pressed?
-	bne.s	Pause_SlowMo		; if yes, branch
-	btst	#button_C,(Ctrl_1_Press).w ; is button C pressed?
-	bne.s	Pause_SlowMo		; if yes, branch
+    btst    #button_B,(Ctrl_1_Held).w ; is button B pressed?
+    bne.s    Pause_SlowMo        ; if yes, branch
+    btst    #button_C,(Ctrl_1_Press).w ; is button C pressed?
+    bne.s    Pause_SlowMo        ; if yes, branch
+    move.b    #MusID_Pause,(Music_to_play).l    ; pause music
 ; loc_13E4:
 Pause_ChkStart:
 	move.b	(Ctrl_1_Press).w,d0	; is Start button pressed?
