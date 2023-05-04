@@ -821,6 +821,7 @@ MusID_Continue =	id(zMusIDPtr_Continue)	; 9C
 MusID_Emerald =		id(zMusIDPtr_Emerald)	; 9D
 MusID_Credits =		id(zMusIDPtr_Credits)	; 9E
 MusID_Countdown =	id(zMusIDPtr_Countdown)	; 9F
+MusID_SaveScreen =	id(zMusIDPtr_SaveScreen)	; 9F
 MusID__End =		id(zMusIDPtr__End)	; A0
     if MOMPASS == 2
 	if MusID__End > SndID__First
@@ -837,7 +838,7 @@ sfx_SlotMachine = $71
 ; Sound IDs
 offset :=	SoundIndex
 ptrsize :=	2
-idstart :=	$A0
+idstart :=	$A1
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy SndPtr in the $80 slot
 

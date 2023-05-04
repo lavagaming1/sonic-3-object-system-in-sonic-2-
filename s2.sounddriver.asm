@@ -3547,6 +3547,7 @@ zMusIDPtr_Continue:	zmakePlaylistEntry	Mus_Continue,20h	; 0
 zMusIDPtr_Emerald:	zmakePlaylistEntry	Mus_Emerald,20h	; BA
 zMusIDPtr_Credits:	zmakePlaylistEntry	Mus_Credits,20h	; BD
 zMusIDPtr_Countdown:	zmakePlaylistEntry	Mus_Drowning,20h	; DC, PAL mode will be broken
+zMusIDPtr_SaveScreen:	zmakePlaylistEntry	Mus_SaveScreen,20h	; DC, PAL mode will be broken
 zMusIDPtr__End:
 
 ; Tempo with speed shoe tempo for each song

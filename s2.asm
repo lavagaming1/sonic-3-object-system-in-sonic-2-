@@ -90927,6 +90927,7 @@ Mus_ExtraLife:	INCLUDE	"sound/music/Extra life.asm"
 Mus_GameOver:	INCLUDE	"sound/music/Game over.asm"
 Mus_Emerald:	INCLUDE	"sound/music/Got emerald.asm"
 Mus_Credits:	INCLUDE	"sound/music/Credits.asm"
+Mus_SaveScreen:	INCLUDE	"sound/music/Menu.asm"
 	finishBank
 ; ------------------------------------------------------------------------------------------
 ; Sound effect pointers
