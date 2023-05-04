@@ -37173,7 +37173,7 @@ Tails_RecordPos:
 	rts
 Tails_Carry_Sonic:
 		; a1 = MainCharacter
-		move.w	(Ctrl_1_Logical).w,d0
+		move.w	(Ctrl_2_Logical).w,d0
 		tst.b	(a2) ; a2 = Flying_carrying_Sonic_flag but only sometimes
 		beq.w	loc_14534
 		cmpi.b	#4,routine(a1)
@@ -37473,11 +37473,6 @@ Tails_FlyingSwimming:
 	lea	(Tails_Carrying_Sonic_Flag).w,a2
 	lea	(MainCharacter).w,a1
 	bsr.w	Tails_Carry_Sonic
-	tst.b	(Tails_Carrying_Sonic_Flag).w
-	beq.s	+
-	bne.w	Sonic_ChgJumpDir
-
-+
 	bsr.w	Tails_ChgJumpDir
 	rts
 ; =============== S U B R O U T I N E =======================================
@@ -37509,7 +37504,7 @@ loc_1485E:
 ; ---------------------------------------------------------------------------
 
 loc_14860:
-	move.b	(Ctrl_1_Press_Logical).w,d0
+	move.b	(Ctrl_2_Press_Logical).w,d0
 	andi.b	#button_A_mask|button_C_mask|button_B_mask,d0
 	beq.s	loc_1488C
 	cmpi.w	#-$100,y_vel(a0)
@@ -37630,7 +37625,7 @@ Tails_Roll_Stop_Flying:
         beq.s   +
         btst	#1,status(a0)	; is Tails In Air ?
 	beq.s	+		; if not, branch
-	move.b (Ctrl_1_Press_Logical).w,d0 ; Move $FFFFF603 to d0
+	move.b (Ctrl_2_Press_Logical).w,d0 ; Move $FFFFF603 to d0
 	andi.b #$70,d0 ; Has A/B/C been pressed?
         beq.s  +
         move.b	#AniIDTailsAni_Roll,anim(a0) ; Set Sonic's animation to rolling.
@@ -38405,12 +38400,8 @@ return_1C70C:
 Tails_Test_For_Flight:
 	tst.b	double_jump_flag(a0)
 	bne.w	locret_151A2
-	move.b	(Ctrl_1_Press_Logical).w,d0
+	move.b	(Ctrl_2_Press_Logical).w,d0
 	andi.b	#button_A_mask|button_C_mask|button_B_mask,d0
-	beq.w	locret_151A2
-	bra.s	loc_1515C
-	move.b	(Ctrl_1_Press_Logical).w,d0
-	andi.b	#button_up_mask,d0
 	beq.w	locret_151A2
 	bra.s	loc_1515C
 
