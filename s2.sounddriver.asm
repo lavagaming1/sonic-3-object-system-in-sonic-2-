@@ -5,8 +5,8 @@
 ; RAS' work merged into SVN by Flamewing
 ; ---------------------------------------------------------------------------
 
-FixDriverBugs = 0
-OptimiseDriver = 0
+FixDriverBugs = 1
+OptimiseDriver = 1
 
 ; ---------------------------------------------------------------------------
 ; NOTES:
@@ -1600,38 +1600,32 @@ zBGMLoad:
 	add	hl,de				; Offset by 16-bit version of song index to proper tempo
 	ld	a,(hl)				; Get value at this location -> 'a'
 	ld	(zAbsVar.TempoTurbo),a		; Store 'a' here (provides an alternate tempo or something for speed up mode)
-	ld	hl,zMasterPlaylist		; Get address of the zMasterPlaylist
-	add	hl,de				; Add the 16-bit offset here
-	ld	a,(hl)				; Get "fixed" index
-	ld	b,a				; 'a' -> 'b'
-	; The following instructions enable a bankswitch routine
-	and	80h				; Get only 'bank' bit
-	ld	(zAbsVar.MusicBankNumber),a	; Store this (use to enable alternate bank)
-	ld	a,b				; Restore 'a'
-	add	a,a				; Adding a+a causes a possible overflow and a multiplication by 2
-	add	a,a				; Now multiplied by 4 and another possible overflow
-	ld	c,a				; Result -> 'c'
-	ccf					; Invert carry flag...
-	sbc	a,a				; ... so that this sets a to FFh if bit 6 of original a was clear (allow PAL double-update), zero otherwise (do not allow PAL double-update)
-	ld	(zAbsVar.IsPalFlag),a		; Set IsPalFlag
-	ld	a,c				; Put prior multiply result back in
-	add	a,a				; Now multiplied by 8!
-	sbc	a,a				; This is FFh if bit 5 of original a was set (uncompressed song), zero otherwise (compressed song)
-	push	af				; Backing up result...?
-	ld	a,b				; Put 80h based index -> 'a'
-	and	1Fh				; Strip the flag bits
-	add	a,a				; multiply by 2; now 'a' is offset into music table, save for the $8000
-	ld	e,a
-	ld	d,0				; de = a
-	ld	hl,zROMWindow
-	add	hl,de				; "hl" now contains 2-byte offset for music address table lookup
-	push	hl				; Save 'hl' (will be damaged by bank switch)
-	call	zBankSwitchToMusic		; Bank switch to start of music in ROM!
-	pop	hl				; Restore 'hl'
-	ld	e,(hl)
-	inc	hl
-	ld	d,(hl)				; Getting offset within bank to music -> de
-
+  ld   hl,zMasterPlaylist; Get address of the zMasterPlaylist
+   add   hl,de           ; Add the 16-bit offset here
+   add   hl,de           ; Add the 16-bit offset here
+   add   hl,de           ; Add the 16-bit offset here
+   add   hl,de           ; Add the 16-bit offset here
+   ld   a,(hl)           ; Get bank index
+   inc   hl               ; Advance pointer
+   ld   (zAbsVar.MusicBankNumber),a; Store bank index
+   ld   a,(hl)           ; Get song flags
+   inc   hl               ; Advance pointer
+   add   a,a               ; Adding a+a causes an overflow and a multiplication by 2
+   add   a,a               ; Now multiplied by 4
+   ld   c,a               ; Result -> 'c'
+   ccf                   ; Clear carry flag...
+   sbc   a,a               ; ... reverse subtract with carry that was set to zero ... umm.. a=0 in a funny way?
+   ld   (zAbsVar.IsPalFlag),a   ; Clear zIsPalFlag?
+   ld   a,c               ; Put prior multiply result back in
+   add   a,a               ; Now multiplied by 8!
+   sbc   a,a               ; This is nonzero if bit 5 of original a is set, zero otherwise (uncompressed song flag)
+   push   af           ; Backing up result...?
+   ld   e, (hl)           ; Read low byte of pointer into e
+   inc   hl               ; Advance pointer
+   ld   d, (hl)           ; Read high byte of pointer into d
+   push   hl; Save 'hl' (will be damaged by bank switch)
+   call   zBankSwitchToMusic; Bank switch to start of music in ROM!
+   pop   hl ; Restore 'hl'
 	; If we bypass the Saxman decompressor, the Z80 engine starts
 	; with the assumption that we're already decompressed with 'de' pointing
 	; at the decompressed data (which just so happens to be the ROM window)
@@ -2576,15 +2570,16 @@ zFMNoteOff:
 
 ; zsub_C63:
 zBankSwitchToMusic:
-	ld	a,(zAbsVar.MusicBankNumber)
-	or	a
-	jr	nz,+
-
-	bankswitch MusicPoint1
-	ret
-+
-	bankswitch MusicPoint2
-	ret
+   ld   a,(zAbsVar.MusicBankNumber)
+   ld   hl, zBankRegister
+   ld   (hl), a
+   rept 7
+       rra
+       ld   (hl), a
+   endm
+   xor   a
+   ld   (hl), a
+   ret
 ; End of function zBankSwitchToMusic
 
 ; ---------------------------------------------------------------------------
@@ -3510,48 +3505,48 @@ byte_11E5:
 	db	0Eh,0Dh,0Ch,0Bh,0Ah,9,8,7,6,5,4,3,2,1,0,80h
 
 ;	END of zPSG_FlutterTbl ---------------------------
-
+zmake68kBank function addr,(((addr&3F8000h)/zROMWindow))
+zmakePlaylistEntry macro addr,val
+   db   zmake68kBank(addr),val
+   dw   zmake68kPtr(addr)
+   endm
+   
 ; zbyte_11F5h:
 zMasterPlaylist:
-
-; Music IDs
-offset :=	MusicPoint2
-ptrsize :=	2
-idstart :=	80h
 ; note: +20h means uncompressed, here
 ; +40h is a flag that forces PAL mode off when set
 
-zMusIDPtr_2PResult:	db	id(MusPtr_2PResult)	; 92
-zMusIDPtr_EHZ:		db	id(MusPtr_EHZ)		; 81
-zMusIDPtr_MCZ_2P:	db	id(MusPtr_MCZ_2P)	; 85
-zMusIDPtr_OOZ:		db	id(MusPtr_OOZ)		; 8F
-zMusIDPtr_MTZ:		db	id(MusPtr_MTZ)		; 82
-zMusIDPtr_HTZ:		db	id(MusPtr_HTZ)		; 94
-zMusIDPtr_ARZ:		db	id(MusPtr_ARZ)		; 86
-zMusIDPtr_CNZ_2P:	db	id(MusPtr_CNZ_2P)	; 80
-zMusIDPtr_CNZ:		db	id(MusPtr_CNZ)		; 83
-zMusIDPtr_DEZ:		db	id(MusPtr_DEZ)		; 87
-zMusIDPtr_MCZ:		db	id(MusPtr_MCZ)		; 84
-zMusIDPtr_EHZ_2P:	db	id(MusPtr_EHZ_2P)	; 91
-zMusIDPtr_SCZ:		db	id(MusPtr_SCZ)		; 8E
-zMusIDPtr_CPZ:		db	id(MusPtr_CPZ)		; 8C
-zMusIDPtr_WFZ:		db	id(MusPtr_WFZ)		; 90
-zMusIDPtr_HPZ:		db	id(MusPtr_HPZ)		; 9B
-zMusIDPtr_Options:	db	id(MusPtr_Options)	; 89
-zMusIDPtr_SpecStage:	db	id(MusPtr_SpecStage)	; 88
-zMusIDPtr_Boss:		db	id(MusPtr_Boss)		; 8D
-zMusIDPtr_EndBoss:	db	id(MusPtr_EndBoss)	; 8B
-zMusIDPtr_Ending:	db	id(MusPtr_Ending)	; 8A
-zMusIDPtr_SuperSonic:	db	id(MusPtr_SuperSonic)	; 93
-zMusIDPtr_Invincible:	db	id(MusPtr_Invincible)	; 99
-zMusIDPtr_ExtraLife:	db	id(MusPtr_ExtraLife)+20h; B5
-zMusIDPtr_Title:	db	id(MusPtr_Title)	; 96
-zMusIDPtr_EndLevel:	db	id(MusPtr_EndLevel)	; 97
-zMusIDPtr_GameOver:	db	id(MusPtr_GameOver)+20h	; B8
-zMusIDPtr_Continue:	db	(MusPtr_Continue-MusicPoint1)/ptrsize	; 0
-zMusIDPtr_Emerald:	db	id(MusPtr_Emerald)+20h	; BA
-zMusIDPtr_Credits:	db	id(MusPtr_Credits)+20h	; BD
-zMusIDPtr_Countdown:	db	id(MusPtr_Drowning)+40h	; DC
+zMusIDPtr_2PResult:	zmakePlaylistEntry	Mus_2PResult,20h	; 92
+zMusIDPtr_EHZ:		zmakePlaylistEntry	Mus_EHZ,20h		; 81
+zMusIDPtr_MCZ_2P:	zmakePlaylistEntry	Mus_MCZ_2P,20h	; 85
+zMusIDPtr_OOZ:		zmakePlaylistEntry	Mus_OOZ,20h		; 8F
+zMusIDPtr_MTZ:		zmakePlaylistEntry	Mus_MTZ,20h		; 82
+zMusIDPtr_HTZ:		zmakePlaylistEntry	Mus_HTZ,20h		; 94
+zMusIDPtr_ARZ:		zmakePlaylistEntry	Mus_ARZ,20h		; 86
+zMusIDPtr_CNZ_2P:	zmakePlaylistEntry	Mus_CNZ_2P,20h	; 80
+zMusIDPtr_CNZ:		zmakePlaylistEntry	Mus_CNZ,20h		; 83
+zMusIDPtr_DEZ:		zmakePlaylistEntry	Mus_DEZ,20h		; 87
+zMusIDPtr_MCZ:		zmakePlaylistEntry	Mus_MCZ,20h		; 84
+zMusIDPtr_EHZ_2P:	zmakePlaylistEntry	Mus_EHZ_2P,20h	; 91
+zMusIDPtr_SCZ:		zmakePlaylistEntry	Mus_SCZ,20h		; 8E
+zMusIDPtr_CPZ:		zmakePlaylistEntry	Mus_CPZ,20h		; 8C
+zMusIDPtr_WFZ:		zmakePlaylistEntry	Mus_WFZ,20h		; 90
+zMusIDPtr_HPZ:		zmakePlaylistEntry	Mus_HPZ,20h		; 9B
+zMusIDPtr_Options:	zmakePlaylistEntry	Mus_Options,20h	; 89
+zMusIDPtr_SpecStage:	zmakePlaylistEntry	Mus_SpecStage,20h	; 88
+zMusIDPtr_Boss:		zmakePlaylistEntry	Mus_Boss,20h		; 8D
+zMusIDPtr_EndBoss:	zmakePlaylistEntry	Mus_EndBoss,20h	; 8B
+zMusIDPtr_Ending:	zmakePlaylistEntry	Mus_Ending,20h	; 8A
+zMusIDPtr_SuperSonic:	zmakePlaylistEntry	Mus_SuperSonic,20h	; 93
+zMusIDPtr_Invincible:	zmakePlaylistEntry	Mus_Invincible,20h	; 99
+zMusIDPtr_ExtraLife:	zmakePlaylistEntry	Mus_ExtraLife,20h; B5
+zMusIDPtr_Title:	zmakePlaylistEntry	Mus_Title,20h	; 96
+zMusIDPtr_EndLevel:	zmakePlaylistEntry	Mus_EndLevel,20h	; 97
+zMusIDPtr_GameOver:	zmakePlaylistEntry	Mus_GameOver,20h	; B8
+zMusIDPtr_Continue:	zmakePlaylistEntry	Mus_Continue,20h	; 0
+zMusIDPtr_Emerald:	zmakePlaylistEntry	Mus_Emerald,20h	; BA
+zMusIDPtr_Credits:	zmakePlaylistEntry	Mus_Credits,20h	; BD
+zMusIDPtr_Countdown:	zmakePlaylistEntry	Mus_Drowning,20h	; DC, PAL mode will be broken
 zMusIDPtr__End:
 
 ; Tempo with speed shoe tempo for each song
@@ -3569,62 +3564,58 @@ zSpedUpTempoTable:
 	; DAC sample pointers and lengths
 	ensure1byteoffset 1Ch
 
-;zDACPtr_Index:
-;zbyte_1233:
 zDACPtrTbl:
-zDACPtr_Sample1:	dw	zmake68kPtr(SndDAC_Sample1)
-;zbyte_1235
+zDACPtr_Kick:	dw	zmake68kPtr(SndDAC_Kick)
 zDACLenTbl:
-			dw	SndDAC_Sample1_End-SndDAC_Sample1
+			dw	SndDAC_Kick_End-SndDAC_Kick
 
-zDACPtr_Sample2:	dw	zmake68kPtr(SndDAC_Sample2)
-			dw	SndDAC_Sample2_End-SndDAC_Sample2
+zDACPtr_Snare:	dw	zmake68kPtr(SndDAC_Snare)
+			dw	SndDAC_Snare_End-SndDAC_Snare
 
-zDACPtr_Sample3:	dw	zmake68kPtr(SndDAC_Sample3)
-			dw	SndDAC_Sample3_End-SndDAC_Sample3
+zDACPtr_Clap:	dw	zmake68kPtr(SndDAC_Clap)
+			dw	SndDAC_Clap_End-SndDAC_Clap
 
-zDACPtr_Sample4:	dw	zmake68kPtr(SndDAC_Sample4)
-			dw	SndDAC_Sample4_End-SndDAC_Sample4
+zDACPtr_Scratch:	dw	zmake68kPtr(SndDAC_Scratch)
+			dw	SndDAC_Scratch_End-SndDAC_Scratch
 
-zDACPtr_Sample5:	dw	zmake68kPtr(SndDAC_Sample5)
-			dw	SndDAC_Sample5_End-SndDAC_Sample5
+zDACPtr_Timpani:	dw	zmake68kPtr(SndDAC_Timpani)
+			dw	SndDAC_Timpani_End-SndDAC_Timpani
 
-zDACPtr_Sample6:	dw	zmake68kPtr(SndDAC_Sample6)
-			dw	SndDAC_Sample6_End-SndDAC_Sample6
+zDACPtr_Tom:	dw	zmake68kPtr(SndDAC_Tom)
+			dw	SndDAC_Tom_End-SndDAC_Tom
 
-zDACPtr_Sample7:	dw	zmake68kPtr(SndDAC_Sample7)
-			dw	SndDAC_Sample7_End-SndDAC_Sample7
+zDACPtr_Bongo:	dw	zmake68kPtr(SndDAC_Bongo)
+			dw	SndDAC_Bongo_End-SndDAC_Bongo
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that
 	; follows it is a wait time between each nibble written to the DAC
 	; (thus higher = slower)
-	ensure1byteoffset 22h
+	;ensure1byteoffset 22h
 ; zbyte_124F:
 zDACMasterPlaylist:
-
 ; DAC samples IDs
 offset :=	zDACPtrTbl
 ptrsize :=	2+2
 idstart :=	81h
 
-	db	id(zDACPtr_Sample1),17h		; 81h
-	db	id(zDACPtr_Sample2),1		; 82h
-	db	id(zDACPtr_Sample3),6		; 83h
-	db	id(zDACPtr_Sample4),8		; 84h
-	db	id(zDACPtr_Sample5),1Bh		; 85h
-	db	id(zDACPtr_Sample6),0Ah		; 86h
-	db	id(zDACPtr_Sample7),1Bh		; 87h
-	db	id(zDACPtr_Sample5),12h		; 88h
-	db	id(zDACPtr_Sample5),15h		; 89h
-	db	id(zDACPtr_Sample5),1Ch		; 8Ah
-	db	id(zDACPtr_Sample5),1Dh		; 8Bh
-	db	id(zDACPtr_Sample6),2		; 8Ch
-	db	id(zDACPtr_Sample6),5		; 8Dh
-	db	id(zDACPtr_Sample6),8		; 8Eh
-	db	id(zDACPtr_Sample7),8		; 8Fh
-	db	id(zDACPtr_Sample7),0Bh		; 90h
-	db	id(zDACPtr_Sample7),12h		; 91h
+	db	id(zDACPtr_Kick),17h		; 81h
+	db	id(zDACPtr_Snare),1		; 82h
+	db	id(zDACPtr_Clap),6		; 83h
+	db	id(zDACPtr_Scratch),8		; 84h
+	db	id(zDACPtr_Timpani),1Bh		; 85h
+	db	id(zDACPtr_Tom),0Ah		; 86h
+	db	id(zDACPtr_Bongo),1Bh		; 87h
+	db	id(zDACPtr_Timpani),12h		; 88h
+	db	id(zDACPtr_Timpani),15h		; 89h
+	db	id(zDACPtr_Timpani),1Ch		; 8Ah
+	db	id(zDACPtr_Timpani),1Dh		; 8Bh
+	db	id(zDACPtr_Tom),2		; 8Ch
+	db	id(zDACPtr_Tom),5		; 8Dh
+	db	id(zDACPtr_Tom),8		; 8Eh
+	db	id(zDACPtr_Bongo),8		; 8Fh
+	db	id(zDACPtr_Bongo),0Bh		; 90h
+	db	id(zDACPtr_Bongo),12h		; 91h
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
