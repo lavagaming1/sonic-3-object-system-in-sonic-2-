@@ -42,7 +42,7 @@ loc_C5F0:
 ;loc_C600:
 ;		move.l	d0,(a1)+
 ;		dbf	d1,loc_C600
-		move.w	#MusID_Options,d0
+		move.w	#MusID_SaveScreen,d0
 		jsrto	(PlayMusic).l, JmpTo_PlayMusic
                 clearRAM Chunk_Table,Chunk_Table_End
                 clearRAM Object_RAM,Object_RAM_End
