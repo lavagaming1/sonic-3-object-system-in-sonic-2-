@@ -19,8 +19,8 @@ Snd_Menu_Header:
 	smpsStop
 
 Snd_Menu_Call00:
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $12, dKick
-	dc.b	$06, dKick, dMidTom, dLowTom, $0C
+	dc.b	dKick, $12, dKick, $06, dKick, dHiTimpani, $0C, dKick, $06, dKick, $12, dKick
+	dc.b	$06, dKick, dMidTimpani, dLowTimpani, $0C
 	smpsReturn
 
 ; DAC Data
@@ -30,39 +30,39 @@ Snd_Menu_DAC:
 Snd_Menu_Loop00:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $03, Snd_Menu_Loop00
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $02, dHiTimpani
+	dc.b	dKick, $12, dKick, $06, dKick, dHiTimpani, $0C, dKick, $06, dKick, $02, dHiTimpani
 	dc.b	$03, dHiTimpani, $01, dHiTimpani, $0C, dHiTimpani, $06, dHiTimpani, $08, dHiTimpani, dMidTimpani
 
 Snd_Menu_Loop01:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $03, Snd_Menu_Loop01
-	dc.b	dLowTom, $06, dLowTom, dLowTom, $12, dLowTom, $06, dLowTom, dLowTom, $1E, dMidTom, $18
+	dc.b	dLowTimpani, $06, dLowTimpani, dLowTimpani, $12, dLowTimpani, $06, dLowTimpani, dLowTimpani, $1E, dMidTimpani, $18
 
 Snd_Menu_Loop02:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $07, Snd_Menu_Loop02
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, dHiTimpani, $0C
-	dc.b	dHiTimpani, $06, dHiTimpani, $0C, dLowTom
+	dc.b	dKick, $12, dKick, $06, dKick, dHiTimpani, $0C, dKick, $06, dKick, dHiTimpani, $0C
+	dc.b	dHiTimpani, $06, dHiTimpani, $0C, dLowTimpani
 
 Snd_Menu_Loop03:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $02, Snd_Menu_Loop03
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $12, dKick
-	dc.b	$06, dKick, dMidTom, dLowTom, $0C, dLowTom, $06, dLowTom, dLowTom, $12, dLowTom, $06
-	dc.b	dLowTom, dLowTom, $1E, dMidTom, $18
+	dc.b	dKick, $12, dKick, $06, dKick, dHiTimpani, $0C, dKick, $06, dKick, $12, dKick
+	dc.b	$06, dKick, dMidTimpani, dLowTimpani, $0C, dLowTimpani, $06, dLowTimpani, dLowTimpani, $12, dLowTimpani, $06
+	dc.b	dLowTimpani, dLowTimpani, $1E, dMidTimpani, $18
 
 Snd_Menu_Loop04:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $03, Snd_Menu_Loop04
-	dc.b	dLowTom, $06, dKick, $0C, dLowTom, $06, dKick, dLowTom, dLowTom, dMidTom, $0C, dKick
-	dc.b	$12, dKick, $06, dKick, dHiTom, $0C
+	dc.b	dLowTimpani, $06, dKick, $0C, dLowTimpani, $06, dKick, dLowTimpani, dLowTimpani, dMidTimpani, $0C, dKick
+	dc.b	$12, dKick, $06, dKick, dHiTimpani, $0C
 
 Snd_Menu_Loop05:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $02, Snd_Menu_Loop05
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $12, dKick
-	dc.b	$06, dKick, dMidTom, dLowTom, $0C, dLowTom, dKick, $06, dLowTom, $0C, dKick, $06
-	dc.b	dLowTom, nRst, $36
+	dc.b	dKick, $12, dKick, $06, dKick, dHiTimpani, $0C, dKick, $06, dKick, $12, dKick
+	dc.b	$06, dKick, dMidTimpani, dLowTimpani, $0C, dLowTimpani, dKick, $06, dLowTimpani, $0C, dKick, $06
+	dc.b	dLowTimpani, nRst, $36
 	smpsJump            Snd_Menu_Loop00
 
 ; Unreachable
