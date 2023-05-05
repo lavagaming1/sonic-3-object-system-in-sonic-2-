@@ -90707,13 +90707,13 @@ __LABEL___End label *
 	endm
 	
 SndDAC_Start:
-SndDAC_Kick:	DAC	Sample 1.bin
-SndDAC_Snare:	DAC	Sample 2.bin
-SndDAC_Timpani:	DAC	Sample 5.bin
-SndDAC_Tom:	DAC	Sample 6.bin
-SndDAC_Clap:	DAC	Sample 3.bin
-SndDAC_Scratch:	DAC	Sample 4.bin
-SndDAC_Bongo:	DAC	Sample 7.bin
+SndDAC_Kick:	DAC	81.bin
+SndDAC_Snare:	DAC	82.bin
+SndDAC_Timpani:	DAC	85.bin
+SndDAC_Tom:	DAC	86.bin
+SndDAC_Clap:	DAC	83.bin
+SndDAC_Scratch:	DAC	84.bin
+SndDAC_Bongo:	DAC	87.bin
 SndDAC_End
 
 	if SndDAC_End - SndDAC_Start > $33A7
