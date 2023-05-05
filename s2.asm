@@ -4417,7 +4417,7 @@ Level_ClrRam:
 	clearRAM Oscillating_Data,Oscillating_variables_End
 	; Bug: The '+C0' shouldn't be here; CNZ_saucer_data is only $40 bytes large
 	clearRAM CNZ_saucer_data,CNZ_saucer_data_End+$C0
-
+	move.b	#0,(Victory_Pose).w
 	cmpi.w	#chemical_plant_zone_act_2,(Current_ZoneAndAct).w ; CPZ 2
 	beq.s	Level_InitWater
 	cmpi.b	#aquatic_ruin_zone,(Current_Zone).w ; ARZ
@@ -5628,6 +5628,7 @@ CheckLoadSignpostArt:
 	move.w	d1,(Camera_Min_X_pos).w ; prevent camera from scrolling back to the left
 	tst.w	(Two_player_mode).w
 	bne.s	+	; rts
+	move.b    #1,(Current_Boss_ID).w
 	moveq	#PLCID_Signpost,d0 ; <== PLC_1F
 	bra.w	LoadPLC2		; load signpost art
 ; ---------------------------------------------------------------------------
@@ -5644,6 +5645,7 @@ SignpostUpdateTailsBounds:
 	beq.s	+	; rts
 	cmp.w	(Tails_Min_X_pos).w,d1
 	beq.s	+	; rts
+	move.b    #1,(Current_Boss_ID).w
 	move.w	d1,(Tails_Min_X_pos).w ; prevent Tails from going past new left boundary
 +	rts
 ; End of function CheckLoadSignpostArt
@@ -25789,6 +25791,7 @@ loc_140AC:
 	rts
 ; ---------------------------------------------------------------------------
 +
+	move.b	#1,(Victory_Pose).w
 	movea.l	a0,a1
 	lea	byte_14380(pc),a2
 	moveq	#7,d1
@@ -25800,6 +25803,28 @@ loc_140BC:
 	beq.s	loc_140CE
 	lea	next_object(a1),a1 ; a1=object
 	bra.s	loc_140BC
+Load_LevelResults:
+        lea    (Player_1).w,a1
+        btst    #Status_InAir,status(a1)
+        bne.s    +
+        bsr.s    Set_PlayerEndingPose
++       rts
+
+Set_PlayerEndingPose:
+        move.b    #$81,object_control(a1)
+        move.b    #AniIDSonAni_DeathBW,anim(a1)
++
+	clr.b	(Ctrl_1_Held_Logical).w
+	clr.b	(Ctrl_1_Press_Logical).w
+	clr.b	(Ctrl_2_Held_Logical).w
+	clr.b	(Ctrl_2_Press_Logical).w		
+        clr.b    spindash_flag(a1)
+        clr.l    x_vel(a1)
+        clr.l    y_vel(a1)
+        bclr    #Status_Push,status(a0)
+        bclr    #Status_Underwater,status(a0)
+        bclr    #Status_Push,status(a1)
+        rts
 ; ===========================================================================
 
 loc_140CE:
@@ -32719,18 +32744,7 @@ Obj0D_Main_State3:
 	bne.w	return_194D0
 	btst	#1,(MainCharacter+status).w
 	bne.s	loc_19434
-	move.b	#1,(Control_Locked).w
-	move.w	#(button_right_mask<<8)|0,(Ctrl_1_Logical).w
 loc_19434:
-	; This check here is for S1's Big Ring, which would set Sonic's Object ID to 0
-	tst.l	(MainCharacter).w
-	beq.s	loc_1944C
-	move.w	(MainCharacter+x_pos).w,d0
-	move.w	(Camera_Max_X_pos).w,d1
-	addi.w	#$128,d1
-	cmp.w	d1,d0
-	blo.w	return_194D0
-
 loc_1944C:
 	move.b	#0,routine_secondary(a0) ; => Obj0D_Main_StateNull
 ;loc_19452:
@@ -32772,9 +32786,11 @@ Load_EndOfAct:
 	bne.s	+
 	move.w	#5000,(Bonus_Countdown_3).w
 +
+	move.b	#1,(Control_Locked).w
+	move.b	#1,(Control_Locked_P2).w
 	move.w	#MusID_EndLevel,d0
 	jsr	(PlayMusic).l
-
+	bsr.w	Load_LevelResults
 return_194D0:
 	rts
 ; ===========================================================================
@@ -36384,7 +36400,7 @@ SonAni_Spring:	dc.b $2F,$5B,$FD,  0
 	rev02even
 SonAni_Hang:	dc.b   1,$50,$51,$FF
 	rev02even
-SonAni_Dash2:	dc.b  $F,$43,$43,$43,$FE,  1
+SonAni_Dash2:	dc.b  $F,$D6,$FF
 	rev02even
 SonAni_Dash3:	dc.b  $F,$43,$44,$FE,  1
 	rev02even
@@ -36392,7 +36408,7 @@ SonAni_Hang2:	dc.b $13,$6B,$6C,$FF
 	rev02even
 SonAni_Bubble:	dc.b  $B,$5A,$5A,$11,$12,$FD,  0 ; breathe
 	rev02even
-SonAni_DeathBW:	dc.b $20,$5E,$FF
+SonAni_DeathBW:	dc.b $20,$D6,$FF
 	rev02even
 SonAni_Drown:	dc.b $20,$5D,$FF
 	rev02even
@@ -36630,6 +36646,15 @@ Obj02_Control_Part2:
 	andi.w	#6,d0	; %0000 %0110
 	move.w	Obj02_Modes(pc,d0.w),d1
 	jsr	Obj02_Modes(pc,d1.w)	; run Tails' movement control code
++
+	cmpi.b	#1,(Victory_Pose).w
+	bne.s	+
+	move.w	(MainCharacter+x_pos).w,(Sidekick+x_pos).w
+	move.w	(MainCharacter+y_pos).w,(Sidekick+y_pos).w
+	subi.w	#$20,(Sidekick+x_pos).w
+	addi.w	#4,(Sidekick+y_pos).w
+	move.b	#$81,obj_control(a0)
+	move.b	#AniIDTailsAni_DeathBW,anim(a0)
 +
 	cmpi.w	#-$100,(Camera_Min_Y_pos).w	; is vertical wrapping enabled?
 	bne.s	+                               ; if not, branch
@@ -39508,13 +39533,13 @@ TailsAni_Hang2:		dc.b $13,$85,$86,$FF
 	rev02even
 TailsAni_Bubble:	dc.b  $B,$74,$74,$12,$13,$FD,  0
 	rev02even
-TailsAni_DeathBW:	dc.b $20,$5D,$FF
+TailsAni_DeathBW:	dc.b $20,$99,$FF
 	rev02even
 TailsAni_Drown:		dc.b $2F,$5D,$FF
 	rev02even
 TailsAni_Death:		dc.b   3,$5D,$FF
 	rev02even
-TailsAni_Hurt:		dc.b   3,$5D,$FF
+TailsAni_Hurt:		dc.b   3,$6B,$FF
 	rev02even
 TailsAni_Hurt2:		dc.b   3,$5C,$FF
 	rev02even
@@ -39527,7 +39552,7 @@ TailsAni_Swim:	dc.b   3,  $8d,  $8e,  $8f,  $90,  $91,$FF
 TailsAni_Tired:	dc.b   3,  $8b,  $8c,$FF
 	rev02even
 TailsAni_HaulAss:	dc.b $FF,$32,$33,$FF
-			dc.b $FF,$FF,$FF,$FF,$FF,$FF
+			dc.b $FF,$FF,$FF,$FF,$FF,$FF ;Extra fast running
 	rev02even
 TailsAni_Fly:		dc.b   1,$5E,$5F,$FF
 	even
@@ -90709,10 +90734,10 @@ __LABEL___End label *
 SndDAC_Start:
 SndDAC_Kick:	DAC	81.bin
 SndDAC_Snare:	DAC	82.bin
-SndDAC_Timpani:	DAC	85.bin
-SndDAC_Tom:	DAC	86.bin
 SndDAC_Clap:	DAC	83.bin
 SndDAC_Scratch:	DAC	84.bin
+SndDAC_Timpani:	DAC	85.bin
+SndDAC_Tom:	DAC	86.bin
 SndDAC_Bongo:	DAC	87.bin
 SndDAC_End
 

@@ -1920,7 +1920,7 @@ SS_Perfect_rings_left:	ds.w	1
 SS_Star_color_1:	ds.b	1
 SS_Star_color_2:	ds.b	1
 SS_NoCheckpointMsg_flag:	ds.b	1
-		ds.b	1
+Victory_Pose:		ds.b	1
 SS_NoRingsTogoLifetime:	ds.w	1
 SS_RingsToGoBCD:		ds.w	1
 SS_HideRingsToGo:	ds.b	1
