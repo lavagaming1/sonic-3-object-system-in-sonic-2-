@@ -37496,6 +37496,12 @@ Tails_FlyingSwimming:
 	lea	(Tails_Carrying_Sonic_Flag).w,a2
 	lea	(MainCharacter).w,a1
 	bsr.w	Tails_Carry_Sonic
+	tst.b	(Player_mode).w
+	bne.s	+
+	bsr.w	Sonic_ChgJumpDir
+	bsr.w	Tails_ChgJumpDir
+	rts
++
 	bsr.w	Tails_ChgJumpDir
 	rts
 ; =============== S U B R O U T I N E =======================================
@@ -37528,6 +37534,7 @@ loc_1485E:
 
 loc_14860:
 	move.b	(Ctrl_2_Press_Logical).w,d0
+	or.b	(Ctrl_1_Press_Logical).w,d0
 	andi.b	#button_A_mask|button_C_mask|button_B_mask,d0
 	beq.s	loc_1488C
 	cmpi.w	#-$100,y_vel(a0)
