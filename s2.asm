@@ -90716,8 +90716,8 @@ SndDAC_Scratch:	DAC	84.bin
 SndDAC_Bongo:	DAC	87.bin
 SndDAC_End
 
-	if SndDAC_End - SndDAC_Start > $33A7
-		fatal "DAC samples must fit within $33A7 bytes, but you have $\{SndDAC_End-SndDAC_Start } bytes of DAC samples."
+	if SndDAC_End - SndDAC_Start > $FFFF
+		fatal "DAC samples must fit within $FFFF bytes, but you have $\{SndDAC_End-SndDAC_Start } bytes of DAC samples."
 	endif
 	if SndDAC_End - SndDAC_Start > Size_of_DAC_samples
 		fatal "Size_of_DAC_samples = $\{Size_of_DAC_samples}, but you have $\{SndDAC_End-SndDAC_Start} bytes of DAC samples."
