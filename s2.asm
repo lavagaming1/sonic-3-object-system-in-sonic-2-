@@ -32743,8 +32743,6 @@ Obj0D_Main_State3:
 	tst.w	(Debug_placement_mode).w
 	bne.w	return_194D0
 	btst	#1,(MainCharacter+status).w
-	bne.s	loc_19434
-loc_19434:
 loc_1944C:
 	move.b	#0,routine_secondary(a0) ; => Obj0D_Main_StateNull
 ;loc_19452:
