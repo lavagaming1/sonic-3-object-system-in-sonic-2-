@@ -3573,12 +3573,12 @@ zDACPtr_Kick:	dw	zmake68kPtr(SndDAC_Kick)
 zDACLenTbl:
 			dw	SndDAC_Kick_End-SndDAC_Kick
 
-zzDACPtr_Snare:		DACSize	SndDAC_Snare	
+zDACPtr_Snare:		DACSize	SndDAC_Snare	
 zDACPtr_Clap:		DACSize	SndDAC_Clap
 zDACPtr_Scratch:	DACSize SndDAC_Scratch
 zDACPtr_Timpani:	DACSize SndDAC_Timpani
-zDACPtr_Toms:		DACSize SndDAC_Tom
-zDACPtr_Bongos:		DACSize SndDAC_Bongo
+zDACPtr_Tom:		DACSize SndDAC_Tom
+zDACPtr_Bongo:		DACSize SndDAC_Bongo
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that
