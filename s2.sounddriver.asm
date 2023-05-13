@@ -3564,29 +3564,21 @@ zSpedUpTempoTable:
 
 	; DAC sample pointers and lengths
 	ensure1byteoffset 1Ch
-
+DACSize macro Sample
+	dw	zmake68kPtr(Sample)
+	dw	Sample_End-Sample
+	endm
 zDACPtrTbl:
 zDACPtr_Kick:	dw	zmake68kPtr(SndDAC_Kick)
 zDACLenTbl:
 			dw	SndDAC_Kick_End-SndDAC_Kick
 
-zDACPtr_Snare:	dw	zmake68kPtr(SndDAC_Snare)
-			dw	SndDAC_Snare_End-SndDAC_Snare
-
-zDACPtr_Clap:	dw	zmake68kPtr(SndDAC_Clap)
-			dw	SndDAC_Clap_End-SndDAC_Clap
-
-zDACPtr_Scratch:	dw	zmake68kPtr(SndDAC_Scratch)
-			dw	SndDAC_Scratch_End-SndDAC_Scratch
-
-zDACPtr_Timpani:	dw	zmake68kPtr(SndDAC_Timpani)
-			dw	SndDAC_Timpani_End-SndDAC_Timpani
-
-zDACPtr_Tom:	dw	zmake68kPtr(SndDAC_Tom)
-			dw	SndDAC_Tom_End-SndDAC_Tom
-
-zDACPtr_Bongo:	dw	zmake68kPtr(SndDAC_Bongo)
-			dw	SndDAC_Bongo_End-SndDAC_Bongo
+zzDACPtr_Snare:		DACSize	SndDAC_Snare	
+zDACPtr_Clap:		DACSize	SndDAC_Clap
+zDACPtr_Scratch:	DACSize SndDAC_Scratch
+zDACPtr_Timpani:	DACSize SndDAC_Timpani
+zDACPtr_Toms:		DACSize SndDAC_Toms
+zDACPtr_Bongos:		DACSize SndDAC_Bongos
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that
