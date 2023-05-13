@@ -3577,7 +3577,7 @@ zzDACPtr_Snare:		DACSize	SndDAC_Snare
 zDACPtr_Clap:		DACSize	SndDAC_Clap
 zDACPtr_Scratch:	DACSize SndDAC_Scratch
 zDACPtr_Timpani:	DACSize SndDAC_Timpani
-zDACPtr_Toms:		DACSize SndDAC_Toms
+zDACPtr_Toms:		DACSize SndDAC_Tom
 zDACPtr_Bongos:		DACSize SndDAC_Bongos
 
 	; something else for DAC sounds
