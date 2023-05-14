@@ -3546,8 +3546,8 @@ zMusIDPtr_GameOver:	zmakePlaylistEntry	Mus_GameOver,20h	; B8
 zMusIDPtr_Continue:	zmakePlaylistEntry	Mus_Continue,20h	; 0
 zMusIDPtr_Emerald:	zmakePlaylistEntry	Mus_Emerald,20h	; BA
 zMusIDPtr_Credits:	zmakePlaylistEntry	Mus_Credits,20h	; BD
-zMusIDPtr_Countdown:	zmakePlaylistEntry	Mus_Drowning,20h	; DC, PAL mode will be broken
-zMusIDPtr_SaveScreen:	zmakePlaylistEntry	Mus_SaveScreen,20h	; DC, PAL mode will be broken
+zMusIDPtr_Countdown:	zmakePlaylistEntry	Mus_Drowning,40h	; DC, PAL mode will be broken
+zMusIDPtr_SaveScreen:	zmakePlaylistEntry	Mus_SaveScreen,20h	
 zMusIDPtr__End:
 
 ; Tempo with speed shoe tempo for each song
@@ -3584,7 +3584,7 @@ zDACPtr_Bongo:		DACSize SndDAC_Bongo
 	; First byte selects one of the DAC samples.  The number that
 	; follows it is a wait time between each nibble written to the DAC
 	; (thus higher = slower)
-	;ensure1byteoffset 22h
+	ensure1byteoffset 22h
 ; zbyte_124F:
 zDACMasterPlaylist:
 ; DAC samples IDs
