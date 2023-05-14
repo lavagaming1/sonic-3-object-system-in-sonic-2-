@@ -2,7 +2,7 @@ Drowning_Header:
 	smpsHeaderStartSong 2
 	smpsHeaderVoice     Drowning_Voices
 	smpsHeaderChan      $06, $00
-	smpsHeaderTempo     $01, $80
+	smpsHeaderTempo     $01, $7F
 
 	smpsHeaderDAC       Drowning_DAC
 	smpsHeaderFM        Drowning_FM1,	$0C, $08
