@@ -90728,7 +90728,7 @@ Snd_Driver_End:
 	; actually it only has to fit within one bank, but we'll line it up to the end anyway
 	; because the padding gives the sound driver some room to grow
 	cnop -Size_of_DAC_samples, $8000
-
+   	align  $8000
 ; ---------------------------------------------------------------------------
 ; DAC samples
 ; ---------------------------------------------------------------------------

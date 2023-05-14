@@ -3518,35 +3518,35 @@ zMasterPlaylist:
 
 zMusIDPtr_2PResult:	zmakePlaylistEntry	Mus_2PResult,20h	; 92
 zMusIDPtr_EHZ:		zmakePlaylistEntry	Mus_EHZ,20h		; 81
-zMusIDPtr_MCZ_2P:	zmakePlaylistEntry	Mus_MCZ_2P,20h	; 85
+zMusIDPtr_MCZ_2P:	zmakePlaylistEntry	Mus_MCZ_2P,20h		; 85
 zMusIDPtr_OOZ:		zmakePlaylistEntry	Mus_OOZ,20h		; 8F
 zMusIDPtr_MTZ:		zmakePlaylistEntry	Mus_MTZ,20h		; 82
 zMusIDPtr_HTZ:		zmakePlaylistEntry	Mus_HTZ,20h		; 94
 zMusIDPtr_ARZ:		zmakePlaylistEntry	Mus_ARZ,20h		; 86
-zMusIDPtr_CNZ_2P:	zmakePlaylistEntry	Mus_CNZ_2P,20h	; 80
+zMusIDPtr_CNZ_2P:	zmakePlaylistEntry	Mus_CNZ_2P,20h		; 80
 zMusIDPtr_CNZ:		zmakePlaylistEntry	Mus_CNZ,20h		; 83
 zMusIDPtr_DEZ:		zmakePlaylistEntry	Mus_DEZ,20h		; 87
 zMusIDPtr_MCZ:		zmakePlaylistEntry	Mus_MCZ,20h		; 84
-zMusIDPtr_EHZ_2P:	zmakePlaylistEntry	Mus_EHZ_2P,20h	; 91
+zMusIDPtr_EHZ_2P:	zmakePlaylistEntry	Mus_EHZ_2P,20h		; 91
 zMusIDPtr_SCZ:		zmakePlaylistEntry	Mus_SCZ,20h		; 8E
 zMusIDPtr_CPZ:		zmakePlaylistEntry	Mus_CPZ,20h		; 8C
 zMusIDPtr_WFZ:		zmakePlaylistEntry	Mus_WFZ,20h		; 90
 zMusIDPtr_HPZ:		zmakePlaylistEntry	Mus_HPZ,20h		; 9B
-zMusIDPtr_Options:	zmakePlaylistEntry	Mus_Options,20h	; 89
+zMusIDPtr_Options:	zmakePlaylistEntry	Mus_Options,20h		; 89
 zMusIDPtr_SpecStage:	zmakePlaylistEntry	Mus_SpecStage,20h	; 88
 zMusIDPtr_Boss:		zmakePlaylistEntry	Mus_Boss,20h		; 8D
-zMusIDPtr_EndBoss:	zmakePlaylistEntry	Mus_EndBoss,20h	; 8B
-zMusIDPtr_Ending:	zmakePlaylistEntry	Mus_Ending,20h	; 8A
+zMusIDPtr_EndBoss:	zmakePlaylistEntry	Mus_EndBoss,20h		; 8B
+zMusIDPtr_Ending:	zmakePlaylistEntry	Mus_Ending,20h		; 8A
 zMusIDPtr_SuperSonic:	zmakePlaylistEntry	Mus_SuperSonic,20h	; 93
 zMusIDPtr_Invincible:	zmakePlaylistEntry	Mus_Invincible,20h	; 99
-zMusIDPtr_ExtraLife:	zmakePlaylistEntry	Mus_ExtraLife,20h; B5
-zMusIDPtr_Title:	zmakePlaylistEntry	Mus_Title,20h	; 96
+zMusIDPtr_ExtraLife:	zmakePlaylistEntry	Mus_ExtraLife,20h	; B5
+zMusIDPtr_Title:	zmakePlaylistEntry	Mus_Title,20h		; 96
 zMusIDPtr_EndLevel:	zmakePlaylistEntry	Mus_EndLevel,20h	; 97
 zMusIDPtr_GameOver:	zmakePlaylistEntry	Mus_GameOver,20h	; B8
 zMusIDPtr_Continue:	zmakePlaylistEntry	Mus_Continue,20h	; 0
-zMusIDPtr_Emerald:	zmakePlaylistEntry	Mus_Emerald,20h	; BA
-zMusIDPtr_Credits:	zmakePlaylistEntry	Mus_Credits,20h	; BD
-zMusIDPtr_Countdown:	zmakePlaylistEntry	Mus_Drowning,20h	; DC, PAL mode will be broken
+zMusIDPtr_Emerald:	zmakePlaylistEntry	Mus_Emerald,20h		; BA
+zMusIDPtr_Credits:	zmakePlaylistEntry	Mus_Credits,20h		; BD
+zMusIDPtr_Countdown:	zmakePlaylistEntry	Mus_Drowning,20h	; BC, PAL mode will be broken
 zMusIDPtr_SaveScreen:	zmakePlaylistEntry	Mus_SaveScreen,20h	
 zMusIDPtr__End:
 
@@ -3584,6 +3584,25 @@ zDACPtr_Bongo:		DACSize SndDAC_Bongo
 	; First byte selects one of the DAC samples.  The number that
 	; follows it is a wait time between each nibble written to the DAC
 	; (thus higher = slower)
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
+	nop
 	ensure1byteoffset 22h
 ; zbyte_124F:
 zDACMasterPlaylist:
