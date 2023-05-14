@@ -37498,10 +37498,11 @@ Tails_FlyingSwimming:
 	lea	(Tails_Carrying_Sonic_Flag).w,a2
 	lea	(MainCharacter).w,a1
 	bsr.w	Tails_Carry_Sonic
-	tst.b	(Player_mode).w
+	tst.w	(Player_mode).w
 	bne.s	+
-	bsr.w	Sonic_ChgJumpDir
-	bsr.w	Tails_ChgJumpDir
+	cmpi.b	#1,(Tails_Carrying_Sonic_Flag).w
+	beq.w	Sonic_ChgJumpDir
+	bne.w	Tails_ChgJumpDir
 	rts
 +
 	bsr.w	Tails_ChgJumpDir
