@@ -1,6 +1,6 @@
 ; Sonic the Hedgehog 2 disassembled binary
 
-; Nemesis,   2004: Created original disassemobjoff_10_s2bly for SNASM68K
+; Nemesis,   2004: Created original disassembly for SNASM68K
 ; Aurochs,   2005: Translated to AS and annotated
 ; Xenowhirl, 2007: More annotation, overall cleanup, Z80 disassembly
 ; ---------------------------------------------------------------------------
@@ -34922,22 +34922,15 @@ Sonic_Boundary_Sides:
 
 ; loc_1A9D2:
 Sonic_Roll:
-    if status_sec_isSliding = 7
-	tst.b	status_secondary(a0)
-	bmi.s	Obj01_NoRoll
-    else
-	btst	#status_sec_isSliding,status_secondary(a0)
-	bne.s	Obj01_NoRoll
-    endif
-	mvabs.w	inertia(a0),d0
-	cmpi.w	#$80,d0		; is Sonic moving at $80 speed or faster?
-	blo.s	Obj01_NoRoll	; if not, branch
-	move.b	(Ctrl_1_Held_Logical).w,d0
-	andi.b	#button_left_mask|button_right_mask,d0 ; is left/right being pressed?
-	bne.s	Obj01_NoRoll	; if yes, branch
-	btst	#button_down,(Ctrl_1_Held_Logical).w ; is down being pressed?
-	bne.s	Obj01_ChkRoll			; if yes, branch
-; return_1A9F8:
+   	btst   #button_down,(Ctrl_1_Held_Logical).w   ; is down being pressed?
+   	beq.s   Obj01_NoRoll               ; if not, branch
+   	move.b   (Ctrl_1_Held_Logical).w,d0
+   	andi.b   #button_left_mask|button_right_mask,d0   ; is left/right being pressed?
+   	bne.s   Obj01_NoRoll               ; if yes, branch
+   	mvabs.w   inertia(a0),d0
+   	cmpi.w   #$100,d0               ; is Sonic moving at $100 speed or faster?
+   	bhi.s   Obj01_ChkRoll               ; if yes, branch
+   	move.b   #AniIDSonAni_Duck,anim(a0)       ; use "ducking" animation
 Obj01_NoRoll:
 	rts
 
@@ -38256,22 +38249,16 @@ Tails_Boundary_Sides:
 
 ; loc_1C5B8:
 Tails_Roll:
-    if status_sec_isSliding = 7
-	tst.b	status_secondary(a0)
-	bmi.s	Obj02_NoRoll
-    else
-	btst	#status_sec_isSliding,status_secondary(a0)
-	bne.w	Obj02_NoRoll
-    endif
-	mvabs.w	inertia(a0),d0
-	cmpi.w	#$80,d0		; is Tails moving at $80 speed or faster?
-	blo.s	Obj02_NoRoll	; if not, branch
-	move.b	(Ctrl_2_Held_Logical).w,d0
-	andi.b	#button_left_mask|button_right_mask,d0		; is left/right being pressed?
-	bne.s	Obj02_NoRoll	; if yes, branch
-	btst	#button_down,(Ctrl_2_Held_Logical).w	; is down being pressed?
-	bne.s	Obj02_ChkRoll			; if yes, branch
-; return_1C5DE:
+   	btst   #button_down,(Ctrl_2_Held_Logical).w   ; is down being pressed?
+   	beq.s   Obj02_NoRoll               ; if not, branch
+   	move.b   (Ctrl_2_Held_Logical).w,d0
+   	andi.b   #button_left_mask|button_right_mask,d0   ; is left/right being pressed?
+   	bne.s   Obj02_NoRoll               ; if yes, branch
+   	mvabs.w   inertia(a0),d0
+   	cmpi.w   #$100,d0               ; is Sonic moving at $100 speed or faster?
+   	bhi.s   Obj02_ChkRoll               ; if yes, branch
+   	move.b   #AniIDTailsAni_Duck,anim(a0)       ; use "ducking" animation
+
 Obj02_NoRoll:
 	rts
 
