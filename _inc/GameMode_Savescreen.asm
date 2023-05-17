@@ -42,6 +42,8 @@ loc_C5F0:
 ;loc_C600:
 ;		move.l	d0,(a1)+
 ;		dbf	d1,loc_C600
+		move.w	#MusID_SaveScreen,d0
+		jsrto	(PlayMusic).l, JmpTo_PlayMusic
                 clearRAM Chunk_Table,Chunk_Table_End
                 clearRAM Object_RAM,Object_RAM_End
 		clearRAM Camera_RAM,Camera_RAM_End
@@ -205,7 +207,7 @@ loc_C84E:
 loc_C856:
 		cmpi.b	#GameModeID_save_screen,(Game_mode).w	; are we still in the savescreen mode?
 		beq.s	SaveScreen_MainLoop	; if so, loop
-		moveq	#sfx_EnterSS,d0
+		moveq	#SndID_EnterGiantRing,d0
 		jmp	(PlaySound).l
 
 ; =============== S U B R O U T I N E =======================================
@@ -711,13 +713,13 @@ loc_D238:
 		tst.b	(Dataselect_entry).w
 		beq.s	loc_D254
 		subq.b	#1,(Dataselect_entry).w
-		moveq	#sfx_SlotMachine,d0
+		moveq	#SndID_CasinoBonus,d0
 		tst.w	(Events_bg+$12).w
 		beq.s	loc_D24C
-		moveq	#sfx_SmallBumpers,d0
+		moveq	#SndID_Bumper,d0
 
 loc_D24C:
-		jsr	(Play_Sound_2).l
+		jsr	(PlaySound).l
 		moveq	#-8,d0
 
 loc_D254:
@@ -726,13 +728,13 @@ loc_D254:
 		cmpi.b	#9,(Dataselect_entry).w
 		beq.s	loc_D27A
 		addq.b	#1,(Dataselect_entry).w
-		moveq	#sfx_SlotMachine,d0
+		moveq	#SndID_CasinoBonus,d0
 		tst.w	(Events_bg+$12).w
 		beq.s	loc_D272
-		moveq	#sfx_SmallBumpers,d0
+		moveq	#SndID_Bumper,d0
 
 loc_D272:
-		jsr	(Play_Sound_2).l
+		jsr	(PlaySound).l
 		moveq	#8,d0
 
 loc_D27A:
@@ -975,7 +977,7 @@ loc_D4EE:
 		move.b	(Ctrl_1_pressed).w,d0
 		btst	#1,d0
 		beq.s	loc_D508
-		moveq	#sfx_Switch,d2
+		moveq	#SndID_Blip,d2
 		subq.w	#1,d1
 		bpl.s	loc_D518
 		move.w	d6,d1
@@ -985,7 +987,7 @@ loc_D4EE:
 loc_D508:
 		btst	#0,d0
 		beq.s	loc_D518
-		moveq	#sfx_Switch,d2
+		moveq	#SndID_Blip,d2
 		addq.w	#1,d1
 		cmp.w	d6,d1
 		bls.s	loc_D518
@@ -994,7 +996,7 @@ loc_D508:
 loc_D518:
 		move.w	d1,$36(a0)
 		move.l	d2,d0
-		jsr	(Play_Sound_2).l
+		jsr	(PlaySound).l
 		move.b	#$1A,$1D(a0)
 		btst	#4,(Level_frame_counter+1).w
 		beq.s	loc_D53C
@@ -1134,9 +1136,9 @@ sub_D6D0:
 		move.b	(Ctrl_1_pressed).w,d1
 		lsr.w	#1,d1
 		bcc.s	loc_D6EE
-		moveq	#sfx_Switch,d2
+		moveq	#SndID_Blip,d2
 		addq.w	#1,d0
-		cmpi.w	#3,d0
+		cmpi.w	#2,d0
 		bls.s	loc_D6FA
 		moveq	#0,d0
 		bra.s	loc_D6FA
@@ -1145,17 +1147,17 @@ sub_D6D0:
 loc_D6EE:
 		lsr.w	#1,d1
 		bcc.s	loc_D6FA
-		moveq	#sfx_Switch,d2
+		moveq	#SndID_Blip,d2
 		subq.w	#1,d0
 		bpl.s	loc_D6FA
-		moveq	#3,d0
+		moveq	#2,d0
 
 loc_D6FA:
 		tst.w	d2
 		beq.s	locret_D70A
 		move.l	d0,-(sp)
 		move.l	d2,d0
-		jsr	(Play_Sound_2).l
+		jsr	(PlaySound).l
 		move.l	(sp)+,d0
 
 locret_D70A:
@@ -1238,8 +1240,8 @@ loc_D7C0:
 		move.b	(Ctrl_1_pressed).w,d0
 		andi.w	#$E0,d0
 		beq.w	loc_D8A0
-		moveq	#sfx_Starpost,d0
-		jsr	(Play_Sound_2).l
+		moveq	#SndID_Checkpoint,d0
+		jsr	(PlaySound).l
 		st	(Events_bg+$12).w
 		addq.b	#4,5(a0)
 		bra.w	loc_D8A0
@@ -1266,8 +1268,8 @@ loc_D7EA:
 		movea.l	d0,a1
 		tst.b	(a1)
 		bmi.s	loc_D854
-		moveq	#sfx_Starpost,d0
-		jsr	(Play_Sound_2).l
+		moveq	#SndID_Checkpoint,d0
+		jsr	(PlaySound).l
 		st	(Events_bg+$10).w
 		addq.b	#8,5(a0)
 
@@ -1328,8 +1330,8 @@ loc_D8C4:
 		bne.s	loc_D8FE
 		btst	#2,(Ctrl_1_pressed).w
 		beq.s	loc_D90C
-		moveq	#sfx_Perfect,d0
-		jsr	(Play_Sound_2).l
+		moveq	#SndID_Signpost2P,d0
+		jsr	(PlaySound).l
 		movea.l	$2E(a0),a1
 		move.w	#$8000,(a1)
 		clr.l	2(a1)

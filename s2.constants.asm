@@ -4,9 +4,9 @@
 ; ---------------------------------------------------------------------------
 ; size variables - you'll get an informational error if you need to change these...
 ; they are all in units of bytes
-Size_of_DAC_samples =		$2F00
+Size_of_DAC_samples =		$FFFF
 Size_of_SEGA_sound =		$6174
-Size_of_Snd_driver_guess =	$F64 ; approximate post-compressed size of the Z80 sound driver
+Size_of_Snd_driver_guess =	$1500 ; approximate post-compressed size of the Z80 sound driver
 
 ; ---------------------------------------------------------------------------
 ; Object Status Table offsets (for everything between Object_RAM and Primary_Collision)
@@ -784,7 +784,7 @@ ObjID_RingPrize =		id(ObjPtr_RingPrize)		; DC
 
 ; Music IDs
 offset :=	zMasterPlaylist
-ptrsize :=	1
+ptrsize :=	4
 idstart :=	$81
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy zMusIDPtr in the $80 slot
@@ -821,6 +821,7 @@ MusID_Continue =	id(zMusIDPtr_Continue)	; 9C
 MusID_Emerald =		id(zMusIDPtr_Emerald)	; 9D
 MusID_Credits =		id(zMusIDPtr_Credits)	; 9E
 MusID_Countdown =	id(zMusIDPtr_Countdown)	; 9F
+MusID_SaveScreen =	id(zMusIDPtr_SaveScreen)	; 9F
 MusID__End =		id(zMusIDPtr__End)	; A0
     if MOMPASS == 2
 	if MusID__End > SndID__First
@@ -837,7 +838,7 @@ sfx_SlotMachine = $71
 ; Sound IDs
 offset :=	SoundIndex
 ptrsize :=	2
-idstart :=	$A0
+idstart :=	$A1
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy SndPtr in the $80 slot
 
@@ -868,7 +869,9 @@ SndID_Ring =		id(SndPtr_Ring)			; B5
 SndID_RingRight =	id(SndPtr_RingRight)		; B5
 SndID_SpikesMove =	id(SndPtr_SpikesMove)		; B6
 SndID_Rumbling =	id(SndPtr_Rumbling)		; B7
+SndID_Fly =		id(SndPtr_Fly)		; B9
 SndID_Smash =		id(SndPtr_Smash)		; B9
+SndID_Tired =		id(SndPtr_Tired)		; B9
 SndID_DoorSlam =	id(SndPtr_DoorSlam)		; BB
 SndID_SpindashRelease =	id(SndPtr_SpindashRelease)	; BC
 SndID_Hammer =		id(SndPtr_Hammer)		; BD
@@ -1011,9 +1014,9 @@ AniIDTailsAni_Balance		= id(TailsAni_Balance_ptr)		;  6 ;   6
 AniIDTailsAni_LookUp		= id(TailsAni_LookUp_ptr)		;  7 ;   7
 AniIDTailsAni_Duck			= id(TailsAni_Duck_ptr)			;  8 ;   8
 AniIDTailsAni_Spindash		= id(TailsAni_Spindash_ptr)		;  9 ;   9
-AniIDTailsAni_Dummy1		= id(TailsAni_Dummy1_ptr)		; 10 ;  $A
-AniIDTailsAni_Dummy2		= id(TailsAni_Dummy2_ptr)		; 11 ;  $B
-AniIDTailsAni_Dummy3		= id(TailsAni_Dummy3_ptr)		; 12 ;  $C
+AniIDTailsAni_FlyCarryUp		= id(TailsAni_FlyCarryUp_ptr)		; 10 ;  $A
+AniIDTailsAni_SwimTired		= id(TailsAni_SwimTired_ptr)		; 11 ;  $B
+AniIDTailsAni_FlyCarry		= id(TailsAni_FlyCarry_ptr)		; 12 ;  $C
 AniIDTailsAni_Stop			= id(TailsAni_Stop_ptr)			; 13 ;  $D
 AniIDTailsAni_Float			= id(TailsAni_Float_ptr)		; 14 ;  $E
 AniIDTailsAni_Float2		= id(TailsAni_Float2_ptr)		; 15 ;  $F
@@ -1030,8 +1033,8 @@ AniIDTailsAni_Hurt			= id(TailsAni_Hurt_ptr)			; 25 ; $19
 AniIDTailsAni_Hurt2			= id(TailsAni_Hurt2_ptr)		; 26 ; $1A
 AniIDTailsAni_Slide			= id(TailsAni_Slide_ptr)		; 27 ; $1B
 AniIDTailsAni_Blank			= id(TailsAni_Blank_ptr)		; 28 ; $1C
-AniIDTailsAni_Dummy4		= id(TailsAni_Dummy4_ptr)		; 29 ; $1D
-AniIDTailsAni_Dummy5		= id(TailsAni_Dummy5_ptr)		; 30 ; $1E
+AniIDTailsAni_Swim		= id(TailsAni_Swim_ptr)		; 29 ; $1D
+AniIDTailsAni_Tired		= id(TailsAni_Tired_ptr)		; 30 ; $1E
 AniIDTailsAni_HaulAss		= id(TailsAni_HaulAss_ptr)		; 31 ; $1F
 AniIDTailsAni_Fly			= id(TailsAni_Fly_ptr)			; 32 ; $20
 
@@ -1149,7 +1152,7 @@ Kos_last_module_size:           ds.w    1
 Kos_module_destination:         ds.w  1
 Kos_modules_left:               ds.b 1
 Kos_decomp_buffer_END:
-                                ds.b  1  ; unused odd
+Tails_Carrying_Sonic_Flag:	ds.b  1  
                       ds.w   1
                                 ds.l	$1	; $FFFFE740-$FFFFE7FF ; unused as far as I can tell
 DMA_queue:
@@ -1350,7 +1353,7 @@ PalCycle_Frame_CNZ:		ds.w	1
 PalCycle_Frame2:		ds.w	1
 PalCycle_Frame3:		ds.w	1
 PalCycle_Frame2_CNZ:	ds.w	1
-				ds.b	4	; $FFFFF658-$FFFFF65B ; seems unused
+Flying_carrying_Sonic_flag:	= Tails_Carrying_Sonic_Flag	; $FFFFF658-$FFFFF65B ; seems unused
 Palette_frame:			ds.w	1
 Palette_timer:			ds.b	1	; was "Palette_frame_count"
 Super_Sonic_palette:		ds.b	1
@@ -1395,12 +1398,12 @@ Plc_Buffer_End:
 
 
 Misc_Variables:
-				ds.w	1	; unused
+Flying_x_vel_unk:			ds.w	1	; unused
 
 ; extra variables for the second player (CPU) in 1-player mode
 Tails_control_counter:		ds.w	1	; how long until the CPU takes control
 Tails_respawn_counter:		ds.w	1
-				ds.w	1	; unused
+Flying_y_vel_unk:			ds.w	1	; unused
 Tails_CPU_routine:		ds.w	1
 Tails_CPU_target_x:		ds.w	1
 Tails_CPU_target_y:		ds.w	1
@@ -1917,7 +1920,7 @@ SS_Perfect_rings_left:	ds.w	1
 SS_Star_color_1:	ds.b	1
 SS_Star_color_2:	ds.b	1
 SS_NoCheckpointMsg_flag:	ds.b	1
-		ds.b	1
+Victory_Pose:		ds.b	1
 SS_NoRingsTogoLifetime:	ds.w	1
 SS_RingsToGoBCD:		ds.w	1
 SS_HideRingsToGo:	ds.b	1
@@ -2508,7 +2511,7 @@ ArtTile_ArtNem_TailsDust              = $048C
 ArtTile_ArtNem_SonicDust              = $049C
 ArtTile_ArtNem_Numbers                = $04AC
 ArtTile_ArtUnc_Shield                 = $04BE
-ArtTile_ArtUnc_Invincible_stars       = ArtTile_ArtUnc_Shield
+ArtTile_ArtUnc_Invincible_stars       = $0540
 ArtTile_ArtNem_Powerups               = $0680
 ArtTile_ArtNem_Ring                   = $06BC
 ArtTile_ArtNem_HUD                    = ArtTile_ArtNem_Powerups + $4A
