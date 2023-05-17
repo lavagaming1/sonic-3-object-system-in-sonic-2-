@@ -1,6 +1,6 @@
-# Lavagaming S2 disasm
-this is a sonic 2 disasm with a small port to sonic 3 object id system over to sonic 2 with a few edits on the object manger 
-by randomname and the whole game converted to that system you might run into a few crashes 
-if you happen to want to know the current fixes or you know how to help make this better please visit 
+# Lavagaming S2 Disasmembly 
+This is a Sonic 2 Disasembly with a small port of the Sonic 3 Object ID System over into Sonic 2, with a few edits on the object manager by randomname. The whole game has been converted to the Sonic 3 Object ID system, so you may run into a few crashes and bugs.
+    
+If you happen to want to know the current fixes or you know how to help make this better please visit:
 
 https://discord.gg/zr4n2GdTfJ aka the Team Conquest Discord Server
