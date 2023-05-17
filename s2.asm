@@ -25908,11 +25908,29 @@ loc_141E6:
 
 	add.w	d0,(Total_Bonus_Countdown).w
 	tst.w	d0
-	bne.s	loc_14256
+	bne.w	loc_14256
 	move.w	#SndID_TallyEnd,d0
 	jsr	(PlaySound).l
+	tst.b	(Current_Act).w
+	beq.s	+
         st	(SRAM_mask_interrupts_flag).w		; If in act 2 or Sky Sanctuary, save the game
 	jsr	(SaveGame).l
++
+	cmpi.b	#metropolis_zone_2,(Current_Zone).w
+	bne.s	+ ; skip loading Tails if this is WFZ
+        st	(SRAM_mask_interrupts_flag).w		; If in act 2 or Sky Sanctuary, save the game
+	jsr	(SaveGame).l
++
+	cmpi.b	#wing_fortress_zone,(Current_Zone).w
+	bne.s	+ ; skip loading Tails if this is WFZ
+        st	(SRAM_mask_interrupts_flag).w		; If in act 2 or Sky Sanctuary, save the game
+	jsr	(SaveGame).l
++
+	cmpi.b	#death_egg_zone,(Current_Zone).w
+	bne.s	+ ; skip loading Tails if this is DEZ
+        st	(SRAM_mask_interrupts_flag).w		; If in act 2 or Sky Sanctuary, save the game
+	jsr	(SaveGame).l
++
 	addq.b	#2,routine(a0)
 	move.w	#$B4,anim_frame_duration(a0)
 	cmpi.w	#1000,(Total_Bonus_Countdown).w
@@ -87130,7 +87148,7 @@ JmpTbl_DbgObjLists: zoneOrderedOffsetTable 2,1
 	zoneOffsetTableEntry.w DbgObjList_Test	; 8
 	zoneOffsetTableEntry.w DbgObjList_Test	; 9
 	zoneOffsetTableEntry.w DbgObjList_Test	; $A
-	zoneOffsetTableEntry.w DbgObjList_MCZ	; $B
+	zoneOffsetTableEntry.w DbgObjList_Test	; $B
 	zoneOffsetTableEntry.w DbgObjList_Test	; $C
 	zoneOffsetTableEntry.w DbgObjList_Test	; $D
 	zoneOffsetTableEntry.w DbgObjList_Test	; $E
@@ -87157,34 +87175,6 @@ DbgObjList_Test: dbglistheader
 	dbglistobj Obj26,	Obj26_MapUnc_12D36,   8,   0, make_art_tile(ArtTile_ArtNem_Powerups,0,0) ; obj26 = monitor
 	dbglistobj Obj3E,	Obj3E_MapUnc_3F436,   0,   0, make_art_tile(ArtTile_ArtNem_Capsule,1,0)
 DbgObjList_Test_End
-
-DbgObjList_MCZ: dbglistheader
-        dbglistobj Obj3E,		Obj25_MapUnc_12382,   0,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0) ; obj25 = ring
-	dbglistobj Obj25,		Obj25_MapUnc_12382,   0,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0) ; obj25 = ring
-	dbglistobj Obj26,         	Obj26_MapUnc_12D36,   8,   0, make_art_tile(ArtTile_ArtNem_Powerups,0,0) ; obj26 = monitor
-	dbglistobj Obj79,	Obj79_MapUnc_1F424,   1,   0, make_art_tile(ArtTile_ArtNem_Checkpoint,0,0)
-	dbglistobj Obj15, Obj15_Obj7A_MapUnc_10256, $48,   2, make_art_tile(ArtTile_ArtKos_LevelArt,0,0)
-	dbglistobj Obj1F,	Obj1F_MapUnc_11106,   0,   0, make_art_tile(ArtTile_ArtNem_MCZCollapsePlat,3,0)
-	dbglistobj Obj73,	Obj73_MapUnc_28B9C, $F5,   0, make_art_tile(ArtTile_ArtNem_Ring,1,0)
-	dbglistobj Obj6A,	Obj6A_MapUnc_27D30, $18,   0, make_art_tile(ArtTile_ArtNem_Crate,3,0)
-	dbglistobj Obj2A,	Obj2A_MapUnc_11666,   0,   0, make_art_tile(ArtTile_ArtKos_LevelArt,2,0)
-	dbglistobj Obj36,	Obj36_MapUnc_15B68,   0,   0, make_art_tile(ArtTile_ArtNem_Spikes,1,0)
-	dbglistobj Obj36,	Obj36_MapUnc_15B68, $40,   4, make_art_tile(ArtTile_ArtNem_HorizSpike,1,0)
-	dbglistobj Obj41,	Obj41_MapUnc_1901C, $81,   0, make_art_tile(ArtTile_ArtNem_VrtclSprng,0,0)
-	dbglistobj Obj41,	Obj41_MapUnc_1901C, $90,   3, make_art_tile(ArtTile_ArtNem_HrzntlSprng,0,0)
-	dbglistobj Obj40,	Obj40_MapUnc_265F4,   1,   0, make_art_tile(ArtTile_ArtNem_LeverSpring,0,0)
-	dbglistobj Obj74, Obj74_MapUnc_20F66, $11,   0, make_art_tile(ArtTile_ArtNem_Powerups,0,1)
-	dbglistobj Obj75,	Obj75_MapUnc_28D8A, $18,   2, make_art_tile(ArtTile_ArtKos_LevelArt,1,0)
-	dbglistobj Obj76,	Obj76_MapUnc_28F3A,   0,   0, make_art_tile(ArtTile_ArtKos_LevelArt,0,0)
-	dbglistobj Obj77,	Obj77_MapUnc_29064,   1,   0, make_art_tile(ArtTile_ArtNem_MCZGateLog,3,0)
-	dbglistobj Obj7F,	Obj7F_MapUnc_29938,   0,   0, make_art_tile(ArtTile_ArtNem_VineSwitch,3,0)
-	dbglistobj Obj80,	Obj80_MapUnc_29C64,   0,   0, make_art_tile(ArtTile_ArtNem_VinePulley,3,0)
-	dbglistobj Obj81,	Obj81_MapUnc_2A24E,   0,   1, make_art_tile(ArtTile_ArtNem_MCZGateLog,3,0)
-	dbglistobj Obj7A,	Obj15_Obj7A_MapUnc_10256, $12,   0, make_art_tile(ArtTile_ArtKos_LevelArt,0,0)
-	dbglistobj ObjA3,	ObjA3_MapUnc_388F0, $2C,   0, make_art_tile(ArtTile_ArtNem_Flasher,0,1)
-	dbglistobj Obj9E,	Obj9E_MapUnc_37FF2, $22,   0, make_art_tile(ArtTile_ArtNem_Crawlton,1,0)
-	dbglistobj Obj3E,	Obj3E_MapUnc_3F436,   0,   0, make_art_tile(ArtTile_ArtNem_Capsule,1,0)
-DbgObjList_MCZ_End
     if ~~removeJmpTos
 JmpTo66_Adjust2PArtPointer ; JmpTo
 	jmp	(Adjust2PArtPointer).l
