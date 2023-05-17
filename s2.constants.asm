@@ -205,23 +205,29 @@ objoff_2C =		$2C ; overlaps subtype, but a few objects use it for other things a
 
 ; ---------------------------------------------------------------------------
 ; Special Stage object properties:
-ss_dplc_timer = $25 ;s2 => 23
-SSTestRoutineSec = angle+1 ;flag for your hurt state
-ss_x_pos = objoff_2C
-ss_x_sub = objoff_2E
-ss_y_pos = objoff_30
-ss_y_sub = objoff_32
-ss_init_flip_timer = objoff_34
-ss_flip_timer = objoff_35
-ss_z_pos = objoff_36
-ss_hurt_timer = objoff_3A
-ss_slide_timer = objoff_3B
-ss_parent = objoff_3C
-ss_rings_base = objoff_3E	; word
-ss_rings_hundreds = objoff_3E
-ss_rings_tens = objoff_3F
-ss_rings_units = objoff_40
-ss_last_angle_index = objoff_41
+       phase  $2B
+ss_dplc_timer: ds.b 1 ;s2 => 23
+SSTestRoutineSec: ds.b 1 ;flag for your hurt state
+          ds.b   1
+ss_x_pos: ds.w 1
+ss_x_sub: ds.w 1
+ss_y_pos: ds.w 1
+ss_y_sub: ds.w 1
+ss_init_flip_timer: ds.w 1
+ss_flip_timer:  ds.b 1
+ss_z_pos: ds.l  1
+ss_hurt_timer: ds.b 1
+ss_slide_timer: ds.b 1
+ss_parent: ds.l 1
+            ds.b 1
+ss_rings_base:	; word
+ss_rings_hundreds:
+          ds.b 1
+ss_rings_tens:
+          ds.b 1 ;= objoff_3F
+ss_rings_units: ds.b 1 ;= objoff_40
+ss_last_angle_index: ds.b 1 ; objoff_41
+          !org 0
 ; ---------------------------------------------------------------------------
 ; property of all objects:
 object_size =		$4A ; the size of an object
@@ -1276,9 +1282,9 @@ Underwater_palette_line3:	ds.b palette_line_size
 Underwater_palette_line4:	ds.b palette_line_size
 
 BlocksAddr:                                ds.l   1
-             			ds.b	$454	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
 Competition_saved_data:         ds.b    $54     ; whatever you wanna use in compition mode
-Saved_data                      ds.b    $54     ;data select
+Saved_data:                     ds.b    $54     ;data select
+             			ds.b	$454	; $FFFFF100-$FFFFF5FF ; unused, leftover from the Sonic 1 sound driver (and used by it when you port it to Sonic 2)
 Game_mode:
 Game_Mode:			ds.w	1	; 1 byte ; see GameModesArray (master level trigger, Mstr_Lvl_Trigger)
 Ctrl_1_Logical:					; 2 bytes
@@ -1619,6 +1625,10 @@ Ring_spill_anim_frame:		ds.b	1
 Ring_spill_anim_accum:		ds.w	1
 				ds.b	6	; $FFFFFEA9-$FFFFFEAF ; seems unused, but cleared once
 Oscillating_variables_End
+Dataselect_nosave_player:       ds.w    1
+Dataselect_entry:
+                                ds.b    1
+                                ds.b    1 ; unused
 Save_pointer:				   ds.l    1
                                ds.b    3    ; $FFFFFEB0-$FFFFFEBF ; seems unused
         ds.b    1
@@ -1701,9 +1711,8 @@ SlotMachine_Slot2Rout:	ds.b	1
 SlotMachine_Slot3Pos:	ds.w	1
 SlotMachine_Slot3Speed:	ds.b	1
 SlotMachine_Slot3Rout:	ds.b	1
-Dataselect_entry:               ds.b    1
-                                ds.b    1 ; unused
-Dataselect_nosave_player:       ds.w    1
+
+
 				ds.b	$C	; $FFFFFF60-$FFFFFF6F ; seems unused
 
 Player_mode:			ds.w	1	; 0 = Sonic and Tails, 1 = Sonic, 2 = Tails
