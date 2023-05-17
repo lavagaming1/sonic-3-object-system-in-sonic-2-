@@ -28,13 +28,13 @@ loc_C5B0:
 		move.w	#$8C81,(a6)  ;40 cell mode
 		move.w	#$9003,(a6)  ;128x32
 		move.w	#$9280,(a6)  ; enable save screen "window"
-;		lea	(Sprite_Table_Input).w,a1
-;		moveq	#0,d0
-;		move.w	#$FF,d1
- ;
-;loc_C5F0:
-	;	move.l	d0,(a1)+
-		;dbf	d1,loc_C5F0
+		lea	(Sprite_Table_Input).w,a1
+		moveq	#0,d0
+		move.w	#$FF,d1
+
+loc_C5F0:
+		move.l	d0,(a1)+
+		dbf	d1,loc_C5F0
 	;	lea	(Object_RAM).w,a1
 	;	moveq	#0,d0
 	;	move.w	#(Kos_decomp_buffer-Object_RAM)/4-1,d1
@@ -42,7 +42,6 @@ loc_C5B0:
 ;loc_C600:
 ;		move.l	d0,(a1)+
 ;		dbf	d1,loc_C600
-                clearRAM Sprite_Table_Input,Sprite_Table_Input_End
                 clearRAM Chunk_Table,Chunk_Table_End
                 clearRAM Object_RAM,Object_RAM_End
 		clearRAM Camera_RAM,Camera_RAM_End
@@ -345,6 +344,7 @@ byte_C95E:
 		dc.b    1,   2	; 12
 		dc.b    1,   3	; 13
 		dc.b    1,   4	; 14
+		even
 ; ---------------------------------------------------------------------------
 
 loc_C97A:
@@ -1060,7 +1060,7 @@ loc_D5DE:
 		move.b	9(a1),(Continue_count).w
 		st	(SRAM_mask_interrupts_flag).w
 		jsr	Write_SaveGame(pc)
-		move.b	#$C,(Game_mode).w
+		move.b	#$C,(Game_mode).w 
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
 
@@ -1073,7 +1073,7 @@ loc_D5FE:
 		move.b	(Ctrl_1_pressed).w,d0
 		andi.w	#$E0,d0
 		beq.s	loc_D67A
-		move.b	#$C,(Game_mode).w
+		move.b	#$C,(Game_mode).w 
 		clr.l	(a1)
 		clr.l	4(a1)
 		move.w	#$300,8(a1)
@@ -1374,7 +1374,7 @@ locret_D938:
 
 ; ---------------------------------------------------------------------------
 byte_D93A:	dc.b   $D,  $E,  $D,  $E,  $D,  $E,  $D,  $E,  $D,  $E,  $D,  $D,  $D,  $D, $FF,   0
-
+                even
 ; =============== S U B R O U T I N E =======================================
 
 
@@ -1558,7 +1558,7 @@ DEZ  =  $E00
 ARZ  =  $F00
 SCZ  =  $1000
 ; ---------------------------------------------------------------------------
-LevelList_DA6E:
+LevelList_DA6E:	
         dc.w EHZ
 		dc.w CPZ
 		dc.w ARZ
@@ -1573,7 +1573,7 @@ LevelList_DA6E:
 		dc.w $A00
 		dc.w $B00
 		dc.w $C00
-		even
+		even 
 word_DA8A:	dc.w $8000
 		dc.w $8000
 		dc.w $8000
@@ -1648,8 +1648,11 @@ word_DB08:	dc.w $8000
 		dc.w $8000
 		dc.w $8000
 byte_DB1C:	dc.b  $2B, $2C, $FF, $30, $1E, $33, $22, $FF, $21, $22, $29, $22, $31, $22, $FF
+                even
 byte_DB2B:	dc.b    0,   0,   0,   0,   0, $FF
+                even
 byte_DB31:	dc.b  $37, $2C, $2B, $22, $FF
+                even
 byte_DB36:	dc.b  $20, $29, $22, $1E, $2F, $FF
             even
 KosArt_To_VDP:
@@ -1674,8 +1677,8 @@ SRAM_Load:
 	;	tst.w	(SK_alone_flag).w
 	;	bne.w	locret_C260		; Don't bother if we're playing only Sonic and Knuckles
 		clr.w	(SRAM_mask_interrupts_flag).w	; No interrupt shenanigans needed
-		lea	(General_SRAM).l,a0
-		lea	(Backup_SRAM).l,a1
+		lea	($200011).l,a0
+		lea	($2000BD).l,a1
 		lea	(Competition_saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4C44,d1		; RAM integrity value
@@ -1691,8 +1694,8 @@ loc_C186:
 		jsr	Write_SaveGeneral2(pc)	; Write default data back to SRAM
 
 loc_C190:
-		lea	(Game_SRAM).l,a0
-		lea	(Game_Backup_SRAM).l,a1
+		lea	($200281).l,a0
+		lea	($20032D).l,a1
 		lea	(Saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4244,d1		; RAM integrity value for save game data
@@ -1715,15 +1718,15 @@ loc_C1C0:
 loc_C1CA:
 		move.w	(a0)+,(a1)+
 		dbf	d0,loc_C1CA			; Write default game data
-		lea	(Unk_SRAM).l,a0
-		lea	(Unk_SRAM_2).l,a1
-		lea	(S3_SRAM_Data).l,a2		; Attempt to see if there's any existing S3 save data
+		lea	($200169).l,a0
+		lea	($2001F5).l,a1
+		lea	($FF0000).l,a2		; Attempt to see if there's any existing S3 save data
 		moveq	#$19,d0
 		move.w	#$4244,d1
 		jsr	Get_From_SRAM(pc)
 		bne.s	loc_C252		; If write was not successful, branch
 		lea	(Saved_data).w,a0	; If there's valid data from Sonic 3, we'll now go through the process of migrating it to SK
-		lea	(S3_SRAM_Data).l,a1
+		lea	($FF0000).l,a1
 		lea	SaveData_S3LevRef(pc),a2
 		moveq	#5,d0
 
@@ -1915,8 +1918,8 @@ Write_SaveGeneral:
 Write_SaveGeneral2:
 		move.l	a0,-(sp)
 		move.w	d7,-(sp)
-		lea	(General_SRAM).l,a0		; Save general SRAM
-		lea	(Backup_SRAM).l,a1		; Save general Backup SRAM
+		lea	($200011).l,a0		; Save general SRAM
+		lea	($2000BD).l,a1		; Save general Backup SRAM
 		lea	(Competition_saved_data).w,a2	; Save general RAM
 		moveq	#$29,d0
 		bsr.s	Write_SRAM
@@ -1930,10 +1933,10 @@ Write_SaveGeneral2:
 
 
 Write_SaveGame:
-                move.l	a0,-(sp)
+		move.l	a0,-(sp)
 		move.w	d7,-(sp)
-		lea	(Game_SRAM).l,a0		; Save game SRAM
-		lea	(Game_Backup_SRAM).l,a1		; Save game backup SRAM
+		lea	($200281).l,a0		; Save game SRAM
+		lea	($20032D).l,a1		; Save game backup SRAM
 		lea	(Saved_data).w,a2	; Save game RAM
 		moveq	#$29,d0
 		jsr	Write_SRAM(pc)
@@ -1946,6 +1949,7 @@ Write_SaveGame:
 SaveGame_NextLevel:	dc.b    1,   1,   2,   2,   3,   3,   4,   4,   8,   8,   5,   5,   6,   6,   7,   7,   9,   9,  $A,  $A
 		dc.b   $C,  $C,  $D,  $D,  $E,  $E,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0
 		dc.b    0,   0,   0,   0,  $A,  $B,  $D,   0
+                  even
 ; =============== S U B R O U T I N E =======================================
 
 

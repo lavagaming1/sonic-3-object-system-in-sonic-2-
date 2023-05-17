@@ -69,7 +69,7 @@ StartOfRom:
 	fatal "StartOfRom was $\{*} but it should be 0"
     endif
 Vectors:
- dc.l 0       , EntryPoint    , BusError              , AddressError   ; 4
+ dc.l System_Stack       , EntryPoint    , BusError              , AddressError   ; 4
         dc.l IllegalInstrError , ZeroDivideError, CHKExceptionError, TRAPVError         ; 8
         dc.l PrivilegeViolation, TraceError     , LineAEmulation   , LineFEmulation ; 12
         dc.l ErrorTrap          , ErrorTrap     , ErrorTrap     , ErrorTrap     ; 16
@@ -284,7 +284,7 @@ zStartupCodeEndLoc:
     else ; due to an address range limitation I could work around but don't think is worth doing so:
 	message "Warning: using pre-assembled Z80 startup code."
 	dc.w $AF01,$D91F,$1127,$0021,$2600,$F977,$EDB0,$DDE1,$FDE1,$ED47,$ED4F,$D1E1,$F108,$D9C1,$D1E1,$F1F9,$F3ED,$5636,$E9E9
-    endif
+    endif                     
 Z80StartupCodeEnd:
 
 	dc.w	$8104	; value for VDP display mode
@@ -301,7 +301,6 @@ PSGInitValues_End:
 ; loc_300:
         include "_inc/src/Debugger.asm"
 GameProgram:
-        lea    System_Stack.w,sp
 	tst.w	(VDP_control_port).l
 ; loc_306:
 CheckSumCheck:
@@ -6467,7 +6466,7 @@ SSObjectsManager:
 	add.w	d0,d0
 	add.w	d0,d0
 	add.w	d3,d0
-	move.w	d0,ss_z_pos(a1)
+	move.w	d0,objoff_34(a1)
 	move.b	(a0)+,angle(a1)
 	bra.s	-
 ; ===========================================================================
@@ -6477,7 +6476,7 @@ SSObjectsManager:
 	add.w	d0,d0
 	add.w	d0,d0
 	add.w	d3,d0
-	move.w	d0,ss_z_pos(a1)
+	move.w	d0,objoff_34(a1)
 	move.b	(a0)+,angle(a1)
 	bra.s	-
 ; ===========================================================================
@@ -29373,8 +29372,8 @@ BuildSprites_P1_LevelLoop:
 ; loc_1698C:
 BuildSprites_P1_ObjLoop:
 	movea.w	(a4,d6.w),a0 ; a0=object
-;	tst.l	(a0)
-;	beq.w	BuildSprites_P1_NextObj
+	tst.l	(a0)
+	beq.w	BuildSprites_P1_NextObj
 	andi.b	#$7F,render_flags(a0)
 	move.b	render_flags(a0),d0
 	move.b	d0,d4
@@ -69422,19 +69421,19 @@ loc_3512A:
 	bne.s	loc_3516C
 	cmpi.b	#4,(SSTrack_drawing_index).w
 	bne.s	loc_35146
-	subi.l	#$CCCC,ss_z_pos(a0)
+	subi.l	#$CCCC,objoff_34(a0)
 	ble.s	loc_3516C
 	bra.s	loc_35150
 ; ===========================================================================
 
 loc_35146:
-	subi.l	#$CCCD,ss_z_pos(a0)
+	subi.l	#$CCCD,objoff_34(a0)
 	ble.s	loc_3516C
 
 loc_35150:
 	cmpi.b	#$A,anim(a0)
 	beq.s	return_3516A
-	move.w	ss_z_pos(a0),d0
+	move.w	objoff_34(a0),d0
 	cmpi.w	#$1D,d0
 	ble.s	loc_35164
 	moveq	#$1E,d0
@@ -69448,7 +69447,7 @@ return_3516A:
 
 loc_3516C:
 	move.l	(sp)+,d0
-	move.l	ss_parent(a0),d0
+	move.l	objoff_38(a0),d0
 	beq.w	JmpTo63_DeleteObject
 	movea.l	d0,a1 ; a1=object
 	st	objoff_2E(a1)
@@ -69516,7 +69515,7 @@ loc_35202:
 	add.w	d3,d0
 	move.w	d1,x_pos(a0)
 	move.w	d0,y_pos(a0)
-	move.l	ss_parent(a0),d0
+	move.l	objoff_38(a0),d0
 	beq.s	loc_3524E
 	movea.l	d0,a1 ; a1=object
 	move.b	angle(a0),d0
