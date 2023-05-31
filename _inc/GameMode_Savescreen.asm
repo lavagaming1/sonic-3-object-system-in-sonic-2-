@@ -332,20 +332,16 @@ loc_C94C:
 ; shows level number 1-14
 ; NOTE: $FF acts as zero
 byte_C95E:
-		dc.b  $FF,   1	; 01
-		dc.b  $FF,   2	; 02
-		dc.b  $FF,   3	; 03
-		dc.b  $FF,   4	; 04
-		dc.b  $FF,   5	; 05
-		dc.b  $FF,   6	; 06
-		dc.b  $FF,   7	; 07
-		dc.b  $FF,   8	; 08
-		dc.b  $FF,   9	; 09
+		dc.b  	$FF,   1	; 01
+		dc.b  	$FF,   2	; 02
+		dc.b  	$FF,   3	; 03
+		dc.b  	$FF,   4	; 04
+		dc.b  	$FF,   5	; 05
+		dc.b  	$FF,   6	; 06
+		dc.b  	$FF,   7	; 07
+		dc.b  	$FF,   8	; 08
+		dc.b  	$FF,   9	; 09
 		dc.b    1,   0	; 10
-		dc.b    1,   1	; 11
-		dc.b    1,   2	; 12
-		dc.b    1,   3	; 13
-		dc.b    1,   4	; 14
 		even
 ; ---------------------------------------------------------------------------
 
@@ -1215,17 +1211,11 @@ Obj_SaveScreen_Delete_Save:
 
 loc_D78C:
 		bra.w	loc_D7A4
-; ---------------------------------------------------------------------------
 		bra.w	loc_D7C0
-; ---------------------------------------------------------------------------
 		bra.w	loc_D7EA
-; ---------------------------------------------------------------------------
 		bra.w	loc_D884
-; ---------------------------------------------------------------------------
 		bra.w	loc_D8A4
-; ---------------------------------------------------------------------------
 		bra.w	loc_D8C4
-; ---------------------------------------------------------------------------
 
 loc_D7A4:
 		move.b	#$40,4(a0)
@@ -1561,7 +1551,7 @@ ARZ  =  $F00
 SCZ  =  $1000
 ; ---------------------------------------------------------------------------
 LevelList_DA6E:	
-        dc.w EHZ
+        	dc.w EHZ
 		dc.w CPZ
 		dc.w ARZ
 		dc.w CNZ
@@ -1570,11 +1560,7 @@ LevelList_DA6E:
 		dc.w OOZ
 		dc.w MTZ
 		dc.w SCZ
-		dc.w DEZ
-		dc.w $1601
-		dc.w $A00
-		dc.w $B00
-		dc.w $C00
+		dc.w DEZ	
 		even 
 word_DA8A:	dc.w $8000
 		dc.w $8000
@@ -1649,14 +1635,27 @@ word_DB08:	dc.w $8000
 		dc.w $8000
 		dc.w $8000
 		dc.w $8000
-byte_DB1C:	dc.b  $2B, $2C, $FF, $30, $1E, $33, $22, $FF, $21, $22, $29, $22, $31, $22, $FF
-                even
-byte_DB2B:	dc.b    0,   0,   0,   0,   0, $FF
-                even
-byte_DB31:	dc.b  $37, $2C, $2B, $22, $FF
-                even
-byte_DB36:	dc.b  $20, $29, $22, $1E, $2F, $FF
-            even
+; DATA SELECT TEXT (modified from Sonic 2 disassembly)
+    charset '0','9',$10    ; Add character set for numbers
+    charset '*',$1A    ; Add character for star
+    charset '@',$1B ; Add character for copyright symbol
+    charset ':',$1C ; Add character for colon
+    charset '.',$1D ; Add character for period
+    charset 'A','Z',$1E ; Add character set for letters
+    charset ' ',$FF    ; Add character that marks the end of text
+    charset '#',0    ; Add character for displaying nothing...?
+
+byte_DB1C:
+    dc.b    "NO SAVE"    ;
+    dc.b    " DELETE "    ;
+byte_DB2B:
+    dc.b    "     "    ; inactive save, no text
+byte_DB36:
+    dc.b    "CLEAR "    ; save that's beaten
+byte_DB31:
+    dc.b     "ZONE   "    ; save where you still have a game to beat, has 2-digit zone number
+    even
+    charset
 KosArt_To_VDP:
 		movea.l	a1,a3		; a1 will be changed by Kos_Decomp, so we're backing it up to a3
 		jsr	(Kos_Decomp).l
@@ -1948,16 +1947,29 @@ Write_SaveGame:
 ; End of function Write_SaveGame
 
 ; ---------------------------------------------------------------------------
-SaveGame_NextLevel:	dc.b    1,   1,   2,   2,   3,   3,   4,   4,   8,   8,   5,   5,   6,   6,   7,   7,   9,   9,  $A,  $A
-		dc.b   $C,  $C,  $D,  $D,  $E,  $E,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0,   0
-		dc.b    0,   0,   0,   0,  $A,  $B,  $D,   0
+SaveGame_NextLevel:	
+		dc.b    0	;EHZ
+		dc.b	1, 1	;EHZ to CPZ
+		dc.b	8, 8	;SCZ to WFZ
+		dc.b	$A, $A	;
+		dc.b	$A, $A	;
+		dc.b	7, 8	;MTZ to MTZ3	
+		dc.b	9, $A	;WFZ to DEZ
+		dc.b	$A, $A	;
+		dc.b	5, 5	;HTZ to MCZ
+		dc.b	$A, $A	;
+		dc.b	$A, $A	;
+		dc.b	7, 7	;OOZ to MTZ
+		dc.b	6, 6 	;MCZ to OOZ
+		dc.b	4, 4	;CNZ to HTZ
+		dc.b	2, 2	;CPZ to ARZ
+		dc.b	8	;MTZ3 to SCZ
+		dc.b	3, 3	;ARZ to CNZ		
                   even
 ; =============== S U B R O U T I N E =======================================
 
 
 SaveGame:
-	;	tst.w	(SK_alone_flag).w
-	;	bne.w	loc_C4CC			; If this is SK, saving is disabled
 		move.l	(Save_pointer).w,d0
 		beq.w	loc_C4CC			; If not playing on a save file, get out
 		movea.l	d0,a1
@@ -1967,30 +1979,14 @@ SaveGame:
 		move.b	SaveGame_NextLevel(pc,d0.w),d0
 		move.b	(a1),d1
 		andi.w	#3,d1
-		beq.s	loc_C464
+		beq.s	loc_C488
 		cmp.b	3(a1),d0		; If game is complete, make it uncomplete if last level is less than the current level
 		blo.s	loc_C4B4		; Think of, say, getting all the super emeralds then going to Doomsday on a completed save file
 		andi.b	#-4,(a1)
-
-loc_C464:
-		move.b	d0,3(a1)			; Move next level into current level
-		cmpi.w	#3,(Player_mode).w
-		bne.s	loc_C478
-		cmpi.b	#$C,d0
-		blo.s	loc_C4B0
-		bra.s	loc_C498		; If playing as Knuckles and level code is Death egg or higher, make it a completed save file
-; ---------------------------------------------------------------------------
-
-loc_C478:
-		cmpi.w	#2,(Player_mode).w
-		bne.s	loc_C488
-		cmpi.b	#$D,d0
-		blo.s	loc_C4B0
-		bra.s	loc_C498		; If playing as Knuckles and level code is Doomsday or higher, make it a completed save file
 ; ---------------------------------------------------------------------------
 
 loc_C488:
-		cmpi.b	#$D,d0
+		cmpi.b	#$A,d0
 		bhi.s	loc_C498		; If next level above Doomsday's code, make it a completed save file
 		bne.s	loc_C4B0
 		cmpi.b	#7,(Emerald_count).w	; If next level IS Doomsday but the emeralds aren't collected, make it a completed save file
