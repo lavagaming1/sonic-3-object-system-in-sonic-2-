@@ -1,0 +1,32 @@
+{
+    "Flex": 2,
+    "name": "",
+    "node": "df917707-3f65-440f-959e-ed5ad77402e0",
+    "objects": [
+        {
+            "format": "Sonic 2.js",
+            "name": "object",
+            "palettes": [
+                {
+                    "path": "art\\palettes\\SonicAndTails.bin",
+                    "length": 1
+                }
+            ],
+            "art": {
+                "path": "art\\uncompressed\\Tails's art.bin",
+                "compression": "Uncompressed",
+                "offset": 0
+            },
+            "mappings": {
+                "path": "mappings\\sprite\\Tails.bin",
+                "label": ""
+            },
+            "dplcs": {
+                "enabled": true,
+                "path": "mappings\\spriteDPLC\\Tails.bin",
+                "label": ""
+            },
+            "uuid": "df917707-3f65-440f-959e-ed5ad77402e0"
+        }
+    ]
+}

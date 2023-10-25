@@ -77672,7 +77672,7 @@ ObjB2_Index:	offsetTable
 		offsetTableEntry.w ObjB2_Main_WFZ_End	;  6
 		offsetTableEntry.w ObjB2_Invisible_grabber	;  8
 		offsetTableEntry.w loc_3AD0C	; $A
-		offsetTableEntry.w loc_3AD2A	; $C
+		offsetTableEntry.w loc_3AD2A	; $C  ; seems unused
 		offsetTableEntry.w loc_3AD42	; $E
 ; ===========================================================================
 ; loc_3A7AE:
@@ -77883,6 +77883,11 @@ ObjB2_Wait_Leader_position:
 	bsr.w	LoadChildObject
 	clr.w	x_pos(a1)
 	clr.w	y_pos(a1)
+
+;	lea	(UnusedPlaneObj).l,a2 ; does nothing
+;	bsr.w	LoadChildObject
+;	clr.w	x_pos(a1)
+;	clr.w	y_pos(a1)
 	rts
 ; ===========================================================================
 ; loc_3AA0E: ObjB2_Move_Leader_egde:
@@ -77965,7 +77970,8 @@ ObjB2_Landed_on_plane:
 	blo.s	loc_3AB18
 	addq.b	#2,routine_secondary(a0)
 	movea.w	objoff_3E(a0),a1 ; a1=object ??
-	move.b	#2,routine_secondary(a1)
+	move.l  #loc_3AD5C,(a1)
+	;move.b	#2,routine_secondary(a1)
 
 loc_3AB18:
 	clr.w	(Ctrl_1_Logical).w
@@ -78161,7 +78167,7 @@ off_3AD1A:	offsetTable
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
-loc_3AD2A:
+loc_3AD2A:    ; unused object all it does is spawn and display
 	moveq	#0,d0
 	move.b	routine_secondary(a0),d0
 	move.w	off_3AD38(pc,d0.w),d1
@@ -78171,34 +78177,25 @@ off_3AD38:	offsetTable
 		offsetTableEntry.w +	; 0
 ; ===========================================================================
 + ; loc_3AD3A:
+       ; bsr.w	PlaneAttributeFollowPlane ; added line to see what happens
 	jsrto	(ObjectMove).l, JmpTo26_ObjectMove
 	jmpto	(MarkObjGone).l, JmpTo39_MarkObjGone
 ; ===========================================================================
 
 loc_3AD42:
-	moveq	#0,d0
-	move.b	routine_secondary(a0),d0
-	move.w	off_3AD50(pc,d0.w),d1
-	jmp	off_3AD50(pc,d1.w)
-; ===========================================================================
-off_3AD50:	offsetTable
-		offsetTableEntry.w loc_3AD54	; 0
-		offsetTableEntry.w loc_3AD5C	; 2
-; ===========================================================================
 
-loc_3AD54:
-	bsr.w	loc_3AD6E
+	bsr.w	PlaneAttributeFollowPlane
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
 loc_3AD5C:
-	bsr.w	loc_3AD6E
+	bsr.w	PlaneAttributeFollowPlane
 	lea	(Ani_objB2_b).l,a1
 	jsrto	(AnimateSprite).l, JmpTo25_AnimateSprite
 	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
 ; ===========================================================================
 
-loc_3AD6E:
+PlaneAttributeFollowPlane:
 	movea.w	objoff_30(a0),a1 ; a1=object
 	move.w	x_pos(a1),d0
 	subi.w	#$C,d0
@@ -78449,7 +78446,7 @@ Sonic_pilot_frames:
 	dc.b $2F	; 2
 	dc.b $30	; 3
 Sonic_pilot_frames_end:
-
+        even
 ; byte_3AFA0:
 Tails_pilot_frames:
 	dc.b $10
@@ -78477,13 +78474,13 @@ Tails_pilot_frames:
 	dc.b   1	; 22
 	dc.b   1	; 23
 Tails_pilot_frames_end:
-
+        even
 word_3AFB8:
 	dc.w objoff_42
 	dc.l ObjB2
 	dc.b $58
 word_3AFBC:
-	dc.w objoff_40
+	dc.w objoff_40   ; rocket on plane
 	dc.l ObjB2
 	dc.b $56
 word_3AFC0:
@@ -78491,7 +78488,8 @@ word_3AFC0:
 	dc.l ObjB2
 	dc.b $5C
 ; seems unused
-	dc.w objoff_42
+UnusedPlaneObj:
+	dc.w parent3
 	dc.l ObjB2
 	dc.b $5A
 ; off_3AFC8:
