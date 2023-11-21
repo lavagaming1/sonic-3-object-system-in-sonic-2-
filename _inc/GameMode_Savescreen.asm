@@ -1,5 +1,5 @@
 s3_save_screen:
-
+    
 		jsr	(Pal_FadeToBlack).l
 		move	#$2700,sr
 		move.w	(VDP_reg_1_command).w,d0
@@ -35,9 +35,9 @@ loc_C5B0:
 loc_C5F0:
 		move.l	d0,(a1)+
 		dbf	d1,loc_C5F0
-	;	lea	(Object_RAM).w,a1
-	;	moveq	#0,d0
-	;	move.w	#(Kos_decomp_buffer-Object_RAM)/4-1,d1
+;		lea	(Object_RAM).w,a1
+;		moveq	#0,d0
+;		move.w	#(Kos_decomp_buffer-Object_RAM)/4-1,d1
 
 ;loc_C600:
 ;		move.l	d0,(a1)+
@@ -162,8 +162,6 @@ loc_C7A4:
 loc_C7CC:
 		move.l	(a0)+,(a1)+
 		dbf	d0,loc_C7CC
-		moveq	#$1,d0
-		jsr	(PlaySound).l
 		move.l	#loc_C890,(_unkEF44_1).w
 		move.b	#VintID_Savescreen,(V_int_routine).w
 		jsr	(Wait_VSync).l
@@ -207,7 +205,7 @@ loc_C84E:
 loc_C856:
 		cmpi.b	#GameModeID_save_screen,(Game_mode).w	; are we still in the savescreen mode?
 		beq.s	SaveScreen_MainLoop	; if so, loop
-		moveq	#SndID_EnterGiantRing,d0
+		move.w	#sfx_EnterSS,d0
 		jmp	(PlaySound).l
 
 ; =============== S U B R O U T I N E =======================================
@@ -332,16 +330,20 @@ loc_C94C:
 ; shows level number 1-14
 ; NOTE: $FF acts as zero
 byte_C95E:
-		dc.b  	$FF,   1	; 01
-		dc.b  	$FF,   2	; 02
-		dc.b  	$FF,   3	; 03
-		dc.b  	$FF,   4	; 04
-		dc.b  	$FF,   5	; 05
-		dc.b  	$FF,   6	; 06
-		dc.b  	$FF,   7	; 07
-		dc.b  	$FF,   8	; 08
-		dc.b  	$FF,   9	; 09
+		dc.b  $FF,   1	; 01
+		dc.b  $FF,   2	; 02
+		dc.b  $FF,   3	; 03
+		dc.b  $FF,   4	; 04
+		dc.b  $FF,   5	; 05
+		dc.b  $FF,   6	; 06
+		dc.b  $FF,   7	; 07
+		dc.b  $FF,   8	; 08
+		dc.b  $FF,   9	; 09
 		dc.b    1,   0	; 10
+		dc.b    1,   1	; 11
+		dc.b    1,   2	; 12
+		dc.b    1,   3	; 13
+		dc.b    1,   4	; 14
 		even
 ; ---------------------------------------------------------------------------
 
@@ -709,13 +711,13 @@ loc_D238:
 		tst.b	(Dataselect_entry).w
 		beq.s	loc_D254
 		subq.b	#1,(Dataselect_entry).w
-		moveq	#SndID_CasinoBonus,d0
+		move.w	#sfx_SlotMachine,d0
 		tst.w	(Events_bg+$12).w
 		beq.s	loc_D24C
-		moveq	#SndID_Bumper,d0
+		move.w	#sfx_SmallBumpers,d0
 
 loc_D24C:
-		jsr	(PlaySound).l
+		jsr	(Play_Sound_2).l
 		moveq	#-8,d0
 
 loc_D254:
@@ -724,13 +726,13 @@ loc_D254:
 		cmpi.b	#9,(Dataselect_entry).w
 		beq.s	loc_D27A
 		addq.b	#1,(Dataselect_entry).w
-		moveq	#SndID_CasinoBonus,d0
+		move.w	#sfx_SlotMachine,d0
 		tst.w	(Events_bg+$12).w
 		beq.s	loc_D272
-		moveq	#SndID_Bumper,d0
+		move.w	#sfx_SmallBumpers,d0
 
 loc_D272:
-		jsr	(PlaySound).l
+		jsr	(Play_Sound_2).l
 		moveq	#8,d0
 
 loc_D27A:
@@ -819,7 +821,7 @@ Obj_SaveScreen_NoSave_Slot:
 		move.b	(Ctrl_1_pressed).w,d0
 		andi.w	#$E0,d0
 		beq.s	loc_D376
-		move.b	#$C,(Game_mode).w
+		move.b	#GameModeID_Level,(Game_mode).w
 		move.w	(Dataselect_nosave_player).w,(Player_option).w
 		clr.w	(Current_zone_and_act).w
 	;	clr.w	(Apparent_zone_and_act).w
@@ -833,7 +835,7 @@ Obj_SaveScreen_NoSave_Slot:
 		clr.l	(Save_pointer).w
 		jsr	(Set_Lives_and_Continues).l
 		moveq	#PLCID_Std1,d0
-         	jsr	LoadPLC2
+        jsr	LoadPLC2
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
 
@@ -973,7 +975,7 @@ loc_D4EE:
 		move.b	(Ctrl_1_pressed).w,d0
 		btst	#1,d0
 		beq.s	loc_D508
-		moveq	#SndID_Blip,d2
+		moveq	#sfx_Switch,d2
 		subq.w	#1,d1
 		bpl.s	loc_D518
 		move.w	d6,d1
@@ -983,7 +985,7 @@ loc_D4EE:
 loc_D508:
 		btst	#0,d0
 		beq.s	loc_D518
-		moveq	#SndID_Blip,d2
+		move.w	#sfx_Switch,d2
 		addq.w	#1,d1
 		cmp.w	d6,d1
 		bls.s	loc_D518
@@ -992,7 +994,7 @@ loc_D508:
 loc_D518:
 		move.w	d1,$36(a0)
 		move.l	d2,d0
-		jsr	(PlaySound).l
+		jsr	(Play_Sound_2).l
 		move.b	#$1A,$1D(a0)
 		btst	#4,(Level_frame_counter+1).w
 		beq.s	loc_D53C
@@ -1024,7 +1026,7 @@ loc_D540:
 
 loc_D57A:
 		jsr	sub_DA4E(pc)
-		move.w	d0,(Current_zone_and_act).w
+	    move.w	d0,(Current_zone_and_act).w
 	;	move.w	d0,(Apparent_zone_and_act).w
 		moveq	#0,d0
 		move.b	2(a1),d0
@@ -1132,7 +1134,7 @@ sub_D6D0:
 		move.b	(Ctrl_1_pressed).w,d1
 		lsr.w	#1,d1
 		bcc.s	loc_D6EE
-		moveq	#SndID_Blip,d2
+		move.w	#sfx_Switch,d2
 		addq.w	#1,d0
 		cmpi.w	#2,d0
 		bls.s	loc_D6FA
@@ -1143,7 +1145,7 @@ sub_D6D0:
 loc_D6EE:
 		lsr.w	#1,d1
 		bcc.s	loc_D6FA
-		moveq	#SndID_Blip,d2
+		move.w	#sfx_Switch,d2
 		subq.w	#1,d0
 		bpl.s	loc_D6FA
 		moveq	#2,d0
@@ -1153,7 +1155,7 @@ loc_D6FA:
 		beq.s	locret_D70A
 		move.l	d0,-(sp)
 		move.l	d2,d0
-		jsr	(PlaySound).l
+		jsr	(Play_Sound_2).l
 		move.l	(sp)+,d0
 
 locret_D70A:
@@ -1211,11 +1213,17 @@ Obj_SaveScreen_Delete_Save:
 
 loc_D78C:
 		bra.w	loc_D7A4
+; ---------------------------------------------------------------------------
 		bra.w	loc_D7C0
+; ---------------------------------------------------------------------------
 		bra.w	loc_D7EA
+; ---------------------------------------------------------------------------
 		bra.w	loc_D884
+; ---------------------------------------------------------------------------
 		bra.w	loc_D8A4
+; ---------------------------------------------------------------------------
 		bra.w	loc_D8C4
+; ---------------------------------------------------------------------------
 
 loc_D7A4:
 		move.b	#$40,4(a0)
@@ -1230,8 +1238,8 @@ loc_D7C0:
 		move.b	(Ctrl_1_pressed).w,d0
 		andi.w	#$E0,d0
 		beq.w	loc_D8A0
-		moveq	#SndID_Checkpoint,d0
-		jsr	(PlaySound).l
+		move.w	#sfx_Starpost,d0
+		jsr	(Play_Sound_2).l
 		st	(Events_bg+$12).w
 		addq.b	#4,5(a0)
 		bra.w	loc_D8A0
@@ -1258,8 +1266,8 @@ loc_D7EA:
 		movea.l	d0,a1
 		tst.b	(a1)
 		bmi.s	loc_D854
-		moveq	#SndID_Checkpoint,d0
-		jsr	(PlaySound).l
+		move.w	#sfx_Starpost,d0
+		jsr	(Play_Sound_2).l
 		st	(Events_bg+$10).w
 		addq.b	#8,5(a0)
 
@@ -1320,8 +1328,8 @@ loc_D8C4:
 		bne.s	loc_D8FE
 		btst	#2,(Ctrl_1_pressed).w
 		beq.s	loc_D90C
-		moveq	#SndID_Signpost2P,d0
-		jsr	(PlaySound).l
+		move.w	#sfx_Perfect,d0
+		jsr	(Play_Sound_2).l
 		movea.l	$2E(a0),a1
 		move.w	#$8000,(a1)
 		clr.l	2(a1)
@@ -1533,15 +1541,15 @@ locret_DA6C:
 		rts
 ; End of function sub_DA4E
 EHZ  =  0
-ID1  =  $100
-ID2  =  $200
-ID3  =  $300
+GHZ  =  $100
+WZ   =  $200
+LZ   =  $300
 MTZ  =  $400
 MTZ3 =  $500
-WFZ  =  $600
+SSZ  =  $600
 HTZ  =  $700
 HPZ  =  $800
-ID9  =  $900
+MZ   =  $900
 OOZ  =  $A00
 MCZ  =  $B00
 CNZ  =  $C00
@@ -1549,19 +1557,20 @@ CPZ  =  $D00
 DEZ  =  $E00
 ARZ  =  $F00
 SCZ  =  $1000
+CCZ  =  $1100
 ; ---------------------------------------------------------------------------
 LevelList_DA6E:	
-        	dc.w EHZ
-		dc.w CPZ
-		dc.w ARZ
-		dc.w CNZ
-		dc.w HTZ
-		dc.w MCZ
-		dc.w OOZ
-		dc.w MTZ
-		dc.w SCZ
-		dc.w DEZ	
-		even 
+        	dc.w EHZ   ;0
+		dc.w CPZ   ;1
+		dc.w ARZ   ;2
+		dc.w CNZ   ;3
+		dc.w HTZ    ;4
+		dc.w MCZ   ;5
+		dc.w OOZ    ;6
+		dc.w MTZ   ;7
+		dc.w SCZ   ;8 
+		dc.w DEZ   ;9
+	
 word_DA8A:	dc.w $8000
 		dc.w $8000
 		dc.w $8000
@@ -1635,27 +1644,14 @@ word_DB08:	dc.w $8000
 		dc.w $8000
 		dc.w $8000
 		dc.w $8000
-; DATA SELECT TEXT (modified from Sonic 2 disassembly)
-    charset '0','9',$10    ; Add character set for numbers
-    charset '*',$1A    ; Add character for star
-    charset '@',$1B ; Add character for copyright symbol
-    charset ':',$1C ; Add character for colon
-    charset '.',$1D ; Add character for period
-    charset 'A','Z',$1E ; Add character set for letters
-    charset ' ',$FF    ; Add character that marks the end of text
-    charset '#',0    ; Add character for displaying nothing...?
-
-byte_DB1C:
-    dc.b    "NO SAVE"    ;
-    dc.b    " DELETE "    ;
-byte_DB2B:
-    dc.b    "     "    ; inactive save, no text
-byte_DB36:
-    dc.b    "CLEAR "    ; save that's beaten
-byte_DB31:
-    dc.b     "ZONE   "    ; save where you still have a game to beat, has 2-digit zone number
-    even
-    charset
+byte_DB1C:	dc.b  $2B, $2C, $FF, $30, $1E, $33, $22, $FF, $21, $22, $29, $22, $31, $22, $FF
+                even
+byte_DB2B:	dc.b    0,   0,   0,   0,   0, $FF
+                even
+byte_DB31:	dc.b  $37, $2C, $2B, $22, $FF
+                even
+byte_DB36:	dc.b  $20, $29, $22, $1E, $2F, $FF
+            even
 KosArt_To_VDP:
 		movea.l	a1,a3		; a1 will be changed by Kos_Decomp, so we're backing it up to a3
 		jsr	(Kos_Decomp).l
@@ -1678,8 +1674,8 @@ SRAM_Load:
 	;	tst.w	(SK_alone_flag).w
 	;	bne.w	locret_C260		; Don't bother if we're playing only Sonic and Knuckles
 		clr.w	(SRAM_mask_interrupts_flag).w	; No interrupt shenanigans needed
-		lea	($200011).l,a0
-		lea	($2000BD).l,a1
+		lea	(General_SRAM).l,a0
+		lea	(Backup_SRAM).l,a1
 		lea	(Competition_saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4C44,d1		; RAM integrity value
@@ -1695,8 +1691,8 @@ loc_C186:
 		jsr	Write_SaveGeneral2(pc)	; Write default data back to SRAM
 
 loc_C190:
-		lea	($200281).l,a0
-		lea	($20032D).l,a1
+		lea	(Game_SRAM).l,a0
+		lea	(Game_Backup_SRAM).l,a1
 		lea	(Saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4244,d1		; RAM integrity value for save game data
@@ -1719,15 +1715,15 @@ loc_C1C0:
 loc_C1CA:
 		move.w	(a0)+,(a1)+
 		dbf	d0,loc_C1CA			; Write default game data
-		lea	($200169).l,a0
-		lea	($2001F5).l,a1
-		lea	($FF0000).l,a2		; Attempt to see if there's any existing S3 save data
+		lea	(Unk_SRAM).l,a0
+		lea	(Unk_SRAM_2).l,a1
+		lea	(S3_SRAM_Data).l,a2		; Attempt to see if there's any existing S3 save data
 		moveq	#$19,d0
 		move.w	#$4244,d1
 		jsr	Get_From_SRAM(pc)
 		bne.s	loc_C252		; If write was not successful, branch
 		lea	(Saved_data).w,a0	; If there's valid data from Sonic 3, we'll now go through the process of migrating it to SK
-		lea	($FF0000).l,a1
+		lea	(S3_SRAM_Data).l,a1
 		lea	SaveData_S3LevRef(pc),a2
 		moveq	#5,d0
 
@@ -1919,8 +1915,8 @@ Write_SaveGeneral:
 Write_SaveGeneral2:
 		move.l	a0,-(sp)
 		move.w	d7,-(sp)
-		lea	($200011).l,a0		; Save general SRAM
-		lea	($2000BD).l,a1		; Save general Backup SRAM
+		lea	(General_SRAM).l,a0		; Save general SRAM
+		lea	(Backup_SRAM).l,a1		; Save general Backup SRAM
 		lea	(Competition_saved_data).w,a2	; Save general RAM
 		moveq	#$29,d0
 		bsr.s	Write_SRAM
@@ -1936,8 +1932,8 @@ Write_SaveGeneral2:
 Write_SaveGame:
 		move.l	a0,-(sp)
 		move.w	d7,-(sp)
-		lea	($200281).l,a0		; Save game SRAM
-		lea	($20032D).l,a1		; Save game backup SRAM
+		lea	(Game_SRAM).l,a0		; Save game SRAM
+		lea	(Game_Backup_SRAM).l,a1		; Save game backup SRAM
 		lea	(Saved_data).w,a2	; Save game RAM
 		moveq	#$29,d0
 		jsr	Write_SRAM(pc)
@@ -1947,29 +1943,42 @@ Write_SaveGame:
 ; End of function Write_SaveGame
 
 ; ---------------------------------------------------------------------------
-SaveGame_NextLevel:	
-		dc.b    0	;EHZ
-		dc.b	1, 1	;EHZ to CPZ
-		dc.b	8, 8	;SCZ to WFZ
-		dc.b	$A, $A	;
-		dc.b	$A, $A	;
-		dc.b	7, 8	;MTZ to MTZ3	
-		dc.b	9, $A	;WFZ to DEZ
-		dc.b	$A, $A	;
-		dc.b	5, 5	;HTZ to MCZ
-		dc.b	$A, $A	;
-		dc.b	$A, $A	;
-		dc.b	7, 7	;OOZ to MTZ
-		dc.b	6, 6 	;MCZ to OOZ
-		dc.b	4, 4	;CNZ to HTZ
-		dc.b	2, 2	;CPZ to ARZ
-		dc.b	8	;MTZ3 to SCZ
-		dc.b	3, 3	;ARZ to CNZ		
+SaveGame_NextLevel:    
+        dc.b    0    ;EHZ
+        dc.b    1, 1    ;EHZ to CPZ
+        dc.b    8, 8    ;SCZ to WFZ
+        dc.b    $A, $A    ;
+        dc.b    $A, $A    ;
+        dc.b    7, 8    ;MTZ to MTZ3    
+        dc.b    9, $A    ;WFZ to DEZ
+        dc.b    $A, $A    ;
+        dc.b    5, 5    ;HTZ to MCZ
+        dc.b    $A, $A    ;
+        dc.b    $A, $A    ;
+        dc.b    7, 7    ;OOZ to MTZ
+        dc.b    6, 6     ;MCZ to OOZ
+        dc.b    4, 4    ;CNZ to HTZ
+        dc.b    2, 2    ;CPZ to ARZ
+        dc.b    8    ;MTZ3 to SCZ
+        dc.b    3, 3    ;ARZ to CNZ        
                   even
 ; =============== S U B R O U T I N E =======================================
 
-
+; save data format
+; Save_pointer => a1
+;	b 0 = clear conditions; 
+;		code 1 is completed without all emeralds
+;		code 2 is completed with all chaos emeralds
+;		code 3 is completed with all super emeralds
+;	b 2 = last played special stage only if Sonic 3 special stages are in effect (shares character IDs?)
+;	b 3 = current level
+;	w 4 = special stage ring collection memory 
+;	w 6 = Compress emerald collection RAM
+;	b 8 = number of lives
+;	b 9 = number of continues
 SaveGame:
+	;	tst.w	(SK_alone_flag).w
+	;	bne.w	loc_C4CC			; If this is SK, saving is disabled
 		move.l	(Save_pointer).w,d0
 		beq.w	loc_C4CC			; If not playing on a save file, get out
 		movea.l	d0,a1
@@ -1979,14 +1988,30 @@ SaveGame:
 		move.b	SaveGame_NextLevel(pc,d0.w),d0
 		move.b	(a1),d1
 		andi.w	#3,d1
-		beq.s	loc_C488
+		beq.s	loc_C464
 		cmp.b	3(a1),d0		; If game is complete, make it uncomplete if last level is less than the current level
 		blo.s	loc_C4B4		; Think of, say, getting all the super emeralds then going to Doomsday on a completed save file
 		andi.b	#-4,(a1)
+
+loc_C464:
+		move.b	d0,3(a1)			; Move next level into current level
+		cmpi.w	#3,(Player_mode).w
+		bne.s	loc_C478
+		cmpi.b	#$A,d0 ;$C
+		blo.s	loc_C4B0
+		bra.s	loc_C498		; If playing as Knuckles and level code is Death egg or higher, make it a completed save file
+; ---------------------------------------------------------------------------
+
+loc_C478:
+		cmpi.w	#2,(Player_mode).w
+		bne.s	loc_C488
+		cmpi.b	#$A,d0  ;$D
+		blo.s	loc_C4B0
+		bra.s	loc_C498		; If playing as Knuckles and level code is Doomsday or higher, make it a completed save file
 ; ---------------------------------------------------------------------------
 
 loc_C488:
-		cmpi.b	#$A,d0
+		cmpi.b	#$A,d0  ;$D
 		bhi.s	loc_C498		; If next level above Doomsday's code, make it a completed save file
 		bne.s	loc_C4B0
 		cmpi.b	#7,(Emerald_count).w	; If next level IS Doomsday but the emeralds aren't collected, make it a completed save file
@@ -2113,15 +2138,13 @@ Init_SpriteTable:
 		lea	(Sprite_Table).w,a0
 		bsr.s	Init_SpriteTable2
 		bsr.s	Init_SpriteTable_2Player
-		lea	(Sprite_Table_2).l,a0
+		lea	(Sprite_table_buffer_2).l,a0
 		bsr.s	Init_SpriteTable2
 		bsr.s	Init_SpriteTable_2Player
-		lea	($FF7B00).l,a0
+		lea	(Sprite_table_buffer_P2).l,a0
 		bsr.s	Init_SpriteTable2
-		lea	($FF7D80).l,a0
+		lea	(Sprite_table_buffer_P2_2).l,a0
 		bra.s	Init_SpriteTable2
-; ---------------------------------------------------------------------------
-
 loc_1AA9E:
 		lea	(Sprite_Table).w,a0
 ; End of function Init_SpriteTable
@@ -2157,4 +2180,3 @@ Init_SpriteTable_2Player:
 		move.l	#0,(a0)
 		rts
 ; End of function Init_SpriteTable_2Player
-
