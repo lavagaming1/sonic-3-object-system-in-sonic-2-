@@ -1644,14 +1644,27 @@ word_DB08:	dc.w $8000
 		dc.w $8000
 		dc.w $8000
 		dc.w $8000
-byte_DB1C:	dc.b  $2B, $2C, $FF, $30, $1E, $33, $22, $FF, $21, $22, $29, $22, $31, $22, $FF
-                even
-byte_DB2B:	dc.b    0,   0,   0,   0,   0, $FF
-                even
-byte_DB31:	dc.b  $37, $2C, $2B, $22, $FF
-                even
-byte_DB36:	dc.b  $20, $29, $22, $1E, $2F, $FF
-            even
+; DATA SELECT TEXT (modified from Sonic 2 disassembly)
+    charset '0','9',$10    ; Add character set for numbers
+    charset '*',$1A    ; Add character for star
+    charset '@',$1B ; Add character for copyright symbol
+    charset ':',$1C ; Add character for colon
+    charset '.',$1D ; Add character for period
+    charset 'A','Z',$1E ; Add character set for letters
+    charset ' ',$FF    ; Add character that marks the end of text
+    charset '#',0    ; Add character for displaying nothing...?
+
+byte_DB1C:
+    dc.b    "NO SAVE"    ;
+    dc.b    " DELETE "    ;
+byte_DB2B:
+    dc.b    "##### "    ; inactive save, no text
+byte_DB36:
+    dc.b    "CLEAR "    ; save that's beaten
+byte_DB31:
+    dc.b     "ZONE  "    ; save where you still have a game to beat, has 2-digit zone number
+    even
+    charset
 KosArt_To_VDP:
 		movea.l	a1,a3		; a1 will be changed by Kos_Decomp, so we're backing it up to a3
 		jsr	(Kos_Decomp).l
