@@ -828,13 +828,7 @@ MusID__End =		id(zMusIDPtr__End)	; A0
 		fatal "You have too many SndPtrs. MusID__End ($\{MusID__End}) can't exceed SndID__First ($\{SndID__First})."
 	endif
     endif
-mus_DataSelect = $20
-sfx_Switch = $50
-sfx_Starpost = $40
-sfx_Perfect = $30
-sfx_EnterSS = $60
-sfx_SmallBumpers = $70
-sfx_SlotMachine = $71
+
 ; Sound IDs
 offset :=	SoundIndex
 ptrsize :=	2
@@ -930,7 +924,12 @@ SndID__End =		id(SndPtr__End)			; F1
 		fatal "You have too many SndPtrs. SndID__End ($\{SndID__End}) can't exceed CmdID__First ($\{CmdID__First})."
 	endif
     endif
-
+sfx_Switch = SndID_Beep
+sfx_Starpost = SndID_Checkpoint 
+sfx_Perfect = SndID_ContinueJingle
+sfx_EnterSS = SndID_EnterGiantRing
+sfx_SmallBumpers = SndID_Bumper
+sfx_SlotMachine = SndID_Beep
 ; Sound command IDs
 offset :=	zCommandIndex
 ptrsize :=	4
