@@ -35,13 +35,6 @@ loc_C5B0:
 loc_C5F0:
 		move.l	d0,(a1)+
 		dbf	d1,loc_C5F0
-;		lea	(Object_RAM).w,a1
-;		moveq	#0,d0
-;		move.w	#(Kos_decomp_buffer-Object_RAM)/4-1,d1
-
-;loc_C600:
-;		move.l	d0,(a1)+
-;		dbf	d1,loc_C600
 		move.w	#MusID_SaveScreen,d0
 		jsrto	(PlayMusic).l, JmpTo_PlayMusic
                 clearRAM Chunk_Table,Chunk_Table_End
@@ -348,119 +341,7 @@ byte_C95E:
 ; ---------------------------------------------------------------------------
 
 loc_C97A:
-		lea	word_DA8A(pc),a2
-		lea	(Dynamic_Object_RAM+object_size).w,a3
-		move.w	#$D220,d7
-		lea	(Saved_data).w,a0
-		moveq	#7,d6
-
-loc_C98C:
-		move.w	$34(a3),d0 ;34
-		bne.s	loc_C994
-		moveq	#1,d0
-
-loc_C994:
-		tst.b	(a0)
-		bpl.s	loc_C99A
-		moveq	#0,d0
-
-loc_C99A:
-		lsl.w	#5,d0
-		movea.l	a2,a1
-		adda.w	d0,a1
-		move.w	d7,d0
-		bsr.w	sub_C87E
-		moveq	#2,d1
-		moveq	#4,d2
-		jsr	(Plane_Map_To_VRAM_2).l
-		tst.b	(a0)
-		bpl.s	loc_C9CC
-		lea	word_DB08(pc),a1
-		move.w	d7,d0
-		addq.w	#6,d0
-		bsr.w	sub_C87E
-		moveq	#1,d1
-		moveq	#4,d2
-		jsr	(Plane_Map_To_VRAM_2).l
-		bra.s	loc_CA02
-; ---------------------------------------------------------------------------
-
-loc_C9CC:
-		move.b	$3E(a3),d0 ;3E
-		jsr	sub_CA14(pc)
-		move.w	d7,d0
-		addq.w	#6,d0
-		bsr.w	sub_C87E
-		moveq	#1,d1
-		moveq	#1,d2
-		jsr	(Plane_Map_To_VRAM_2).l
-		move.b	$3F(a3),d0  ;3F
-		jsr	sub_CA14(pc)
-		move.w	d7,d0
-		addi.w	#$306,d0
-		bsr.w	sub_C87E
-		moveq	#1,d1
-		moveq	#1,d2
-		jsr	(Plane_Map_To_VRAM_2).l
-
-loc_CA02:
-		addi.w	#$1A,d7
-		lea	next_SaveSlot(a0),a0
-		lea	next_object(a3),a3
-		dbf	d6,loc_C98C
-
 		rts
-
-; =============== S U B R O U T I N E =======================================
-
-
-sub_CA14:
-		moveq	#0,d1
-
-loc_CA16:
-		addq.w	#1,d1
-		subi.b	#$A,d0
-		bcc.s	loc_CA16
-		subq.w	#1,d1
-		addi.b	#$A,d0
-		lea	(_unkEEEA).w,a1
-		lsl.w	#2,d1
-		bne.s	loc_CA2E
-		moveq	#$28,d1
-
-loc_CA2E:
-		move.w	word_CA4C(pc,d1.w),(a1)
-		move.w	word_CA4E(pc,d1.w),4(a1)
-		andi.w	#$FF,d0
-		lsl.w	#2,d0
-		move.w	word_CA4C(pc,d0.w),2(a1)
-		move.w	word_CA4E(pc,d0.w),6(a1)
-		rts
-; End of function sub_CA14
-
-; ---------------------------------------------------------------------------
-word_CA4C:	dc.w $A49A
-word_CA4E:	dc.w $A49B
-		dc.w $A49C
-		dc.w $A49D
-		dc.w $A49E
-		dc.w $A49F
-		dc.w $A4A0
-		dc.w $A4A1
-		dc.w $A4A2
-		dc.w $A4A3
-		dc.w $A4A4
-		dc.w $A4A5
-		dc.w $A4A6
-		dc.w $A4A7
-		dc.w $A4A8
-		dc.w $A4A9
-		dc.w $A4AA
-		dc.w $A4AB
-		dc.w $A4AC
-		dc.w $A4AD
-		dc.w $8000
-		dc.w $8000
 Pal_Save_Chars:	binclude "art/Save Menu/Palettes/Chars.bin"
 	even
 
@@ -824,8 +705,6 @@ Obj_SaveScreen_NoSave_Slot:
 		move.b	#GameModeID_Level,(Game_mode).w
 		move.w	(Dataselect_nosave_player).w,(Player_option).w
 		clr.w	(Current_zone_and_act).w
-	;	clr.w	(Apparent_zone_and_act).w
-	;	clr.w	(Current_special_stage).w
 		clr.b	(Emerald_count).w
 		clr.l	(Collected_emeralds_array).w
 		clr.w	(Collected_emeralds_array+4).w
@@ -835,7 +714,7 @@ Obj_SaveScreen_NoSave_Slot:
 		clr.l	(Save_pointer).w
 		jsr	(Set_Lives_and_Continues).l
 		moveq	#PLCID_Std1,d0
-        jsr	LoadPLC2
+       		jsr	LoadPLC2
 		jmp	(Draw_Sprite).l
 ; ---------------------------------------------------------------------------
 
@@ -878,7 +757,7 @@ loc_D3B0:
 		move.b	(a1),d0
 		andi.b	#3,d0
 		move.b	d0,$3B(a0)
-		move.w	$0006(a1),d0
+		move.w	6(a1),d0
 		lea	(Collected_emeralds_array).w,a2
 		jsr	sub_DA1E(pc)
 		move.b	d1,$3C(a0)
@@ -952,12 +831,13 @@ loc_D4B6:
 		tst.w	(Player_2+object_control).w
 		bne.s	loc_D44A
 		tst.w	(Events_bg+$12).w
-		beq.s	loc_D4D0
+		beq.s	Set_Completed_Game_Icons
 		clr.b	$1D(a0)
 		move.w	#2,$16(a0)
 		bra.w	loc_D44A
 ; ---------------------------------------------------------------------------
 
+Set_Completed_Game_Icons:
 loc_D4D0:
 		moveq	#$B,d6
 		cmpi.w	#3,$34(a0)
@@ -968,7 +848,6 @@ loc_D4D0:
 		cmpi.b	#2,$3B(a0)
 		blo.s	loc_D4EE
 		moveq	#$D,d6
-
 loc_D4EE:
 		moveq	#0,d2
 		move.w	$36(a0),d1
@@ -1026,8 +905,7 @@ loc_D540:
 
 loc_D57A:
 		jsr	sub_DA4E(pc)
-	    move.w	d0,(Current_zone_and_act).w
-	;	move.w	d0,(Apparent_zone_and_act).w
+	   	move.w	d0,(Current_zone_and_act).w
 		moveq	#0,d0
 		move.b	2(a1),d0
 		lsr.b	#4,d0
@@ -1082,13 +960,11 @@ loc_D5FE:
 		lsl.b	#4,d0
 		move.b	d0,2(a1)
 		clr.w	(Current_zone_and_act).w
-	;	clr.w	(Apparent_zone_and_act).w
 		clr.w	(Current_special_stage).w
 		clr.b	(Emerald_count).w
 		clr.l	(Collected_emeralds_array).w
 		clr.w	(Collected_emeralds_array+4).w
 		clr.b	(Collected_emeralds_array+6).w
-	;	clr.l	(Collected_special_ring_array).w
 		clr.b	(Emeralds_converted_flag).w
 		move.l	a1,(Save_pointer).w
 		jsr	(Set_Lives_and_Continues).l
@@ -1163,7 +1039,6 @@ locret_D70A:
 ; End of function sub_D6D0
 
 ; ---------------------------------------------------------------------------
-
 Obj_SaveScreen_Emeralds:
 		move.b	#$40,4(a0)
 		move.w	#$829F,$A(a0)
@@ -1564,12 +1439,12 @@ LevelList_DA6E:
 		dc.w CPZ   ;1
 		dc.w ARZ   ;2
 		dc.w CNZ   ;3
-		dc.w HTZ    ;4
-		dc.w MCZ   ;5
-		dc.w OOZ    ;6
+		dc.w MTZ   ;4
+		dc.w MTZ   ;5
+		dc.w MTZ   ;6
 		dc.w MTZ   ;7
-		dc.w SCZ   ;8 
-		dc.w DEZ   ;9
+		dc.w MTZ   ;8 
+		dc.w MTZ   ;9
 	
 word_DA8A:	dc.w $8000
 		dc.w $8000
@@ -1687,8 +1562,8 @@ SRAM_Load:
 	;	tst.w	(SK_alone_flag).w
 	;	bne.w	locret_C260		; Don't bother if we're playing only Sonic and Knuckles
 		clr.w	(SRAM_mask_interrupts_flag).w	; No interrupt shenanigans needed
-		lea	(General_SRAM).l,a0
-		lea	(Backup_SRAM).l,a1
+		lea	($200011).l,a0
+		lea	($2000BD).l,a1
 		lea	(Competition_saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4C44,d1		; RAM integrity value
@@ -1704,8 +1579,8 @@ loc_C186:
 		jsr	Write_SaveGeneral2(pc)	; Write default data back to SRAM
 
 loc_C190:
-		lea	(Game_SRAM).l,a0
-		lea	(Game_Backup_SRAM).l,a1
+		lea	($200281).l,a0
+		lea	($20032D).l,a1
 		lea	(Saved_data).w,a2
 		moveq	#$29,d0
 		move.w	#$4244,d1		; RAM integrity value for save game data
@@ -1728,15 +1603,15 @@ loc_C1C0:
 loc_C1CA:
 		move.w	(a0)+,(a1)+
 		dbf	d0,loc_C1CA			; Write default game data
-		lea	(Unk_SRAM).l,a0
-		lea	(Unk_SRAM_2).l,a1
-		lea	(S3_SRAM_Data).l,a2		; Attempt to see if there's any existing S3 save data
+		lea	($200169).l,a0
+		lea	($2001F5).l,a1
+		lea	($FF0000).l,a2		; Attempt to see if there's any existing S3 save data
 		moveq	#$19,d0
 		move.w	#$4244,d1
 		jsr	Get_From_SRAM(pc)
 		bne.s	loc_C252		; If write was not successful, branch
 		lea	(Saved_data).w,a0	; If there's valid data from Sonic 3, we'll now go through the process of migrating it to SK
-		lea	(S3_SRAM_Data).l,a1
+		lea	($FF0000).l,a1
 		lea	SaveData_S3LevRef(pc),a2
 		moveq	#5,d0
 
@@ -1957,23 +1832,23 @@ Write_SaveGame:
 
 ; ---------------------------------------------------------------------------
 SaveGame_NextLevel:    
-        dc.b    0    ;EHZ
-        dc.b    1, 1    ;EHZ to CPZ
-        dc.b    8, 8    ;SCZ to WFZ
-        dc.b    $A, $A    ;
-        dc.b    $A, $A    ;
-        dc.b    7, 8    ;MTZ to MTZ3    
-        dc.b    9, $A    ;WFZ to DEZ
-        dc.b    $A, $A    ;
-        dc.b    5, 5    ;HTZ to MCZ
-        dc.b    $A, $A    ;
-        dc.b    $A, $A    ;
-        dc.b    7, 7    ;OOZ to MTZ
-        dc.b    6, 6     ;MCZ to OOZ
-        dc.b    4, 4    ;CNZ to HTZ
-        dc.b    2, 2    ;CPZ to ARZ
-        dc.b    8    ;MTZ3 to SCZ
-        dc.b    3, 3    ;ARZ to CNZ        
+        dc.b    0           ;EHZ
+        dc.b    1, 1        ;EHZ to CPZ
+        dc.b    8, 8        ;SCZ to WFZ
+        dc.b    $A, $A      ;
+        dc.b    $A, $A      ;
+        dc.b    4, 5        ;MTZ to MTZ3    
+        dc.b    9, $A       ;WFZ to DEZ
+        dc.b    $A, $A      ;
+        dc.b    4, 5        ;HTZ to MCZ
+        dc.b    $A, $A      ;
+        dc.b    $A, $A      ;
+        dc.b    4, 5        ;OOZ to MTZ
+        dc.b    6, 6        ;MCZ to OOZ
+        dc.b    4, 4        ;CNZ to HTZ
+        dc.b    2, 2        ;CPZ to ARZ
+        dc.b    8           ;MTZ3 to SCZ
+        dc.b    3, 3        ;ARZ to CNZ        
                   even
 ; =============== S U B R O U T I N E =======================================
 
@@ -1990,8 +1865,6 @@ SaveGame_NextLevel:
 ;	b 8 = number of lives
 ;	b 9 = number of continues
 SaveGame:
-	;	tst.w	(SK_alone_flag).w
-	;	bne.w	loc_C4CC			; If this is SK, saving is disabled
 		move.l	(Save_pointer).w,d0
 		beq.w	loc_C4CC			; If not playing on a save file, get out
 		movea.l	d0,a1
@@ -2002,15 +1875,15 @@ SaveGame:
 		move.b	(a1),d1
 		andi.w	#3,d1
 		beq.s	loc_C464
-		cmp.b	3(a1),d0		; If game is complete, make it uncomplete if last level is less than the current level
+		cmp.b	3(a1),d0		; If game is complete, make it incomplete if last level is less than the current level
 		blo.s	loc_C4B4		; Think of, say, getting all the super emeralds then going to Doomsday on a completed save file
-		andi.b	#-4,(a1)
+		andi.b	#4,(a1)
 
 loc_C464:
 		move.b	d0,3(a1)			; Move next level into current level
 		cmpi.w	#3,(Player_mode).w
 		bne.s	loc_C478
-		cmpi.b	#$A,d0 ;$C
+		cmpi.b	#$5,d0 ;$C
 		blo.s	loc_C4B0
 		bra.s	loc_C498		; If playing as Knuckles and level code is Death egg or higher, make it a completed save file
 ; ---------------------------------------------------------------------------
@@ -2018,13 +1891,13 @@ loc_C464:
 loc_C478:
 		cmpi.w	#2,(Player_mode).w
 		bne.s	loc_C488
-		cmpi.b	#$A,d0  ;$D
+		cmpi.b	#$5,d0  ;$D
 		blo.s	loc_C4B0
 		bra.s	loc_C498		; If playing as Knuckles and level code is Doomsday or higher, make it a completed save file
 ; ---------------------------------------------------------------------------
 
 loc_C488:
-		cmpi.b	#$A,d0  ;$D
+		cmpi.b	#$5,d0  ;$D
 		bhi.s	loc_C498		; If next level above Doomsday's code, make it a completed save file
 		bne.s	loc_C4B0
 		cmpi.b	#7,(Emerald_count).w	; If next level IS Doomsday but the emeralds aren't collected, make it a completed save file
@@ -2035,12 +1908,10 @@ loc_C498:
 		cmpi.b	#7,(Emerald_count).w
 		blo.s	loc_C4AE		; code 1 is completed without all emeralds
 		addq.b	#1,d0
-		cmpi.b	#7,(Super_emerald_count).w
-		blo.s	loc_C4AE		; code 2 is completed with all chaos emeralds
-		addq.b	#1,d0			; code 3 is completed with all super emeralds
 
 loc_C4AE:
 		move.b	d0,(a1)
+		jsr	Write_SaveGame(pc)
 
 loc_C4B0:
 		clr.w	4(a1)			; Clear the special stage ring collection memory
@@ -2066,13 +1937,10 @@ loc_C4CC:
 
 
 SaveGame_SpecialStage:
-	;	tst.w	(SK_alone_flag).w
-	;	bne.s	locret_C530			; If playing Sonic and Knuckles, don't bother
 		move.l	(Save_pointer).w,d0
 		beq.s	locret_C530
-		movea.l	d0,a1				; Get address of save slot
-	;	tst.b	(SK_special_stage_flag).w
-	;	bne.s	loc_C4F8
+		movea.l	d0,a1				; Get address of save slot	
+	
 		andi.b	#-$10,2(a1)
 		move.b	(Current_special_stage).w,d0
 		andi.b	#$F,d0
@@ -2100,7 +1968,6 @@ loc_C524:
 		move.b	d0,9(a1)		; Save number of continues
 		move.b	d0,(Continue_count).w
 		jmp	Write_SaveGame(pc)
-; ---------------------------------------------------------------------------
 
 locret_C530:
 		rts
@@ -2111,8 +1978,6 @@ locret_C530:
 
 
 SaveGame_LivesContinues:
-	;	tst.w	(SK_alone_flag).w
-	;	bne.s	locret_C56C		; If playing Sonic and Knuckles, don't bother
 		move.l	(Save_pointer).w,d0
 		beq.s	locret_C56C
 		movea.l	d0,a1
@@ -2133,7 +1998,6 @@ loc_C560:
 		move.b	d0,9(a1)		; Save number of continues
 		move.b	d0,(Continue_count).w
 		jmp	Write_SaveGame(pc)
-; ---------------------------------------------------------------------------
 
 locret_C56C:
 		rts
