@@ -1415,16 +1415,17 @@ loc_DA62:
 locret_DA6C:
 		rts
 ; End of function sub_DA4E
+; End of function sub_DA4E
 EHZ  =  0
-GHZ  =  $100
-WZ   =  $200
-LZ   =  $300
+ID1  =  $100
+ID2  =  $200
+ID3  =  $300
 MTZ  =  $400
 MTZ3 =  $500
-SSZ  =  $600
+WFZ  =  $600
 HTZ  =  $700
 HPZ  =  $800
-MZ   =  $900
+ID9  =  $900
 OOZ  =  $A00
 MCZ  =  $B00
 CNZ  =  $C00
@@ -1432,19 +1433,19 @@ CPZ  =  $D00
 DEZ  =  $E00
 ARZ  =  $F00
 SCZ  =  $1000
-CCZ  =  $1100
 ; ---------------------------------------------------------------------------
 LevelList_DA6E:	
-        	dc.w EHZ   ;0
-		dc.w CPZ   ;1
-		dc.w ARZ   ;2
-		dc.w CNZ   ;3
-		dc.w MTZ   ;4
-		dc.w MTZ   ;5
-		dc.w MTZ   ;6
-		dc.w MTZ   ;7
-		dc.w MTZ   ;8 
-		dc.w MTZ   ;9
+        	dc.w EHZ
+		dc.w CPZ
+		dc.w ARZ
+		dc.w CNZ
+		dc.w HTZ
+		dc.w MCZ
+		dc.w OOZ
+		dc.w MTZ
+		dc.w SCZ
+		dc.w DEZ
+		even
 	
 word_DA8A:	dc.w $8000
 		dc.w $8000
@@ -1831,24 +1832,24 @@ Write_SaveGame:
 ; End of function Write_SaveGame
 
 ; ---------------------------------------------------------------------------
-SaveGame_NextLevel:    
-        dc.b    0           ;EHZ
-        dc.b    1, 1        ;EHZ to CPZ
-        dc.b    8, 8        ;SCZ to WFZ
-        dc.b    $A, $A      ;
-        dc.b    $A, $A      ;
-        dc.b    4, 5        ;MTZ to MTZ3    
-        dc.b    9, $A       ;WFZ to DEZ
-        dc.b    $A, $A      ;
-        dc.b    4, 5        ;HTZ to MCZ
-        dc.b    $A, $A      ;
-        dc.b    $A, $A      ;
-        dc.b    4, 5        ;OOZ to MTZ
-        dc.b    6, 6        ;MCZ to OOZ
-        dc.b    4, 4        ;CNZ to HTZ
-        dc.b    2, 2        ;CPZ to ARZ
-        dc.b    8           ;MTZ3 to SCZ
-        dc.b    3, 3        ;ARZ to CNZ        
+SaveGame_NextLevel:	
+		dc.b    0	;EHZ
+		dc.b	1, 1	;EHZ to CPZ
+		dc.b	8, 8	;SCZ to WFZ
+		dc.b	$A, $A	;
+		dc.b	$A, $A	;
+		dc.b	7, 8	;MTZ to MTZ3	
+		dc.b	9, $A	;WFZ to DEZ
+		dc.b	$A, $A	;
+		dc.b	5, 5	;HTZ to MCZ
+		dc.b	$A, $A	;
+		dc.b	$A, $A	;
+		dc.b	7, 7	;OOZ to MTZ
+		dc.b	6, 6 	;MCZ to OOZ
+		dc.b	4, 4	;CNZ to HTZ
+		dc.b	2, 2	;CPZ to ARZ
+		dc.b	8	;MTZ3 to SCZ
+		dc.b	3, 3	;ARZ to    
                   even
 ; =============== S U B R O U T I N E =======================================
 
