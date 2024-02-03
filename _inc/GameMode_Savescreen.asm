@@ -339,9 +339,120 @@ byte_C95E:
 		dc.b    1,   4	; 14
 		even
 ; ---------------------------------------------------------------------------
-
 loc_C97A:
+		lea	word_DA8A(pc),a2
+		lea	(Dynamic_Object_RAM+object_size).w,a3
+		move.w	#$D220,d7
+		lea	(Saved_data).w,a0
+		moveq	#7,d6
+
+loc_C98C:
+		move.w	$34(a3),d0 ;34
+		bne.s	loc_C994
+		moveq	#1,d0
+
+loc_C994:
+		tst.b	(a0)
+		bpl.s	loc_C99A
+		moveq	#0,d0
+
+loc_C99A:
+		lsl.w	#5,d0
+		movea.l	a2,a1
+		adda.w	d0,a1
+		move.w	d7,d0
+		bsr.w	sub_C87E
+		moveq	#2,d1
+		moveq	#4,d2
+		jsr	(Plane_Map_To_VRAM_2).l
+		tst.b	(a0)
+		bpl.s	loc_C9CC
+		lea	word_DB08(pc),a1
+		move.w	d7,d0
+		addq.w	#6,d0
+		bsr.w	sub_C87E
+		moveq	#1,d1
+		moveq	#4,d2
+		jsr	(Plane_Map_To_VRAM_2).l
+		bra.s	loc_CA02
+; ---------------------------------------------------------------------------
+
+loc_C9CC:
+		move.b	$3E(a3),d0 ;3E
+		jsr	sub_CA14(pc)
+		move.w	d7,d0
+		addq.w	#6,d0
+		bsr.w	sub_C87E
+		moveq	#1,d1
+		moveq	#1,d2
+		jsr	(Plane_Map_To_VRAM_2).l
+		move.b	$3F(a3),d0  ;3F
+		jsr	sub_CA14(pc)
+		move.w	d7,d0
+		addi.w	#$306,d0
+		bsr.w	sub_C87E
+		moveq	#1,d1
+		moveq	#1,d2
+		jsr	(Plane_Map_To_VRAM_2).l
+
+loc_CA02:
+		addi.w	#$1A,d7
+		lea	next_SaveSlot(a0),a0
+		lea	next_object(a3),a3
+		dbf	d6,loc_C98C
+
 		rts
+
+; =============== S U B R O U T I N E =======================================
+
+
+sub_CA14:
+		moveq	#0,d1
+
+loc_CA16:
+		addq.w	#1,d1
+		subi.b	#$A,d0
+		bcc.s	loc_CA16
+		subq.w	#1,d1
+		addi.b	#$A,d0
+		lea	(_unkEEEA).w,a1
+		lsl.w	#2,d1
+		bne.s	loc_CA2E
+		moveq	#$28,d1
+
+loc_CA2E:
+		move.w	word_CA4C(pc,d1.w),(a1)
+		move.w	word_CA4E(pc,d1.w),4(a1)
+		andi.w	#$FF,d0
+		lsl.w	#2,d0
+		move.w	word_CA4C(pc,d0.w),2(a1)
+		move.w	word_CA4E(pc,d0.w),6(a1)
+		rts
+; End of function sub_CA14
+
+; ---------------------------------------------------------------------------
+word_CA4C:	dc.w $A49A
+word_CA4E:	dc.w $A49B
+		dc.w $A49C
+		dc.w $A49D
+		dc.w $A49E
+		dc.w $A49F
+		dc.w $A4A0
+		dc.w $A4A1
+		dc.w $A4A2
+		dc.w $A4A3
+		dc.w $A4A4
+		dc.w $A4A5
+		dc.w $A4A6
+		dc.w $A4A7
+		dc.w $A4A8
+		dc.w $A4A9
+		dc.w $A4AA
+		dc.w $A4AB
+		dc.w $A4AC
+		dc.w $A4AD
+		dc.w $8000
+		dc.w $8000
 Pal_Save_Chars:	binclude "art/Save Menu/Palettes/Chars.bin"
 	even
 
