@@ -1455,14 +1455,14 @@ zPlaySoundByIndex:
 	ld	(ix+zVar.QueueToPlay),80h	; Rewrite zComRange+8 flag so we know nothing new is coming in
 	cp	MusID__End			; is it music (less than index 20)?
 	jp	c,zPlayMusic			; if yes, branch to play the music
-	cp	SndID__First			; is it not a sound? (this check is redundant if MusID__End == SndID__First...)
-	ret	c				; if it isn't a sound, return (do nothing)
+	;cp	SndID__First			; is it not a sound? (this check is redundant if MusID__End == SndID__First...)
+	;ret	c				; if it isn't a sound, return (do nothing)
 	cp	SndID__End			; is it a sound (less than index 71)?
 	jp	c,zPlaySound_CheckRing		; if yes, branch to play the sound
 	cp	CmdID__First			; is it after the last regular sound but before the first special sound command (between 71 and 78)?
 	ret	c				; if yes, return (do nothing)
-	cp	MusID_Pause			; is it sound 7E or 7F (pause all or resume all)
-	ret	nc				; if yes, return (those get handled elsewhere)
+	;cp	MusID_Pause			; is it sound 7E or 7F (pause all or resume all)
+	;ret	nc				; if yes, return (those get handled elsewhere)
 	; Otherwise, this is a special command to the music engine...
 	sub	CmdID__First	; convert index 78-7D to a lookup into the following jump table
 	add	a,a
@@ -2378,6 +2378,8 @@ zInitMusicPlayback:
 	ld	b,(ix+zVar.SFXToPlay)		; SFX queue slot
 	ld	c,(ix+zVar.SFXStereoToPlay)	; Stereo SFX queue slot
 	push	bc
+	ld	c,(ix+zVar.SFXUnknown)		; Unknown SFX queue slot
+	push	bc
 	; The following clears all playback memory and non-SFX tracks
 	ld	hl,zAbsVar
 	ld	de,zAbsVar+1
@@ -2388,6 +2390,8 @@ zInitMusicPlayback:
 	pop	bc
 	ld	(ix+zVar.SFXToPlay),b		; SFX queue slot
 	ld	(ix+zVar.SFXStereoToPlay),c	; Stereo SFX queue slot
+	pop	bc
+	ld	(ix+zVar.SFXUnknown),b		; Unknown SFX queue slot
 	pop	bc
 	ld	(ix+zVar.SpeedUpFlag),b		; speed shoe flag
 	ld	(ix+zVar.FadeInCounter),c	; fade in frames

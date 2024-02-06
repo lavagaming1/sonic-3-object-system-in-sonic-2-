@@ -477,10 +477,6 @@ Vint_Lag:
 	cmpi.b	#GameModeID_Level,(Game_Mode).w	; Zone play mode?
 	beq.s	loc_4C4
 
-	stopZ80			; stop the Z80
-	bsr.w	sndDriverInput	; give input to the sound driver
-	startZ80		; start the Z80
-
 	bra.s	VintRet
 ; ---------------------------------------------------------------------------
 
@@ -512,7 +508,6 @@ loc_526:
 loc_54A:
 	move.w	(Hint_counter_reserve).w,(a5)
 	move.w	#$8200|(VRAM_Plane_A_Name_Table/$400),(VDP_control_port).l	; Set scroll A PNT base to $C000
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -536,7 +531,6 @@ Vint0_noWater:
 
 	stopZ80
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
-	bsr.w	sndDriverInput
 	startZ80
 
 	bra.w	VintRet
@@ -643,7 +637,6 @@ loc_748:
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -685,7 +678,6 @@ Vint_Pause_specialStage:
 	stopZ80
 
 	bsr.w	ReadJoypads
-	jsr	(sndDriverInput).l
 	tst.b	(SS_Last_Alternate_HorizScroll_Buf).w
 	beq.s	loc_84A
 
@@ -763,7 +755,6 @@ SS_PNTA_Transfer_Table:	offsetTable
 	eori.b	#1,(SS_Alternate_PNT).w			; Toggle flag
 +
 	bsr.w	ProcessDMAQueue
-	jsr	(sndDriverInput).l
 
 	startZ80
 
@@ -897,7 +888,6 @@ loc_BD6:
 
 	bsr.w	ProcessDMAQueue
 	jsr	(DrawLevelTitleCard).l
-	jsr	(sndDriverInput).l
 
 	startZ80
 
@@ -933,7 +923,6 @@ Vint_Ending:
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 	movem.l	(Camera_RAM).w,d0-d7
 	movem.l	d0-d7,(Camera_RAM_copy).w
 	movem.l	(Scroll_flags).w,d0-d3
@@ -984,7 +973,6 @@ Vint_Menu:
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -1015,8 +1003,6 @@ loc_EDA:
 loc_EFE:
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -1091,51 +1077,6 @@ loc_1072:
 	bsr.w	Do_Updates
 	movem.l	(sp)+,d0-a6
 	rte
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Input our music/sound selection to the sound driver.
-
-sndDriverInput:
-	lea	(Music_to_play&$00FFFFFF).l,a0
-	lea	(Z80_RAM+zAbsVar).l,a1 ; $A01B80
-	cmpi.b	#$80,zAbsVar.QueueToPlay-zAbsVar(a1)	; If this (zReadyFlag) isn't $80, the driver is processing a previous sound request.
-	bne.s	loc_10C4	; So we'll wait until at least the next frame before putting anything in there.
-	move.b	0(a0),d0
-	beq.s	loc_10A4
-	clr.b	0(a0)
-	bra.s	loc_10AE
-; ---------------------------------------------------------------------------
-
-loc_10A4:
-	move.b	4(a0),d0	; If there was something in Music_to_play_2, check what that was. Else, just go to the loop.
-	beq.s	loc_10C4
-	clr.b	4(a0)
-
-loc_10AE:		; Check that the sound is not FE or FF
-	move.b	d0,d1	; If it is, we need to put it in $A01B83 as $7F or $80 respectively
-	subi.b	#MusID_Pause,d1
-	bcs.s	loc_10C0
-	addi.b	#$7F,d1
-	move.b	d1,zAbsVar.StopMusic-zAbsVar(a1)
-	bra.s	loc_10C4
-; ---------------------------------------------------------------------------
-
-loc_10C0:
-	move.b	d0,zAbsVar.QueueToPlay-zAbsVar(a1)
-
-loc_10C4:
-	moveq	#4-1,d1
-				; FFE4 (Music_to_play_2) goes to 1B8C (zMusicToPlay),
--	move.b	1(a0,d1.w),d0	; FFE3 (unk_FFE3) goes to 1B8B, (unknown)
-	beq.s	+		; FFE2 (SFX_to_play_2) goes to 1B8A (zSFXToPlay2),
-	tst.b	zAbsVar.SFXToPlay-zAbsVar(a1,d1.w)	; FFE1 (SFX_to_play) goes to 1B89 (zSFXToPlay).
-	bne.s	+
-	clr.b	1(a0,d1.w)
-	move.b	d0,zAbsVar.SFXToPlay-zAbsVar(a1,d1.w)
-+
-	dbf	d1,-
-	rts
-; End of function sndDriverInput
 
     if ~~removeJmpTos
 ; sub_10E0:
@@ -1328,12 +1269,15 @@ JmpTo_SoundDriverLoad ; JmpTo
 ; else move d0 into Music_to_play_2.
 ; sub_135E:
 PlayMusic:
-	tst.b	(Music_to_play).w
+	stopZ80
+	tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
 	bne.s	+
-	move.b	d0,(Music_to_play).w
+	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+	startZ80
 	rts
 +
-	move.b	d0,(Music_to_play_2).w
+	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+	startZ80
 	rts
 ; End of function PlayMusic
 
@@ -1344,7 +1288,9 @@ PlayMusic:
 Play_Sound:
 Play_Sound_2:
 PlaySound:
-	move.b	d0,(SFX_to_play).w
+	stopZ80
+	move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
+	startZ80
 	rts
 ; End of function PlaySound
 
@@ -1353,7 +1299,9 @@ PlaySound:
 ; play a sound in alternating speakers (as in the ring collection sound)
 ; sub_1376:
 PlaySoundStereo:
-	move.b	d0,(SFX_to_play_2).w
+	stopZ80
+	move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
+	startZ80
 	rts
 ; End of function PlaySoundStereo
 
@@ -1362,10 +1310,12 @@ PlaySoundStereo:
 ; play a sound if the source is onscreen
 ; sub_137C:
 PlaySoundLocal:
+	stopZ80
 	tst.b	render_flags(a0)
 	bpl.s	+	; rts
-	move.b	d0,(SFX_to_play).w
+	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
 +
+	startZ80
 	rts
 ; End of function PlaySoundLocal
 
@@ -1385,10 +1335,12 @@ PauseGame:
 	move.b	(Ctrl_1_Press).w,d0 ; is Start button pressed?
 	or.b	(Ctrl_2_Press).w,d0 ; (either player)
 	andi.b	#button_start_mask,d0
-	beq.s	Pause_DoNothing	; if not, branch
+	beq.w	Pause_DoNothing	; if not, branch
 +
 	move.w	#1,(Game_paused).w	; freeze time
-	move.b	#MusID_Pause,(Music_to_play).w	; pause music
+	stopZ80
+	move.b	#MusID_Pause,(Z80_RAM+zAbsVar.StopMusic).l	; pause music
+	startZ80
 ; loc_13B2:
 Pause_Loop:
 	move.b	#VintID_Pause,(Vint_routine).w
@@ -1403,11 +1355,13 @@ Pause_Loop:
 ; ===========================================================================
 ; loc_13D4:
 Pause_ChkBC:
-    btst    #button_B,(Ctrl_1_Held).w ; is button B pressed?
-    bne.s    Pause_SlowMo        ; if yes, branch
-    btst    #button_C,(Ctrl_1_Press).w ; is button C pressed?
-    bne.s    Pause_SlowMo        ; if yes, branch
-    move.b    #MusID_Pause,(Music_to_play).l    ; pause music
+	btst	#button_B,(Ctrl_1_Held).w ; is button B pressed?
+	bne.s	Pause_SlowMo        ; if yes, branch
+	btst	#button_C,(Ctrl_1_Press).w ; is button C pressed?
+	bne.s	Pause_SlowMo        ; if yes, branch
+	stopZ80
+	move.b	#MusID_Pause,(Z80_RAM+zAbsVar.StopMusic).l    ; pause music
+	startZ80
 ; loc_13E4:
 Pause_ChkStart:
 	move.b	(Ctrl_1_Press).w,d0	; is Start button pressed?
@@ -1416,7 +1370,9 @@ Pause_ChkStart:
 	beq.s	Pause_Loop	; if not, branch
 ; loc_13F2:
 Pause_Resume:
-	move.b	#MusID_Unpause,(Music_to_play).w	; unpause the music
+	stopZ80
+	move.b	#MusID_Unpause,(Z80_RAM+zAbsVar.StopMusic).l	; unpause the music
+	startZ80
 ; loc_13F8:
 Unpause:
 	move.w	#0,(Game_paused).w	; unpause the game
@@ -1427,7 +1383,9 @@ Pause_DoNothing:
 ; loc_1400:
 Pause_SlowMo:
 	move.w	#1,(Game_paused).w
-	move.b	#MusID_Unpause,(Music_to_play).w
+	stopZ80
+	move.b	#MusID_Unpause,(Z80_RAM+zAbsVar.StopMusic).l
+	startZ80
 	rts
 ; End of function PauseGame
 

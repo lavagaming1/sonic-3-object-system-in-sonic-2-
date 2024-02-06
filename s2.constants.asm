@@ -944,8 +944,8 @@ MusID_SlowDown =	id(CmdPtr_SlowDown)	; FC
 MusID_Stop =		id(CmdPtr_Stop)		; FD
 CmdID__End =		id(CmdPtr__End)		; FE
 
-MusID_Pause =		$7E+$80			; FE
-MusID_Unpause =		$7F+$80			; FF
+MusID_Pause =		$7F			; FE
+MusID_Unpause =		$80			; FF
 
 ; 2P VS results screens
 offset := TwoPlayerResultsPointers
