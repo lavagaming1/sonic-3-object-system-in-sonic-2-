@@ -3596,23 +3596,23 @@ offset :=	zDACPtrTbl
 ptrsize :=	2+2
 idstart :=	81h
 
-	db	id(zDACPtr_Kick),17h		; 81h
-	db	id(zDACPtr_Snare),1		; 82h
+	db	id(zDACPtr_Kick),6		; 81h
+	db	id(zDACPtr_Snare),6		; 82h
 	db	id(zDACPtr_Clap),6		; 83h
 	db	id(zDACPtr_Scratch),8		; 84h
 	db	id(zDACPtr_Timpani),1Bh		; 85h
-	db	id(zDACPtr_Tom),0Ah		; 86h
-	db	id(zDACPtr_Bongo),1Bh		; 87h
+	db	id(zDACPtr_Tom),20h		; 86h
+	db	id(zDACPtr_Bongo),1Fh		; 87h
 	db	id(zDACPtr_Timpani),12h		; 88h
 	db	id(zDACPtr_Timpani),15h		; 89h
 	db	id(zDACPtr_Timpani),1Ch		; 8Ah
 	db	id(zDACPtr_Timpani),1Dh		; 8Bh
-	db	id(zDACPtr_Tom),2		; 8Ch
-	db	id(zDACPtr_Tom),5		; 8Dh
-	db	id(zDACPtr_Tom),8		; 8Eh
-	db	id(zDACPtr_Bongo),8		; 8Fh
-	db	id(zDACPtr_Bongo),0Bh		; 90h
-	db	id(zDACPtr_Bongo),12h		; 91h
+	db	id(zDACPtr_Tom),0Eh		; 8Ch
+	db	id(zDACPtr_Tom),14h		; 8Dh
+	db	id(zDACPtr_Tom),1Ah		; 8Eh
+	db	id(zDACPtr_Bongo),0Ah		; 8Fh
+	db	id(zDACPtr_Bongo),0Dh		; 90h
+	db	id(zDACPtr_Bongo),14h		; 91h
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
