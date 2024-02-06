@@ -473,6 +473,9 @@ zUpdateEverything:
 	; Otherwise it just mucks with the timing loop, forcing an update.
 zUpdateDAC:
 
+	ld	a,2Ah		; DAC port
+	ld	(zYM2612_A0),a	; Set DAC port register
+
 	bankswitch SndDAC_Start	; Bankswitch to the DAC data
 
 	ld	a,(zCurDAC)	; Get currently playing DAC sound
@@ -644,8 +647,6 @@ zWriteToDAC:
 	djnz	$		; Busy wait for specific amount of time in 'b'
 
 	di			; disable interrupts (while updating DAC)
-	ld	a,2Ah		; DAC port
-	ld	(zYM2612_A0),a	; Set DAC port register
 	ld	a,(hl)		; Get next DAC byte
 	rlca
 	rlca
@@ -664,14 +665,11 @@ zloc_18B:
 	djnz	$		; Busy wait for specific amount of time in 'b'
 
 	di			; disable interrupts (while updating DAC)
-	push	af
-	pop	af
-	ld	a,2Ah		; DAC port
-	ld	(zYM2612_A0),a	; Set DAC port register
 	ld	b,c		; reload 'b' with wait value
 	ld	a,(hl)		; Get next DAC byte
 	inc	hl		; Next byte in DAC stream...
 	dec	de		; One less byte
+	nop
 	and	0Fh		; LOWER 4-bit offset into zDACDecodeTbl
 	ld	(zloc_1A8+2),a	; store into the instruction after zloc_1A8 (self-modifying code)
 	ex	af,af'		; shadow register 'a' is the 'd' value for 'jman2050' encoding
@@ -3584,29 +3582,12 @@ zDACPtr_Timpani:	DACSize SndDAC_Timpani
 zDACPtr_Tom:		DACSize SndDAC_Tom
 zDACPtr_Bongo:		DACSize SndDAC_Bongo
 
+	align 32
+
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that
 	; follows it is a wait time between each nibble written to the DAC
 	; (thus higher = slower)
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
 	ensure1byteoffset 22h
 ; zbyte_124F:
 zDACMasterPlaylist:
