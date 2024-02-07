@@ -88669,13 +88669,13 @@ ArtUnc_Waterfall3:	BINCLUDE	"art/uncompressed/ARZ waterfall patterns - 3.bin"
 ; Uncompressed art
 ; Patterns for Sonic  ; ArtUnc_50000:
 ;---------------------------------------------------------------------------------------
-	align $20
+	align $8000
 ArtUnc_Sonic:	BINCLUDE	"art/uncompressed/Sonic's art.bin"
 ;---------------------------------------------------------------------------------------
 ; Uncompressed art
 ; Patterns for Tails  ; ArtUnc_64320:
 ;---------------------------------------------------------------------------------------
-	align $20
+	align $8000
 ArtUnc_Tails:	BINCLUDE	"art/uncompressed/Tails's art.bin"
 ;--------------------------------------------------------------------------------------
 ; Sprite Mappings
