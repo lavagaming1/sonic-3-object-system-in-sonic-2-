@@ -23920,10 +23920,14 @@ robotnik_monitor:
 ; ---------------------------------------------------------------------------
 sonic_1up:
 	addq.w	#1,(Monitors_Broken).w
+	cmpi.b	#99,(Life_count).w
+	bhs.s	+
 	addq.b	#1,(Life_count).w
 	addq.b	#1,(Update_HUD_lives).w
 	move.w	#MusID_ExtraLife,d0
 	jmp	(PlayMusic).l	; Play extra life music
++
+	rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Tails 1up Monitor
@@ -23931,10 +23935,14 @@ sonic_1up:
 ; ---------------------------------------------------------------------------
 tails_1up:
 	addq.w	#1,(Monitors_Broken_2P).w
+	cmpi.b	#99,(Life_count_2P).w
+	bhs.s	+
 	addq.b	#1,(Life_count_2P).w
 	addq.b	#1,(Update_HUD_lives_2P).w
 	move.w	#MusID_ExtraLife,d0
 	jmp	(PlayMusic).l	; Play extra life music
++
+	rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Super Ring Monitor
