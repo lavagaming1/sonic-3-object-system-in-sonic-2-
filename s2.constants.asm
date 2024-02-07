@@ -932,7 +932,7 @@ sfx_SmallBumpers = SndID_Bumper
 sfx_SlotMachine = SndID_Beep
 ; Sound command IDs
 offset :=	zCommandIndex
-ptrsize :=	4
+ptrsize :=	2
 idstart :=	$F8
 
 CmdID__First = idstart

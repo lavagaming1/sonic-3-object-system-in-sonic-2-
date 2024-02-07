@@ -1464,26 +1464,22 @@ zPlaySoundByIndex:
 	; Otherwise, this is a special command to the music engine...
 	sub	CmdID__First	; convert index 78-7D to a lookup into the following jump table
 	add	a,a
-	add	a,a
-	ld	(zloc_6D5+1),a	; store into the instruction after zloc_6D5 (self-modifying code)
+	add	a,zloc_6D5&0FFh
+	ld	(.writeme+1),a
+.writeme:
+	ld	hl,(zloc_6D5)
+	jp	(hl)
 
 zloc_6D5:
-	jr	$
 ; ---------------------------------------------------------------------------
 zCommandIndex:
 
-CmdPtr_StopSFX:		jp	zStopSoundEffects ; sound test index 78
-			db	0
-CmdPtr_FadeOut:		jp	zFadeOutMusic ; 79
-			db	0
-CmdPtr_SegaSound:	jp	zPlaySegaSound ; 7A
-			db	0
-CmdPtr_SpeedUp:		jp	zSpeedUpMusic ; 7B
-			db	0
-CmdPtr_SlowDown:	jp	zSlowDownMusic ; 7C
-			db	0
-CmdPtr_Stop:		jp	zStopSoundAndMusic ; 7D
-			db	0
+CmdPtr_StopSFX:		dw	zStopSoundEffects ; sound test index 78
+CmdPtr_FadeOut:		dw	zFadeOutMusic ; 79
+CmdPtr_SegaSound:	dw	zPlaySegaSound ; 7A
+CmdPtr_SpeedUp:		dw	zSpeedUpMusic ; 7B
+CmdPtr_SlowDown:	dw	zSlowDownMusic ; 7C
+CmdPtr_Stop:		dw	zStopSoundAndMusic ; 7D
 CmdPtr__End:
 ; ---------------------------------------------------------------------------
 ; zloc_6EF:
