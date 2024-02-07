@@ -356,7 +356,7 @@ GameClrRAM:
 	dbf	d6,GameClrRAM	; clear RAM ($0000-$FDFF)
 
 	bsr.w	VDPSetupGame
-	bsr.w	JmpTo_SoundDriverLoad
+	jsr	SoundDriverLoad
 	bsr.w	JoypadInit
 	jsr     (SRAM_Load).l ; s ram wont even work without this lol
 	move.b	#GameModeID_SegaScreen,(Game_Mode).w ; set Game Mode to Sega Screen
@@ -1220,35 +1220,6 @@ ClearScreen:
 	rts
 ; End of function ClearScreen
 
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; JumpTo load the sound driver
-; sub_130A:
-JmpTo_SoundDriverLoad ; JmpTo
-	nop
-	jmp	(SoundDriverLoad).l
-; End of function JmpTo_SoundDriverLoad
-
-; ===========================================================================
-; unused mostly-leftover subroutine to load the sound driver
-; SoundDriverLoadS1:
-	move.w	#$100,(Z80_Bus_Request).l ; stop the Z80
-	move.w	#$100,(Z80_Reset).l ; reset the Z80
-	lea	(Z80_RAM).l,a1
-	move.b	#$F3,(a1)+	; di
-	move.b	#$F3,(a1)+	; di
-	move.b	#$C3,(a1)+	; jp
-	move.b	#0,(a1)+	; jp address low byte
-	move.b	#0,(a1)+	; jp address high byte
-	move.w	#0,(Z80_Reset).l
-	nop
-	nop
-	nop
-	nop
-	move.w	#$100,(Z80_Reset).l ; reset the Z80
-	move.w	#0,(Z80_Bus_Request).l ; start the Z80
-	rts
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; If Music_to_play is clear, move d0 into Music_to_play,
@@ -3804,8 +3775,6 @@ Sega_WaitPalette:
 	jsr	(BuildSprites).l
 	tst.b	(SegaScr_PalDone_Flag).w
 	beq.s	Sega_WaitPalette
-	move.b	#SndID_SegaSound,d0
-	bsr.w	PlaySound	; play "SEGA" sound
 	move.b	#VintID_SEGA,(Vint_routine).w
 	bsr.w	WaitForVint
 	move.w	#3*60,(Demo_Time_left).w	; 3 seconds
@@ -86876,17 +86845,8 @@ Debug_Init:
 	clr.b	(Scroll_lock).w
 	move.b	#0,mapping_frame(a0)
 	move.b	#AniIDSonAni_Walk,anim(a0)
-	; S1 leftover
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w ; special stage mode? (you can't enter debug mode in S2's special stage)
-	bne.s	.islevel	; if not, branch
-	moveq	#6,d0		; force zone 6's debug object list (was the ending in S1)
-	bra.s	.selectlist
-; ===========================================================================
-.islevel:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
-
-.selectlist:
 	lea	(JmpTbl_DbgObjLists).l,a2
 	add.w	d0,d0
 	adda.w	(a2,d0.w),a2
@@ -86900,15 +86860,9 @@ Debug_Init:
 	move.b	#1,(Debug_Speed).w
 ; loc_41B0C:
 Debug_Main:
-	; S1 leftover
-	moveq	#6,d0		; force zone 6's debug object list (was the ending in S1)
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w	; special stage mode? (you can't enter debug mode in S2's special stage)
-	beq.s	.isntlevel	; if yes, branch
 
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
-
-.isntlevel:
 	lea	(JmpTbl_DbgObjLists).l,a2
 	add.w	d0,d0
 	adda.w	(a2,d0.w),a2
@@ -87072,12 +87026,6 @@ Debug_ExitDebugMode:
 	move.b	#9,x_radius(a1)
 	move.w	(Camera_Min_Y_pos_Debug_Copy).w,(Camera_Min_Y_pos).w
 	move.w	(Camera_Max_Y_pos_Debug_Copy).w,(Camera_Max_Y_pos).w
-	; useless leftover; this is for S1's special stage
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w	; special stage mode?
-	bne.s	return_41CB6		; if not, branch
-	move.b	#AniIDSonAni_Roll,(MainCharacter+anim).w
-	bset	#2,(MainCharacter+status).w
-	bset	#1,(MainCharacter+status).w
 
 return_41CB6:
 	rts
@@ -87096,10 +87044,8 @@ Debug_ResetPlayerStats:
 	move.w	d0,x_vel(a1)
 	move.w	d0,y_vel(a1)
 	move.w	d0,inertia(a1)
-	; note: this resets the 'is underwater' flag, causing the bug where
-	; if you enter Debug Mode underwater, and exit it above-water, Sonic
-	; will still move as if he's underwater
-	move.b	#2,status(a1)
+	andi.b	#1<<6,status(a1) ; Preserve the 'is underwater' flag, and clear everything else.
+	ori.b	#2,status(a1)    ; Set the 'is rolling' flag.
 	move.b	#2,routine(a1)
 	move.b	#0,routine_secondary(a1)
 	rts
