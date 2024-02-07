@@ -111,7 +111,7 @@ soundBankStart := __LABEL__
 soundBankName := "__LABEL__"
     endm
 
-DebugSoundbanks := 0
+DebugSoundbanks := 1
 
 finishBank macro
 	if * > soundBankStart + $8000

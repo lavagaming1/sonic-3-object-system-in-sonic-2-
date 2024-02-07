@@ -440,18 +440,11 @@ zUpdateDAC:
 	ld	a,2Ah		; DAC port
 	ld	(zYM2612_A0),a	; Set DAC port register
 
-	; Bankswitch to the DAC data
-	ld	a,(zCurDAC)		; Get currently playing DAC sound
-	and	7Fh			; Strip 'queued' bit
-	add	a,zDACBanks&0FFh	; Offset into list
-	ld	(.writeme+1),a		; Store into the instruction after .writeme (self-modifying code)
-.writeme:
-	ld	a,(zDACBanks)		; Get DAC's bank value
-	call	zBankSwitch
-
 	ld	a,(zCurDAC)	; Get currently playing DAC sound
 	or	a
 	jp	m,+		; If one is queued (80h+), go to it!
+	ld	a,(zCurrentDACBank)	; Get current DAC bank
+	call	zBankSwitch		; Switch to current DAC sample's bank
 	exx			; Otherwise restore registers from mirror regs
 	ld	b,1		; b=1 (initial feed to the DAC "djnz" loops, i.e. UPDATE RIGHT AWAY)
 	pop	af
@@ -459,11 +452,19 @@ zUpdateDAC:
 	ret
 +
 	; If you get here, it's time to start a new DAC sound...
-	ld	a,80h
-	ex	af,af'	;'
+	; Bankswitch to the DAC data
 	ld	hl,zCurDAC		; Get address of 'current DAC sound' value
 	res	7,(hl)			; Subtract 80h (first DAC index is 80h)
 	ld	a,(hl)			; Get current DAC sound value
+	add	a,zDACBanks&0FFh	; Offset into list
+	ld	(.writeme+1),a		; Store into the instruction after .writeme (self-modifying code)
+.writeme:
+	ld	a,(zDACBanks)		; Get DAC's bank value
+	ld	(zCurrentDACBank),a
+	call	zBankSwitch	
+	ld	a,80h
+	ex	af,af'	;'
+	ld	a,(zCurDAC)		; Get currently playing DAC sound
 	; The following two instructions are dangerous: they discard the upper
 	; two bits of zCurDAC, meaning you can only have 40h DAC samples.
 	add	a,a
@@ -654,7 +655,20 @@ zWriteToDAC:
 	ld	(zYM2612_D0),a	; Write this byte to the DAC
 	ex	af,af'		; back to regular registers
 	ei			; enable interrupts (done updating DAC, busy waiting for next update)
-	jp	zWaitLoop	; Back to the wait loop; if there's more DAC to write, we come back down again!
+
+	bit	7,h		; has bank boundary been crossed?
+	jr	nz,zWaitLoop	; if not, branch
+	ld	h,80h		; correct address so it points to start of bank
+	di
+	push	hl
+	ld	hl,zCurrentDACBank
+	inc	(hl)		; set zCurrentDACBank to the next bank, since the boundary's been crossed
+	ld	a,(hl)
+	call	zBankSwitch	; bankswitch to this new bank
+	pop hl
+	ei
+
+	jr	zWaitLoop	; Back to the wait loop; if there's more DAC to write, we come back down again!
 
 ; ---------------------------------------------------------------------------
 	; The following two tables are used for when an SFX terminates
@@ -3605,6 +3619,7 @@ zSpindashPlayingCounter:	db 0 ; zbyte_1304
 zSpindashExtraFrequencyIndex:	db 0 ; zbyte_1305
 zSpindashActiveFlag:		db 0 ; zbyte_1306 ; -1 if spindash charge was the last sound that played
 zPaused:	db 0 ; zbyte_1307 ; 0 = normal, -1 = pause all sound and music
+zCurrentDACBank:	db 0
 
 
 

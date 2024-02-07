@@ -90662,17 +90662,6 @@ SndDAC_ElecTom:	DAC	90-93.bin
 SndDAC_Timbale:	DAC	8D-8E.bin
 		finishBank
 
-; ---------------------------------------------------------------------------
-; Music pointers
-; ---------------------------------------------------------------------------
-; loc_F0000:
-MusicPoint1:	startBank
-Mus_HPZ:	INCLUDE	"sound/music/HPZ.asm"
-Mus_Drowning:	INCLUDE	"sound/music/Drowning.asm"
-Mus_Invincible:	INCLUDE	"sound/music/Invincible.asm"
-Mus_Continue:   INCLUDE	"sound/music/Continue.asm"
-
-	finishBank
    align  $8000
 ; --------------------------------------------------------------------
 ; Nemesis compressed art (20 blocks)
@@ -90806,34 +90795,23 @@ ArtNem_VinePulley:	BINCLUDE	"art/nemesis/Vine that lowers from MCZ.bin"
 	even
 ArtNem_MCZGateLog:	BINCLUDE	"art/nemesis/Drawbridge logs from MCZ.bin"
 
-; ----------------------------------------------------------------------------------
-; Filler (free space)
-; ----------------------------------------------------------------------------------
-	; the PCM data has to line up with the end of the bank.
-	cnop -Size_of_SEGA_sound, $8000
 
-; -------------------------------------------------------------------------------
-; Sega Intro Sound
-; 8-bit unsigned raw audio at 16Khz
-; -------------------------------------------------------------------------------
-; loc_F1E8C:
-Snd_Sega:	BINCLUDE	"sound/PCM/SEGA.bin"
-Snd_Sega_End:
+; ---------------------------------------------------------------------------
+; Music bank
+; ---------------------------------------------------------------------------
 
-	if Snd_Sega_End - Snd_Sega > $8000
-		fatal "Sega sound must fit within $8000 bytes, but you have a $\{Snd_Sega_End-Snd_Sega} byte Sega sound."
-	endif
-	if Snd_Sega_End - Snd_Sega > Size_of_SEGA_sound
-		fatal "Size_of_SEGA_sound = $\{Size_of_SEGA_sound}, but you have a $\{Snd_Sega_End-Snd_Sega} byte Sega sound."
-	endif
+MusicPoint1:	startBank
+Mus_HPZ:	INCLUDE	"sound/music/HPZ.asm"
+Mus_Drowning:	INCLUDE	"sound/music/Drowning.asm"
+Mus_Invincible:	INCLUDE	"sound/music/Invincible.asm"
+Mus_Continue:   INCLUDE	"sound/music/Continue.asm"
+	finishBank
 
 ; ------------------------------------------------------------------------------
-; Music pointers
+; Music bank
 ; ------------------------------------------------------------------------------
-; loc_F8000:
+
 MusicPoint2:	startBank
-
-; loc_F803C:
 Mus_CNZ_2P:	INCLUDE	"sound/music/CNZ_2p.asm"
 Mus_EHZ:	INCLUDE	"sound/music/EHZ.asm"
 Mus_MTZ:	INCLUDE	"sound/music/MTZ.asm"
@@ -90847,8 +90825,10 @@ Mus_Options:	INCLUDE	"sound/music/Options.asm"
 Mus_Ending:	INCLUDE	"sound/music/Ending.asm"
 Mus_EndBoss:	INCLUDE	"sound/music/End_Boss.asm"
 	finishBank
-   align  $8000
-soundBankStart := *
+
+; ------------------------------------------------------------------------------
+; Music bank
+; ------------------------------------------------------------------------------
 
 MusicPoint3:	startBank	
 Mus_CPZ:	INCLUDE	"sound/music/CPZ.asm"
@@ -90868,6 +90848,7 @@ Mus_Emerald:	INCLUDE	"sound/music/Got emerald.asm"
 Mus_Credits:	INCLUDE	"sound/music/Credits.asm"
 Mus_SaveScreen:	INCLUDE	"sound/music/Menu.asm"
 	finishBank
+
 ; ------------------------------------------------------------------------------------------
 ; Sound effect pointers
 ; ------------------------------------------------------------------------------------------
@@ -91050,6 +91031,14 @@ Sound6D:	include "sound/sfx/ED - Error.asm"
 Sound6E:	include "sound/sfx/EE - Mecha Sonic Buzz.asm"
 Sound6F:	include "sound/sfx/EF - Large Laser.asm"
 Sound70:	include "sound/sfx/F0 - Oil Slide.asm"
+
+; -------------------------------------------------------------------------------
+; Sega Intro Sound
+; 8-bit unsigned raw audio at 16Khz
+; -------------------------------------------------------------------------------
+; loc_F1E8C:
+Snd_Sega:	BINCLUDE	"sound/PCM/SEGA.bin"
+Snd_Sega_End:
 	finishBank
 
 ; end of 'ROM'
