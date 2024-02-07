@@ -34139,6 +34139,7 @@ return_1A2DE:
 ; Called if Sonic is airborne, but not in a ball (thus, probably not jumping)
 ; loc_1A2E0: Obj01_MdJump
 Obj01_MdAir:
+	sf.b	spindash_flag(a0)
 	bsr.w	Sonic_JumpHeight
 	bsr.w	Sonic_ChgJumpDir
 	bsr.w	Sonic_LevelBound
@@ -34175,6 +34176,7 @@ Obj01_MdRoll:
 ;        Why they gave it a separate copy of the code, I don't know.
 ; loc_1A330: Obj01_MdJump2:
 Obj01_MdJump:
+	sf.b	spindash_flag(a0)
 	bsr.w	Sonic_JumpHeight
 	bsr.w	Sonic_ChgJumpDir
 	bsr.w	Sonic_LevelBound
@@ -35154,7 +35156,7 @@ Sonic_CheckSpindash:
 	move.w	#SndID_SpindashRev,d0
 	jsr	(PlaySound).l
 	addq.l	#4,sp
-	move.b	#1,spindash_flag(a0)
+	st.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 	cmpi.b	#$C,air_left(a0)	; if he's drowning, branch to not make dust
 	blo.s	+
@@ -35185,7 +35187,7 @@ Sonic_UpdateSpindash:
 	move.b	#7,x_radius(a0)
 	move.b	#AniIDSonAni_Roll,anim(a0)
 	addq.w	#5,y_pos(a0)	; add the difference between Sonic's rolling and standing heights
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	moveq	#0,d0
 	move.b	spindash_counter(a0),d0
 	add.w	d0,d0
@@ -35209,6 +35211,16 @@ Sonic_UpdateSpindash:
 	move.b	#0,(Sonic_Dust+anim).w
 	move.w	#SndID_SpindashRelease,d0	; spindash zoom sound
 	jsr	(PlaySound).l
+	
+	move.b	angle(a0),d0
+	jsr	(CalcSine).l
+	muls.w	inertia(a0),d1
+	asr.l	#8,d1
+	move.w	d1,x_vel(a0)
+	muls.w	inertia(a0),d0
+	asr.l	#8,d0
+	move.w	d0,y_vel(a0)
+
 	bra.s	Obj01_Spindash_ResetScr
 ; ===========================================================================
 ; word_1AD0C:
@@ -35822,7 +35834,7 @@ Sonic_HurtStop:
 	move.b	#AniIDSonAni_Walk,anim(a0)
 	subq.b	#2,routine(a0)	; => Obj01_Control
 	move.b	#$78,invulnerable_time(a0)
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 
 return_1B1C8:
 	rts
@@ -35866,7 +35878,7 @@ Obj01_Dead:
 ; loc_1B21C:
 CheckGameOver:
 	move.b	#1,(Scroll_lock).w
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	(Camera_Max_Y_pos_now).w,d0
 	addi.w	#$100,d0
 	cmp.w	y_pos(a0),d0
@@ -36751,7 +36763,7 @@ TailsCPU_Respawn:
 	subi.w	#$C0,d0
 	move.w	d0,y_pos(a0)
 	ori.w	#high_priority,art_tile(a0)
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 
 return_1BB88:
@@ -36884,7 +36896,7 @@ TailsCPU_Normal:
 	blo.s	TailsCPU_Normal_SonicOK		; if not, branch
 	; Sonic's dead; fly down to his corpse
 	move.w	#4,(Tails_CPU_routine).w	; => TailsCPU_Flying
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 	move.b	#$81,obj_control(a0)
 	move.b	#2,status(a0)
@@ -37276,8 +37288,8 @@ loc_1456C:
 		bhs.s	locret_1459C
 		tst.w	(Debug_placement_mode).w
 		bne.s	locret_1459C
-		cmpi.b	#1,spindash_flag(a1)
-		beq.s	locret_1459C
+		tst.b	spindash_flag(a1)
+		bne.s	locret_1459C
 		bsr.s	sub_1459E
 		clr.b 	double_jump_flag(a1)
 
@@ -37300,7 +37312,7 @@ sub_1459E:
 		move.b	#3,obj_control(a1)
 		bset	#1,status(a1)
 		bclr	#4,status(a1)
-		move.b	#0,spindash_flag(a1)
+		sf.b	spindash_flag(a1)
 		andi.b	#-4,render_flags(a1)
 		andi.b	#-2,status(a1)
 		move.b	status(a0),d0
@@ -37408,6 +37420,7 @@ Obj02_MdNormal:
 ; Called if Tails is airborne, but not in a ball (thus, probably not jumping)
 ; loc_1C032: Obj02_MdJump
 Obj02_MdAir:
+	sf.b	spindash_flag(a0)
 	tst.b	double_jump_flag(a0)
 	bne.s	Tails_FlyingSwimming
 	bsr.w	Tails_JumpHeight
@@ -37606,6 +37619,7 @@ Tails_Roll_Stop_Flying:
 ;        Why they gave it a separate copy of the code, I don't know.
 ; loc_1C082: Obj02_MdJump2:
 Obj02_MdJump:
+	sf.b	spindash_flag(a0)
 	bsr.w	Tails_JumpHeight
 	bsr.w	Tails_ChgJumpDir
 	bsr.w	Tails_LevelBound
@@ -38419,7 +38433,7 @@ Tails_CheckSpindash:
 	move.w	#SndID_SpindashRev,d0
 	jsr	(PlaySound).l
 	addq.l	#4,sp
-	move.b	#1,spindash_flag(a0)
+	st.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 	cmpi.b	#$C,air_left(a0)	; if he's drowning, branch to not make dust
 	blo.s	loc_1C754
@@ -38451,7 +38465,7 @@ Tails_UpdateSpindash:
 	move.b	#7,x_radius(a0)
 	move.b	#AniIDTailsAni_Roll,anim(a0)
 	addq.w	#1,y_pos(a0)	; add the difference between Tails' rolling and standing heights
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	moveq	#0,d0
 	move.b	spindash_counter(a0),d0
 	add.w	d0,d0
@@ -38987,7 +39001,7 @@ Tails_HurtStop:
 	move.b	#AniIDTailsAni_Walk,anim(a0)
 	move.b	#2,routine(a0)	; => Obj02_Control
 	move.b	#$78,invulnerable_time(a0)
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 
 return_1CC4E:
 	rts
@@ -39014,7 +39028,7 @@ Obj02_CheckGameOver:
 	cmpi.w	#2,(Player_mode).w	; is it a Tails Alone game?
 	beq.w	CheckGameOver		; if yes, branch... goodness, code reuse
 	move.b	#1,(Scroll_lock_P2).w
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	(Tails_Max_Y_pos).w,d0
 	addi.w	#$100,d0
 	cmp.w	y_pos(a0),d0
