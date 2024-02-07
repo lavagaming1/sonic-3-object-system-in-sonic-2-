@@ -90635,18 +90635,6 @@ Snd_Driver:
 ; loc_ED04C:
 Snd_Driver_End:
 
-
-
-
-; ---------------------------------------------------------------------------
-; Filler (free space)
-; ---------------------------------------------------------------------------
-	; the DAC data has to line up with the end of the bank.
-
-	; actually it only has to fit within one bank, but we'll line it up to the end anyway
-	; because the padding gives the sound driver some room to grow
-	cnop -Size_of_DAC_samples, $8000
-   	align  $8000
 ; ---------------------------------------------------------------------------
 ; DAC samples
 ; ---------------------------------------------------------------------------
@@ -90657,6 +90645,7 @@ __LABEL__ label *
 __LABEL___End label *
 	endm
 	
+DACBank1:	startBank
 SndDAC_Start:
 SndDAC_Kick:	DAC	81.bin
 SndDAC_Snare:	DAC	82.bin
@@ -90665,16 +90654,13 @@ SndDAC_Scratch:	DAC	84.bin
 SndDAC_Timpani:	DAC	85.bin
 SndDAC_Tom:	DAC	86.bin
 SndDAC_Bongo:	DAC	87.bin
+SndDAC_End
+		finishBank
+
+DACBank2:	startBank
 SndDAC_ElecTom:	DAC	90-93.bin
 SndDAC_Timbale:	DAC	8D-8E.bin
-SndDAC_End
-
-	if SndDAC_End - SndDAC_Start > $FFFF
-		fatal "DAC samples must fit within $FFFF bytes, but you have $\{SndDAC_End-SndDAC_Start } bytes of DAC samples."
-	endif
-	if SndDAC_End - SndDAC_Start > Size_of_DAC_samples
-		fatal "Size_of_DAC_samples = $\{Size_of_DAC_samples}, but you have $\{SndDAC_End-SndDAC_Start} bytes of DAC samples."
-	endif
+		finishBank
 
 ; ---------------------------------------------------------------------------
 ; Music pointers

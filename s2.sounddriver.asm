@@ -441,7 +441,12 @@ zUpdateDAC:
 	ld	(zYM2612_A0),a	; Set DAC port register
 
 	; Bankswitch to the DAC data
-	ld	a,zmake68kBank(SndDAC_Start)
+	ld	a,(zCurDAC)		; Get currently playing DAC sound
+	and	7Fh			; Strip 'queued' bit
+	add	a,zDACBanks&0FFh	; Offset into list
+	ld	(.writeme+1),a		; Store into the instruction after .writeme (self-modifying code)
+.writeme:
+	ld	a,(zDACBanks)		; Get DAC's bank value
 	call	zBankSwitch
 
 	ld	a,(zCurDAC)	; Get currently playing DAC sound
@@ -456,9 +461,9 @@ zUpdateDAC:
 	; If you get here, it's time to start a new DAC sound...
 	ld	a,80h
 	ex	af,af'	;'
-	ld	a,(zCurDAC)		; Get current DAC sound
-	sub	81h			; Subtract 81h (first DAC index is 81h)
-	ld	(zCurDAC),a		; Store that as current DAC sound
+	ld	hl,zCurDAC		; Get address of 'current DAC sound' value
+	res	7,(hl)			; Subtract 80h (first DAC index is 80h)
+	ld	a,(hl)			; Get current DAC sound value
 	; The following two instructions are dangerous: they discard the upper
 	; two bits of zCurDAC, meaning you can only have 40h DAC samples.
 	add	a,a
@@ -3534,6 +3539,8 @@ zSpedUpTempoTable:
 	db	0CDh,0AAh,0F2h,0DBh
 	db	0D5h,0F0h, 80h
 
+	align 16
+
 	; DAC sample pointers and lengths
 	ensure1byteoffset 1Ch
 DACSize macro Sample
@@ -3554,7 +3561,7 @@ zDACPtr_Bongo:		DACSize SndDAC_Bongo
 zDACPtr_ElecTom:	DACSize SndDAC_ElecTom
 zDACPtr_Timbale:	DACSize SndDAC_Timbale
 
-	align 32
+	align 16
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that
@@ -3566,7 +3573,7 @@ zDACMasterPlaylist:
 ; DAC samples IDs
 offset :=	zDACPtrTbl
 ptrsize :=	2+2
-idstart :=	81h
+idstart :=	80h
 
 	db	id(zDACPtr_Kick),6		; 81h
 	db	id(zDACPtr_Snare),6		; 82h
@@ -3591,6 +3598,19 @@ idstart :=	81h
 	db	id(zDACPtr_ElecTom),10h		; 95h
 	db	id(zDACPtr_Timbale),0Dh		; 96h
 	db	id(zDACPtr_Timbale),13h		; 97h
+
+	ensure1byteoffset 9
+zDACBanks:
+	db	zmake68kBank(SndDAC_Kick)
+	db	zmake68kBank(SndDAC_Snare)
+	db	zmake68kBank(SndDAC_Clap)
+	db	zmake68kBank(SndDAC_Scratch)
+	db	zmake68kBank(SndDAC_Timpani)
+	db	zmake68kBank(SndDAC_Tom)
+	db	zmake68kBank(SndDAC_Bongo)
+	db	zmake68kBank(SndDAC_ElecTom)
+	db	zmake68kBank(SndDAC_Timbale)
+
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
