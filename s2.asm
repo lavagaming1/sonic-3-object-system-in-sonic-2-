@@ -1099,6 +1099,7 @@ JmpTo_SegaScr_VInt ; JmpTo
 ; sub_10EC:
 JoypadInit:
 	stopZ80
+	waitZ80
 	moveq	#$40,d0
 	move.b	d0,(HW_Port_1_Control).l	; init port 1 (joypad 1)
 	move.b	d0,(HW_Port_2_Control).l	; init port 2 (joypad 2)
@@ -1270,6 +1271,7 @@ JmpTo_SoundDriverLoad ; JmpTo
 ; sub_135E:
 PlayMusic:
 	stopZ80
+	waitZ80
 	tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
 	bne.s	+
 	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
@@ -1289,6 +1291,7 @@ Play_Sound:
 Play_Sound_2:
 PlaySound:
 	stopZ80
+	waitZ80
 	move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
 	startZ80
 	rts
@@ -1300,6 +1303,7 @@ PlaySound:
 ; sub_1376:
 PlaySoundStereo:
 	stopZ80
+	waitZ80
 	move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
 	startZ80
 	rts
@@ -1311,6 +1315,7 @@ PlaySoundStereo:
 ; sub_137C:
 PlaySoundLocal:
 	stopZ80
+	waitZ80
 	tst.b	render_flags(a0)
 	bpl.s	+	; rts
 	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
@@ -1339,6 +1344,7 @@ PauseGame:
 +
 	move.w	#1,(Game_paused).w	; freeze time
 	stopZ80
+	waitZ80
 	move.b	#MusID_Pause,(Z80_RAM+zAbsVar.StopMusic).l	; pause music
 	startZ80
 ; loc_13B2:
@@ -1360,6 +1366,7 @@ Pause_ChkBC:
 	btst	#button_C,(Ctrl_1_Press).w ; is button C pressed?
 	bne.s	Pause_SlowMo        ; if yes, branch
 	stopZ80
+	waitZ80
 	move.b	#MusID_Pause,(Z80_RAM+zAbsVar.StopMusic).l    ; pause music
 	startZ80
 ; loc_13E4:
@@ -1371,6 +1378,7 @@ Pause_ChkStart:
 ; loc_13F2:
 Pause_Resume:
 	stopZ80
+	waitZ80
 	move.b	#MusID_Unpause,(Z80_RAM+zAbsVar.StopMusic).l	; unpause the music
 	startZ80
 ; loc_13F8:
@@ -1384,6 +1392,7 @@ Pause_DoNothing:
 Pause_SlowMo:
 	move.w	#1,(Game_paused).w
 	stopZ80
+	waitZ80
 	move.b	#MusID_Unpause,(Z80_RAM+zAbsVar.StopMusic).l
 	startZ80
 	rts

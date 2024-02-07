@@ -78,9 +78,13 @@ clearRAM macro startaddr,endaddr
     endif
     endm
 
-; tells the Z80 to stop, and waits for it to finish stopping (acquire bus)
+; tells the Z80 to stop
 stopZ80 macro
 	move.w	#$100,(Z80_Bus_Request).l ; stop the Z80
+    endm
+
+; waits for the Z80 to finish stopping (acquire bus)
+waitZ80 macro
 .loop:	btst	#0,(Z80_Bus_Request).l
 	bne.s	.loop ; loop until it says it's stopped
     endm
