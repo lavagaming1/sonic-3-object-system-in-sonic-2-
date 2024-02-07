@@ -26135,6 +26135,8 @@ Obj6F_Init:
 	rts
 ; ===========================================================================
 +
+	clr.w	(SRAM_mask_interrupts_flag).w
+	jsr	(SaveGame_SpecialStage).l
 	movea.l	a0,a1
 	lea	byte_14752(pc),a2
 	moveq	#$C,d1
