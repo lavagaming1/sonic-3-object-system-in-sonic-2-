@@ -37532,7 +37532,7 @@ Tails_FlyAnim_Tired:
 		move.b	(Timer_frames+1).w,d0
 		addq.b	#8,d0
 		andi.b	#$F,d0
-		bne.s	+
+		bne.s		+
       		move.w	#SndID_Tired,d0
 		jsr	(PlaySound).l	; play rolling sound
 
@@ -65839,7 +65839,6 @@ Obj51_Init:
 	move.w	#$654,y_pos(a0)
 	move.b	#0,mainspr_mapframe(a0)
 	move.b	#$20,mainspr_width(a0)
-	move.b	#$80,mainspr_height(a0)
 	addq.b	#2,boss_subtype(a0)
 	move.b	#0,CNZBossRoutine_Angle(a0)
 	bset	#6,render_flags(a0)
