@@ -483,6 +483,13 @@ zloc_10B:
 	ret
 ; End of function zVInt
 
+; 'jman2050' DAC decode lookup table
+	align 100h
+;zbyte_1B3
+zDACDecodeTbl:
+	db	   0,    1,   2,   4,   8,  10h,  20h,  40h
+	db	 80h,   -1,  -2,  -4,  -8, -10h, -20h, -40h
+
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -619,9 +626,8 @@ zWriteToDAC:
 	rlca
 	rlca
 	and	0Fh		; UPPER 4-bit offset into zDACDecodeTbl
-	ld	(zloc_18B+2),a	; store into the instruction after zloc_18B (self-modifying code)
+	ld	iyl,a		; store into the instruction after zloc_18B (self-modifying code)
 	ex	af,af'		; shadow register 'a' is the 'd' value for 'jman2050' encoding
-zloc_18B:
 	add	a,(iy+0)	; Get byte from zDACDecodeTbl (self-modified to proper index)
 	ld	(zYM2612_D0),a	; Write this byte to the DAC
 	ex	af,af'		; back to regular registers
@@ -637,9 +643,8 @@ zloc_18B:
 	dec	de		; One less byte
 	nop
 	and	0Fh		; LOWER 4-bit offset into zDACDecodeTbl
-	ld	(zloc_1A8+2),a	; store into the instruction after zloc_1A8 (self-modifying code)
+	ld	iyl,a		; store into the instruction after zloc_1A8 (self-modifying code)
 	ex	af,af'		; shadow register 'a' is the 'd' value for 'jman2050' encoding
-zloc_1A8:
 	add	a,(iy+0)	; Get byte from zDACDecodeTbl (self-modified to proper index)
 	ld	(zYM2612_D0),a	; Write this byte to the DAC
 	ex	af,af'		; back to regular registers
@@ -647,12 +652,6 @@ zloc_1A8:
 	jp	zWaitLoop	; Back to the wait loop; if there's more DAC to write, we come back down again!
 
 ; ---------------------------------------------------------------------------
-; 'jman2050' DAC decode lookup table
-;zbyte_1B3
-zDACDecodeTbl:
-	db	   0,    1,   2,   4,   8,  10h,  20h,  40h
-	db	 80h,   -1,  -2,  -4,  -8, -10h, -20h, -40h
-
 	; The following two tables are used for when an SFX terminates
 	; its track to properly restore the music track it temporarily took
 	; over.  Note that an important rule here is that no SFX may use
