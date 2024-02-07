@@ -29,7 +29,7 @@ padToPowerOfTwo = 0
 allOptimizations = 0
 ;	| If 1, enables all optimizations
 ;
-skipChecksumCheck = 0|allOptimizations
+skipChecksumCheck = 1|allOptimizations
 ;	| If 1, disables the unnecessary (and slow) bootup checksum calculation
 ;
 zeroOffsetOptimization = 0|allOptimizations
