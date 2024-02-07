@@ -647,11 +647,6 @@ loc_748:
 	movem.l	(Scroll_flags).w,d0-d3
 	movem.l	d0-d3,(Scroll_flags_copy).w
 	move.l	(Vscroll_Factor_P2).w,(Vscroll_Factor_P2_HInt).w
-	cmpi.b	#$5C,(Hint_counter_reserve+1).w
-	bhs.s	+
-	move.b	#1,(Do_Updates_in_H_int).w
-	jmp	(Set_Kos_Bookmark).l
-+
         bsr.s	Do_Updates
         jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
@@ -1066,16 +1061,6 @@ PalToCRAM:
     endm
 	move.w	#$8ADF,4(a1)	; Write %1101 %1111 to register 10 (interrupt every 224th line)
 	movem.l	(sp)+,a0-a1
-	tst.b	(Do_Updates_in_H_int).w
-	bne.s	loc_1072
-	rte
-; ===========================================================================
-
-loc_1072:
-	clr.b	(Do_Updates_in_H_int).w
-	movem.l	d0-a6,-(sp)
-	bsr.w	Do_Updates
-	movem.l	(sp)+,d0-a6
 	rte
 
     if ~~removeJmpTos
