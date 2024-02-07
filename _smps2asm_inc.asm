@@ -61,6 +61,8 @@ nMaxPSG2			EQU nB6
 		enum dKick=$81,dSnare,dClap,dScratch,dTimpani,dHiTom,dVLowClap,dHiTimpani,dMidTimpani
 		enum dLowTimpani=dMidTimpani+1,dVLowTimpani,dMidTom,dLowTom,dFloorTom,dHiClap
 		enum dMidClap=dHiClap+1,dLowClap
+		enum dElectricHighTom=dLowClap+1,dElectricMidTom,dElectricLowTom,dElectricFloorTom
+		enum dHigherMetalHit=dElectricFloorTom+1,dMidMetalHit
 	else;if SonicDriverVer>=3
 		if (use_s3_samples<>0)||(use_sk_samples<>0)||(use_s3d_samples<>0)
 			enum dSnareS3=$81,dHighTom,dMidTomS3,dLowTomS3,dFloorTomS3,dKickS3,dMuffledSnare

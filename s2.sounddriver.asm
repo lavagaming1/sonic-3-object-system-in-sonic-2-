@@ -3581,6 +3581,8 @@ zDACPtr_Scratch:	DACSize SndDAC_Scratch
 zDACPtr_Timpani:	DACSize SndDAC_Timpani
 zDACPtr_Tom:		DACSize SndDAC_Tom
 zDACPtr_Bongo:		DACSize SndDAC_Bongo
+zDACPtr_ElecTom:	DACSize SndDAC_ElecTom
+zDACPtr_Timbale:	DACSize SndDAC_Timbale
 
 	align 32
 
@@ -3599,7 +3601,7 @@ idstart :=	81h
 	db	id(zDACPtr_Kick),6		; 81h
 	db	id(zDACPtr_Snare),6		; 82h
 	db	id(zDACPtr_Clap),6		; 83h
-	db	id(zDACPtr_Scratch),8		; 84h
+	db	id(zDACPtr_Scratch),1Ah		; 84h
 	db	id(zDACPtr_Timpani),1Bh		; 85h
 	db	id(zDACPtr_Tom),20h		; 86h
 	db	id(zDACPtr_Bongo),1Fh		; 87h
@@ -3613,6 +3615,12 @@ idstart :=	81h
 	db	id(zDACPtr_Bongo),0Ah		; 8Fh
 	db	id(zDACPtr_Bongo),0Dh		; 90h
 	db	id(zDACPtr_Bongo),14h		; 91h
+	db	id(zDACPtr_ElecTom),5		; 92h
+	db	id(zDACPtr_ElecTom),9		; 93h
+	db	id(zDACPtr_ElecTom),0Ch		; 94h
+	db	id(zDACPtr_ElecTom),10h		; 95h
+	db	id(zDACPtr_Timbale),0Dh		; 96h
+	db	id(zDACPtr_Timbale),13h		; 97h
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 

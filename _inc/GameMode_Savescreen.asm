@@ -1,5 +1,7 @@
 s3_save_screen:
-    
+		move.b	#MusID_FadeOut,d0
+		jsr	PlayMusic
+		jsr	ClearPLC
 		jsr	(Pal_FadeToBlack).l
 		move	#$2700,sr
 		move.w	(VDP_reg_1_command).w,d0
@@ -42,8 +44,6 @@ loc_C5F0:
 ;loc_C600:
 ;		move.l	d0,(a1)+
 ;		dbf	d1,loc_C600
-		move.w	#MusID_SaveScreen,d0
-		jsrto	(PlayMusic).l, JmpTo_PlayMusic
                 clearRAM Chunk_Table,Chunk_Table_End
                 clearRAM Object_RAM,Object_RAM_End
 		clearRAM Camera_RAM,Camera_RAM_End
@@ -162,6 +162,10 @@ loc_C7A4:
 loc_C7CC:
 		move.l	(a0)+,(a1)+
 		dbf	d0,loc_C7CC
+
+		move.w	#MusID_SaveScreen,d0
+		jsrto	(PlayMusic).l, JmpTo_PlayMusic
+
 		move.l	#loc_C890,(_unkEF44_1).w
 		move.b	#VintID_Savescreen,(V_int_routine).w
 		jsr	(Wait_VSync).l

@@ -3866,7 +3866,7 @@ JmpTo_RunObjects ; JmpTo
 ; ===========================================================================
 ; loc_3998:
 TitleScreen:
-	move.b	#MusID_Stop,d0
+	move.b	#MusID_FadeOut,d0
 	bsr.w	PlayMusic
 	bsr.w	ClearPLC
 	bsr.w	Pal_FadeToBlack
@@ -90654,6 +90654,8 @@ SndDAC_Scratch:	DAC	84.bin
 SndDAC_Timpani:	DAC	85.bin
 SndDAC_Tom:	DAC	86.bin
 SndDAC_Bongo:	DAC	87.bin
+SndDAC_ElecTom:	DAC	90-93.bin
+SndDAC_Timbale:	DAC	8D-8E.bin
 SndDAC_End
 
 	if SndDAC_End - SndDAC_Start > $FFFF
