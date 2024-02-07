@@ -922,12 +922,13 @@ SndID__End =		id(SndPtr__End)			; F1
 		fatal "You have too many SndPtrs. SndID__End ($\{SndID__End}) can't exceed CmdID__First ($\{CmdID__First})."
 	endif
     endif
-sfx_Switch = SndID_Beep
+sfx_Switch = SndID_Blip
 sfx_Starpost = SndID_Checkpoint 
 sfx_Perfect = SndID_ContinueJingle
 sfx_EnterSS = SndID_EnterGiantRing
 sfx_SmallBumpers = SndID_Bumper
-sfx_SlotMachine = SndID_Beep
+sfx_SlotMachine = SndID_CasinoBonus
+
 ; Sound command IDs
 offset :=	zCommandIndex
 ptrsize :=	2
