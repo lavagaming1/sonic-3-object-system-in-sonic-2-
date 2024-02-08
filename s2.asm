@@ -12226,9 +12226,7 @@ CheckCheats:	; This is called from 2 places: the options screen and the level se
 	tst.w	d2				; Test this to determine which cheat to enable
 	bne.s	+				; If not 0, branch
 	move.b	#$F,(Continue_count).w		; Give 15 continues
-	; The next line causes the bug where the OOZ music plays until reset.
-	; Remove "&$7F" to fix the bug.
-	move.b	#SndID_ContinueJingle&$7F,d0	; Play the continue jingle
+	move.b	#SndID_ContinueJingle,d0	; Play the continue jingle
 	jsrto	(PlayMusic).l, JmpTo_PlayMusic
 	bra.s	++
 ; ===========================================================================
