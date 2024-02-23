@@ -22,24 +22,48 @@ dma68kToVDP macro source,dest,length,type
 	lea	(VDP_control_port).l,a5
 	move.l	#(($9400|((((length)>>1)&$FF00)>>8))<<16)|($9300|(((length)>>1)&$FF)),(a5)
 	move.l	#(($9600|((((source)>>1)&$FF00)>>8))<<16)|($9500|(((source)>>1)&$FF)),(a5)
-	move.w	#$9700|(((((source)>>1)&$FF0000)>>16)&$7F),(a5)
-	move.w	#((vdpComm(dest,type,DMA)>>16)&$FFFF),(a5)
-	move.w	#(vdpComm(dest,type,DMA)&$FFFF),(DMA_data_thunk).w
-	move.w	(DMA_data_thunk).w,(a5)
+	move.l	#($9700|(((((source)>>1)&$FF0000)>>16)&$7F))<<16|((vdpComm(dest,type,DMA)>>16)&$FFFF),(a5)
+	move.w	#(vdpComm(dest,type,DMA)&$FFFF),-(sp)
+	move.w	(sp)+,(a5)
     endm
 
 ; tells the VDP to fill a region of VRAM with a certain byte
 dmaFillVRAM macro byte,addr,length
 	lea	(VDP_control_port).l,a5
-	move.w	#$8F01,(a5) ; VRAM pointer increment: $0001
+	move.l	#$8F019780,(a5) ; VRAM pointer increment: $0001, VRAM fill
 	move.l	#(($9400|((((length)-1)&$FF00)>>8))<<16)|($9300|(((length)-1)&$FF)),(a5) ; DMA length ...
-	move.w	#$9780,(a5) ; VRAM fill
 	move.l	#$40000080|(((addr)&$3FFF)<<16)|(((addr)&$C000)>>14),(a5) ; Start at ...
-	move.w	#(byte)<<8,(VDP_data_port).l ; Fill with byte
+	move.w	#(byte)<<8,-4(a5) ; Fill with byte
 .loop:	move.w	(a5),d1
 	btst	#1,d1
 	bne.s	.loop ; busy loop until the VDP is finished filling...
 	move.w	#$8F02,(a5) ; VRAM pointer increment: $0002
+    endm
+    
+; tells the VDP to fill a region of VRAM with a certain byte
+dmaFillVRAM_reg macro reg,addr,length
+	lea	(VDP_control_port).l,a5
+	move.l	#$8F019780,(a5) ; VRAM pointer increment: $0001, VRAM fill
+	move.l	#(($9400|((((length)-1)&$FF00)>>8))<<16)|($9300|(((length)-1)&$FF)),(a5) ; DMA length ...
+	move.l	#$40000080|(((addr)&$3FFF)<<16)|(((addr)&$C000)>>14),(a5) ; Start at ...
+	move.w	reg,-4(a5) ; Fill with byte
+.loop:	move.w	(a5),d1
+	btst	#1,d1
+	bne.s	.loop ; busy loop until the VDP is finished filling...
+	move.w	#$8F02,(a5) ; VRAM pointer increment: $0002
+    endm
+    
+; tells the VDP to fill a region of VRAM with a certain byte
+dmaFillVRAM_reg2 macro reg,addr,length
+	;lea	(VDP_control_port).l,a5
+	move.w	#$9780,(a5) ; VRAM pointer increment: $0001, VRAM fill
+	move.l	#(($9400|((((length)-1)&$FF00)>>8))<<16)|($9300|(((length)-1)&$FF)),(a5) ; DMA length ...
+	move.l	#$40000080|(((addr)&$3FFF)<<16)|(((addr)&$C000)>>14),(a5) ; Start at ...
+	move.w	reg,-4(a5) ; Fill with byte
+.loop:	move.w	(a5),d1
+	btst	#1,d1
+	bne.s	.loop ; busy loop until the VDP is finished filling...
+	;move.w	#$8F02,(a5) ; VRAM pointer increment: $0002
     endm
 
 ; calculates initial loop counter value for a dbf loop
@@ -49,6 +73,10 @@ bytesToLcnt function n,n>>2-1
 ; calculates initial loop counter value for a dbf loop
 ; that writes n bytes total at 2 bytes per iteration
 bytesToWcnt function n,n>>1-1
+
+; calculates initial loop counter value for a dbf loop
+; that writes n bytes total at x bytes per iteration
+bytesToXcnt function n,x,n/x-1
 
 ; fills a region of 68k RAM with 0
 clearRAM macro startaddr,endaddr
@@ -69,6 +97,37 @@ clearRAM macro startaddr,endaddr
     endif
 	move.w	#bytesToLcnt((endaddr-startaddr) - ((startaddr)&1)),d1
 .loop:	move.l	d0,(a1)+
+	dbf	d1,.loop
+    if (((endaddr-startaddr) - ((startaddr)&1))&2)
+	move.w	d0,(a1)+
+    endif
+    if (((endaddr-startaddr) - ((startaddr)&1))&1)
+	move.b	d0,(a1)+
+    endif
+    endm
+    
+; fills a region of 68k RAM with 0 (plus some unrolling!)
+clearRAM2 macro startaddr,endaddr
+    if startaddr>endaddr
+	fatal "Starting address of clearRAM \{startaddr} is after ending address \{endaddr}."
+    elseif startaddr==endaddr
+	warning "clearRAM is clearing zero bytes. Turning this into a nop instead."
+	exitm
+    endif
+    if ((startaddr)&$8000)==0
+	lea	(startaddr).l,a1
+    else
+	lea	(startaddr).w,a1
+    endif
+	;moveq	#0,d0
+    if ((startaddr)&1)
+	move.b	d0,(a1)+
+    endif
+	move.w	#bytesToXcnt((endaddr-startaddr) - ((startaddr)&1),16),d1
+.loop:	move.l	d0,(a1)+
+	move.l	d0,(a1)+
+	move.l	d0,(a1)+
+	move.l	d0,(a1)+
 	dbf	d1,.loop
     if (((endaddr-startaddr) - ((startaddr)&1))&2)
 	move.w	d0,(a1)+
