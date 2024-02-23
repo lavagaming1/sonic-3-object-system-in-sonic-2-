@@ -507,7 +507,7 @@ loc_526:
 
 loc_54A:
 	move.w	(Hint_counter_reserve).w,(a5)
-	move.w	#$8200|(VRAM_Plane_A_Name_Table/$400),(VDP_control_port).l	; Set scroll A PNT base to $C000
+	move.w	#$8200|(VRAM_Plane_A_Name_Table/$400),(a5)	; Set scroll A PNT base to $C000
 
 	startZ80
 
@@ -1199,22 +1199,27 @@ VDPSetupArray_End:
 Clear_DisplayData:
 ClearScreen:
 	stopZ80
+	
+	moveq	#0,d0
 
-	dmaFillVRAM 0,$0000,$40		; Fill first $40 bytes of VRAM with 0
-	dmaFillVRAM 0,VRAM_Plane_A_Name_Table,VRAM_Plane_Table_Size	; Clear Plane A pattern name table
-	dmaFillVRAM 0,VRAM_Plane_B_Name_Table,VRAM_Plane_Table_Size	; Clear Plane B pattern name table
+	lea	(VDP_control_port).l,a5
+	move.w	#$8F01,(a5)
+	dmaFillVRAM_reg2 d0,$0000,$40		; Fill first $40 bytes of VRAM with 0
+	dmaFillVRAM_reg2 d0,VRAM_Plane_A_Name_Table,VRAM_Plane_Table_Size	; Clear Plane A pattern name table
+	dmaFillVRAM_reg2 d0,VRAM_Plane_B_Name_Table,VRAM_Plane_Table_Size	; Clear Plane B pattern name table
 
 	tst.w	(Two_player_mode).w
 	beq.s	+
 
-	dmaFillVRAM 0,VRAM_Plane_A_Name_Table_2P,VRAM_Plane_Table_Size
+	dmaFillVRAM_reg2 d0,VRAM_Plane_A_Name_Table_2P,VRAM_Plane_Table_Size
 +
-	clr.l	(Vscroll_Factor).w
-	clr.l	(unk_F61A).w
+	move.w	#$8F02,(a5)
 
-	; Bug: These '+4's shouldn't be here; clearRAM accidentally clears an additional 4 bytes
-	clearRAM Sprite_Table,Sprite_Table_End+4
-	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf_End+4
+	move.l	d0,(Vscroll_Factor).w
+	move.l	d0,(unk_F61A).w
+
+	clearRAM2 Sprite_Table,Sprite_Table_End
+	clearRAM2 Horiz_Scroll_Buf,Horiz_Scroll_Buf_End
 
 	startZ80
 	rts
@@ -3705,10 +3710,12 @@ SegaScreen:
 	bsr.w	PlayMusic ; stop music
 	bsr.w	ClearPLC
 	bsr.w	Pal_FadeToBlack
+	
+	moveq	#0,d0
 
-	clearRAM Misc_Variables,Misc_Variables_End
+	clearRAM2 Misc_Variables,Misc_Variables_End
 
-	clearRAM SegaScr_Object_RAM,SegaScr_Object_RAM_End ; fill object RAM with 0
+	clearRAM2 SegaScr_Object_RAM,SegaScr_Object_RAM_End ; fill object RAM with 0
 
 	lea	(VDP_control_port).l,a6
 	move.w	#$8004,(a6)		; H-INT disabled
@@ -3725,8 +3732,10 @@ SegaScreen:
 	andi.b	#$BF,d0
 	move.w	d0,(VDP_control_port).l
 	bsr.w	ClearScreen
+	
+	;moveq	#0,d0
 
-	dmaFillVRAM 0,VRAM_SegaScr_Plane_A_Name_Table,VRAM_SegaScr_Plane_Table_Size ; clear Plane A pattern name table
+	dmaFillVRAM_reg d0,VRAM_SegaScr_Plane_A_Name_Table,VRAM_SegaScr_Plane_Table_Size ; clear Plane A pattern name table
 
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Sega_Logo),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_SEGA).l,a0
@@ -3852,10 +3861,11 @@ TitleScreen:
 	move.w	#$8C81,(a6)		; H res 40 cells, no interlace, S/H disabled
 	bsr.w	ClearScreen
 
-	clearRAM Sprite_Table_Input,Sprite_Table_Input_End ; fill $AC00-$AFFF with $0
-	clearRAM TtlScr_Object_RAM,TtlScr_Object_RAM_End ; fill object RAM ($B000-$D5FF) with $0
-	clearRAM Misc_Variables,Misc_Variables_End ; clear CPU player RAM and following variables
-	clearRAM Camera_RAM,Camera_RAM_End ; clear camera RAM and following variables
+	moveq	#0,d0
+	clearRAM2 Sprite_Table_Input,Sprite_Table_Input_End ; fill $AC00-$AFFF with $0
+	clearRAM2 TtlScr_Object_RAM,TtlScr_Object_RAM_End ; fill object RAM ($B000-$D5FF) with $0
+	clearRAM2 Misc_Variables,Misc_Variables_End ; clear CPU player RAM and following variables
+	clearRAM2 Camera_RAM,Camera_RAM_End ; clear camera RAM and following variables
 
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_CreditText),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_CreditText).l,a0
@@ -3883,14 +3893,15 @@ TitleScreen:
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_FontStuff_TtlScr),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_FontStuff).l,a0
 	bsr.w	NemDec
-	move.b	#0,(Last_star_pole_hit).w
-	move.b	#0,(Last_star_pole_hit_2P).w
-	move.w	#0,(Debug_placement_mode).w
-	move.w	#0,(Demo_mode_flag).w
-	move.w	#0,(unk_FFDA).w
-	move.w	#0,(PalCycle_Timer).w
-	move.w	#0,(Two_player_mode).w
-	move.b	#0,(Level_started_flag).w
+	moveq	#0,d0
+	move.b	d0,(Last_star_pole_hit).w
+	move.b	d0,(Last_star_pole_hit_2P).w
+	move.w	d0,(Debug_placement_mode).w
+	move.w	d0,(Demo_mode_flag).w
+	move.w	d0,(unk_FFDA).w
+	move.w	d0,(PalCycle_Timer).w
+	move.w	d0,(Two_player_mode).w
+	move.b	d0,(Level_started_flag).w
 	move.b	#MusID_Stop,d0
 	bsr.w	PlayMusic
 
@@ -4122,7 +4133,7 @@ TailsNameCheat:
 	bchg	#7,(Graphics_Flags).w ; turn on the cheat that changes MILES to "TAILS"
 	move.b	#SndID_Ring,d0 ; play the ring sound for a successfully entered cheat
 	bsr.w	PlaySound
-+	move.w	#0,(Correct_cheat_entries).w
++	clr.w	(Correct_cheat_entries).w
 +	rts
 ; End of function TailsNameCheat
 
@@ -4280,7 +4291,7 @@ loc_5FD6:
 	move	#$2700,sr
 	bsr.w	ClearScreen
 	lea     (Std1PLCload).l,a2  ; cannot be used if you are not setting sr in 2700
-        jsr     SubLoopPLCentry
+        bsr.s     SubLoopPLCentry
 	jsr	(LoadTitleCard).l ; load title card patterns
 
 
@@ -5990,39 +6001,30 @@ SpecialStage:
 ; | so there's gonna be a lot of wasted cycles.                            |
 ; \------------------------------------------------------------------------/
 
-	dmaFillVRAM 0,VRAM_SS_Plane_A_Name_Table2,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 1
-	dmaFillVRAM 0,VRAM_SS_Plane_A_Name_Table1,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 2
-	dmaFillVRAM 0,VRAM_SS_Plane_B_Name_Table,VRAM_SS_Plane_Table_Size ; clear Plane B pattern name table
-	dmaFillVRAM 0,VRAM_SS_Horiz_Scroll_Table,VRAM_SS_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
+	moveq	#0,d0
 
-	clr.l	(Vscroll_Factor).w
-	clr.l	(unk_F61A).w
-	clr.b	(SpecialStage_Started).w
+	lea	(VDP_control_port).l,a5
+	move.w	#$8F01,(a5)
+	dmaFillVRAM_reg2 d0,VRAM_SS_Plane_A_Name_Table2,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 1
+	dmaFillVRAM_reg2 d0,VRAM_SS_Plane_A_Name_Table1,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 2
+	dmaFillVRAM_reg2 d0,VRAM_SS_Plane_B_Name_Table,VRAM_SS_Plane_Table_Size ; clear Plane B pattern name table
+	dmaFillVRAM_reg2 d0,VRAM_SS_Horiz_Scroll_Table,VRAM_SS_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
+	move.w	#$8F02,(a5)
+
+	move.l	d0,(Vscroll_Factor).w
+	move.l	d0,(unk_F61A).w
+	move.b	d0,(SpecialStage_Started).w
 
 ; /------------------------------------------------------------------------\
 ; | Now we clear out some regions in main RAM where we want to store some  |
 ; | of our data structures.                                                |
 ; \------------------------------------------------------------------------/
-	; Bug: These '+4's shouldn't be here; clearRAM accidentally clears an additional 4 bytes
-	clearRAM SS_Sprite_Table,SS_Sprite_Table_End
-	clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1_End
-	clearRAM SSRAMMiscStart,SSRAMMiscEnd
-	clearRAM SS_Sprite_Table_Input,SS_Sprite_Table_Input_End
-	clearRAM SS_Object_RAM,SS_Object_RAM_End
+	clearRAM2 SS_Sprite_Table,SS_Sprite_Table_End
+	clearRAM2 SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1_End
+	clearRAM2 SSRAMMiscStart,SSRAMMiscEnd
+	clearRAM2 SS_Sprite_Table_Input,SS_Sprite_Table_Input_End
+	clearRAM2 SS_Object_RAM,SS_Object_RAM_End
 
-	; However, the '+4' after SS_Misc_Variables_End is very useful. It resets the
-	; VDP_Command_Buffer queue, avoiding graphical glitches in the Special Stage.
-	; In fact, without reset of the VDP_Command_Buffer queue, Tails sprite DPLCs and other
-	; level DPLCs that are still in the queue erase the Special Stage graphics the next
-	; time ProcessDMAQueue is called.
-	; This '+4' doesn't seem to be intentional, because of the other useless '+4' above,
-	; and because a '+2' is enough to reset the VDP_Command_Buffer queue and fix this bug.
-	; This is a fortunate accident!
-	; Note that this is not a clean way to reset the VDP_Command_Buffer queue because the
-	; VDP_Command_Buffer_Slot address shall be updated as well. They tried to do that in a
-	; clean way after branching to ClearScreen (see below). But they messed up by doing it
-	; after several WaitForVint calls.
-	; You can uncomment the two lines below to clear the VDP_Command_Buffer queue intentionally.
 	clr.w	(VDP_Command_Buffer).w
 	move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
 
