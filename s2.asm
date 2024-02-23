@@ -11580,10 +11580,18 @@ OptionScreen_Controls:
 	moveq	#0,d2
 
 +
+	btst	#button_B,d0
+	beq.s	+
+	subi.b	#$10,d2
+	cmp.b	d3,d2
+	bls.s	+
+	moveq	#0,d2
+
++
 	move.w	d2,(a1)
 	cmpi.b	#1,(Options_menu_box).w
 	bne.s	+	; rts
-	andi.w	#button_B_mask|button_C_mask,d0
+	andi.w	#button_C_mask,d0
 	beq.s	+	; rts
 	move.w	(Sound_test_sound).w,d0
 	addi.w	#$80,d0
@@ -11988,8 +11996,14 @@ LevSelControls_CheckLR:
 	andi.b	#$7F,d0
 
 +
+	btst	#button_B,d1
+	beq.s	+
+	subi.b	#$10,d0
+	andi.b	#$7F,d0
+
++
 	move.w	d0,(Sound_test_sound).w
-	andi.w	#button_B_mask|button_C_mask,d1
+	andi.w	#button_C_mask,d1
 	beq.s	+	; rts
 	move.w	(Sound_test_sound).w,d0
 	addi.w	#$80,d0
@@ -12213,7 +12227,7 @@ CheckCheats:	; This is called from 2 places: the options screen and the level se
 	move.b	#SndID_Ring,d0			; Play the ring sound
 	jsrto	(PlaySound).l, JmpTo_PlaySound
 +
-	move.w	#0,(Correct_cheat_entries).w	; Clear the number of correct entries
+	clr.w	(Correct_cheat_entries).w	; Clear the number of correct entries
 +
 	move.w	(Correct_cheat_entries_2).w,d0	; Do the same procedure with the other cheat
 	adda.w	d0,a2
@@ -12235,7 +12249,7 @@ CheckCheats:	; This is called from 2 places: the options screen and the level se
 	move.b	#MusID_Emerald,d0		; Play the emerald jingle
 	jsrto	(PlayMusic).l, JmpTo_PlayMusic
 +
-	move.w	#0,(Correct_cheat_entries_2).w	; Clear the number of correct entries
+	clr.w	(Correct_cheat_entries_2).w	; Clear the number of correct entries
 +
 	rts
 ; ===========================================================================
