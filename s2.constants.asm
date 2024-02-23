@@ -783,7 +783,7 @@ ObjID_RingPrize =		id(ObjPtr_RingPrize)		; DC
 ; Music IDs
 offset :=	zMasterPlaylist
 ptrsize :=	4
-idstart :=	$81
+idstart :=	$01
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy zMusIDPtr in the $80 slot
 
@@ -830,7 +830,7 @@ MusID__End =		id(zMusIDPtr__End)	; A0
 ; Sound IDs
 offset :=	SoundIndex
 ptrsize :=	2
-idstart :=	$A1
+idstart :=	$A0
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy SndPtr in the $80 slot
 
@@ -932,7 +932,7 @@ sfx_SlotMachine = SndID_CasinoBonus
 ; Sound command IDs
 offset :=	zCommandIndex
 ptrsize :=	2
-idstart :=	$F8
+idstart :=	$FA
 
 CmdID__First = idstart
 MusID_StopSFX =		id(CmdPtr_StopSFX)	; F8

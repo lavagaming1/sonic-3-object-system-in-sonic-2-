@@ -380,7 +380,7 @@ zUpdateEverything:
 	; Apparently if this is 80h, it does not play anything new,
 	; otherwise it cues up the next play (flag from 68K for new item)
 	ld	a,(zAbsVar.QueueToPlay)
-	cp	80h
+	or	a
 	call	nz,zPlaySoundByIndex		; If not 80h, we need to play something new!
 
 	; Spindash update
@@ -1377,7 +1377,7 @@ zResumeTrack:
 ;zsub_674
 zCycleQueue:
 	ld	a,(zAbsVar.QueueToPlay)		; Check if a sound request was made zComRange+08h
-	cp	80h				; Is queue slot equal to 80h?
+	or	a				; Is queue slot equal to 00h?
 	ret	nz				; If not, return
 	ld	hl,zAbsVar.SFXToPlay		; Get address of next sound
 	ld	a,(zAbsVar.SFXPriorityVal)	; Get current SFX priority
@@ -1425,20 +1425,20 @@ zlocQueueItem:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 ; zsub_6B2:
 zPlaySoundByIndex:
-	or	a				; is it sound 00?
-	jp	z,zClearTrackPlaybackMem	; if yes, branch to RESET EVERYTHING!!
-    if MusID__First-1 == 80h
-	ret	p				; return if it was (invalidates 00h-7Fh; maybe we don't want that someday?)
-    else
-	cp	MusID__First
-	ret	c				; return if id is less than the first music id
-    endif
+	;or	a				; is it sound 00?
+	;jp	z,zClearTrackPlaybackMem	; if yes, branch to RESET EVERYTHING!!
+    ;if MusID__First-1 == 80h
+	;ret	p				; return if it was (invalidates 00h-7Fh; maybe we don't want that someday?)
+    ;else
+	;cp	MusID__First
+	;ret	c				; return if id is less than the first music id
+    ;endif
 
-	ld	(ix+zVar.QueueToPlay),80h	; Rewrite zComRange+8 flag so we know nothing new is coming in
+	ld	(ix+zVar.QueueToPlay),0		; Rewrite zComRange+8 flag so we know nothing new is coming in
 	cp	MusID__End			; is it music (less than index 20)?
 	jp	c,zPlayMusic			; if yes, branch to play the music
-	;cp	SndID__First			; is it not a sound? (this check is redundant if MusID__End == SndID__First...)
-	;ret	c				; if it isn't a sound, return (do nothing)
+	cp	SndID__First			; is it not a sound? (this check is redundant if MusID__End == SndID__First...)
+	ret	c				; if it isn't a sound, return (do nothing)
 	cp	SndID__End			; is it a sound (less than index 71)?
 	jp	c,zPlaySound_CheckRing		; if yes, branch to play the sound
 	cp	CmdID__First			; is it after the last regular sound but before the first special sound command (between 71 and 78)?
@@ -1495,7 +1495,7 @@ zPlaySegaSound:
 	ld	de,(Snd_Sega_End - Snd_Sega)/2	; was: 30BAh
 	ld	a,2Ah			; DAC data register
 	ld	(zYM2612_A0),a		; Select it
-	ld	c,80h			; If QueueToPlay is not this, stops Sega PCM
+	or	a			; If QueueToPlay is not this, stops Sega PCM
 
 -	ld	a,(hl)			; Get next PCM byte
 	ld	(zYM2612_D0),a		; Send to DAC
@@ -1506,7 +1506,7 @@ zPlaySegaSound:
 
 	nop
 	ld	a,(zAbsVar.QueueToPlay)	; Get next item to play
-	cp	c			; Is it 80h?
+	cp	a			; Is it 80h?
 	jr	nz,+			; If not, stop Sega PCM
 	ld	a,(hl)			; Get next PCM byte
 	ld	(zYM2612_D0),a		; Send to DAC
@@ -2318,7 +2318,7 @@ zClearTrackPlaybackMem:
 	ld	(hl),0				; Starting byte is 00h
 	ld	bc,(zTracksSFXEnd-zAbsVar)-1	; For 695 bytes...
 	ldir					; 695 bytes of clearing!  (Because it will keep copying the byte prior to the byte after; thus 00h repeatedly)
-	ld	a,80h
+	xor	a
 	ld	(zAbsVar.QueueToPlay),a		; Nothing is queued
 	call	zFMSilenceAll			; Silence FM
 	jp	zPSGSilenceAll			; Silence PSG
@@ -2367,7 +2367,7 @@ zInitMusicPlayback:
 	pop	bc
 	ld	(ix+zVar.SFXPriorityVal),b
 	ld	(ix+zVar.1upPlaying),c		; 1-up playing flag
-	ld	a,80h
+	xor	a
 	ld	(zAbsVar.QueueToPlay),a
 
     if FixDriverBugs
