@@ -276,7 +276,7 @@ loc_C8E6:
 		lea	byte_DB2B(pc),a1
 		tst.b	(a0)
 		bmi.s	loc_C946
-		lea	byte_DB31(pc),a1
+		lea	byte_DB36(pc),a1
 		move.b	objoff_3A(a3),d0
 		cmp.b	objoff_37(a3),d0
 		bne.s	loc_C912
@@ -284,7 +284,7 @@ loc_C8E6:
 		bne.s	loc_C946
 
 loc_C912:
-		lea	byte_DB36(pc),a1
+		lea	byte_DB31(pc),a1
 		move.w	d7,d0
 		subq.w	#2,d0
 		jsr	sub_D9F4(pc)
