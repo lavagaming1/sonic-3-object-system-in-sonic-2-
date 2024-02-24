@@ -243,9 +243,9 @@ loc_C890:
 		andi.w	#$C,d0
 		lea	(MapPtrs_SaveScreenStatic).l,a2
 		movea.l	(a2,d0.w),a2
+		move.w	#VRAM_Plane_A_Name_Table+$21A,d7
 		lea	(Saved_data).w,a0
-		move.w	#$C21A,d7
-		moveq	#7,d6
+		moveq	#8-1,d6
 
 loc_C8B2:
 		lea	(MapUnc_SaveScreenNEW).l,a1
@@ -256,55 +256,55 @@ loc_C8B2:
 loc_C8BE:
 		move.w	d7,d0
 		bsr.s	sub_C87E
-		moveq	#9,d1
-		moveq	#6,d2
+		moveq	#$A-1,d1
+		moveq	#7-1,d2
 		jsr	(Plane_Map_To_VRAM_2).l
 		addi.w	#$1A,d7
 		lea	next_SaveSlot(a0),a0
 		dbf	d6,loc_C8B2
-		lea	(Dynamic_Object_RAM+object_size).w,a3	; load the first save slot object
-		move.w	#$CA20,d7
+		lea	(Dynamic_object_RAM+object_size).w,a3	; load the first save slot object
+		move.w	#VRAM_Plane_A_Name_Table+$A20,d7
 		lea	(Saved_data).w,a0
-		moveq	#7,d3
+		moveq	#8-1,d3
 
 loc_C8E6:
 		move.w	d7,d0
 		subq.w	#2,d0
 		jsr	sub_C87E(pc)
-		move.l	d0,4(a6)
-		move.w	#$82B1,(a6)
+		move.l	d0,VDP_control_port-VDP_data_port(a6)
+		move.w	#make_art_tile($2B1,0,1),(a6)
 		lea	byte_DB2B(pc),a1
 		tst.b	(a0)
 		bmi.s	loc_C946
-		lea	byte_DB36(pc),a1
-		move.b	$3A(a3),d0  ;3A
-		cmp.b	$37(a3),d0  ;37
+		lea	byte_DB31(pc),a1
+		move.b	objoff_3A(a3),d0
+		cmp.b	objoff_37(a3),d0
 		bne.s	loc_C912
-		tst.b	$3B(a3)     ;3B
+		tst.b	objoff_3B(a3)
 		bne.s	loc_C946
 
 loc_C912:
-		lea	byte_DB31(pc),a1
+		lea	byte_DB36(pc),a1
 		move.w	d7,d0
 		subq.w	#2,d0
 		jsr	sub_D9F4(pc)
-		move.w	$36(a3),d0   ;36
+		move.w	objoff_36(a3),d0
 		add.w	d0,d0
 		moveq	#0,d1
 		move.b	byte_C95E(pc,d0.w),d1
 		bpl.s	loc_C932
-		move.w	#$8000,d1
+		move.w	#high_priority,d1
 		bra.s	loc_C936
 ; ---------------------------------------------------------------------------
 
 loc_C932:
-		addi.w	#$A562,d1
+		addi.w	#make_art_tile($562,1,1),d1
 
 loc_C936:
 		move.w	d1,(a6)
 		moveq	#0,d1
 		move.b	byte_C95E+1(pc,d0.w),d1
-		addi.w	#$A562,d1
+		addi.w	#make_art_tile($562,1,1),d1
 		move.w	d1,(a6)
 		bra.s	loc_C94C
 ; ---------------------------------------------------------------------------
