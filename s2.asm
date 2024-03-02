@@ -11576,11 +11576,15 @@ OptionScreen_Controls:
 	moveq	#0,d2
 
 +
+	cmpi.b	#1,(Options_menu_box).w
+	bne.s	+
 	btst	#button_A,d0
 	beq.s	+
 	addi.b	#$10,d2
 
 +
+	cmpi.b	#1,(Options_menu_box).w
+	bne.s	+
 	btst	#button_B,d0
 	beq.s	+
 	subi.b	#$10,d2
