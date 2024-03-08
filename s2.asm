@@ -88682,7 +88682,7 @@ Map_Fireworm:  BINCLUDE "mappings/Map - Fireworm.bin"
        even
 ArtUnc_Fireworm: BINCLUDE "art/Fireworm.bin";BInclude "HPZ/FireWorm/Art/FireWorm_Head_Art.bin"                                     ;unused BINCLUDE "HPZ/Fireworm.bin"
        even
-DPLC_Fireworm: BINCLUDE "art/dplc/DPLC - Fireworm.asm"
+DPLC_Fireworm: BINCLUDE "mappings/spriteDPLC/DPLC - Fireworm.asm"
 	   even
 ;--------------------------------------------------------------------------------------
 ; Nemesis compressed art (34 blocks)
