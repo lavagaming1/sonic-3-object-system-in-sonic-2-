@@ -4,8 +4,6 @@
 ; ---------------------------------------------------------------------------
 ; size variables - you'll get an informational error if you need to change these...
 ; they are all in units of bytes
-Size_of_DAC_samples =		$FFFF
-Size_of_SEGA_sound =		$6174
 Size_of_Snd_driver_guess =	$1500 ; approximate post-compressed size of the Z80 sound driver
 
 ; ---------------------------------------------------------------------------
@@ -785,7 +783,7 @@ ObjID_RingPrize =		id(ObjPtr_RingPrize)		; DC
 ; Music IDs
 offset :=	zMasterPlaylist
 ptrsize :=	4
-idstart :=	$81
+idstart :=	$01
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy zMusIDPtr in the $80 slot
 
@@ -832,7 +830,7 @@ MusID__End =		id(zMusIDPtr__End)	; A0
 ; Sound IDs
 offset :=	SoundIndex
 ptrsize :=	2
-idstart :=	$A1
+idstart :=	$A0
 ; $80 is reserved for silence, so if you make idstart $80 or less,
 ; you may need to insert a dummy SndPtr in the $80 slot
 
@@ -924,16 +922,17 @@ SndID__End =		id(SndPtr__End)			; F1
 		fatal "You have too many SndPtrs. SndID__End ($\{SndID__End}) can't exceed CmdID__First ($\{CmdID__First})."
 	endif
     endif
-sfx_Switch = SndID_Beep
+sfx_Switch = SndID_Blip
 sfx_Starpost = SndID_Checkpoint 
 sfx_Perfect = SndID_ContinueJingle
 sfx_EnterSS = SndID_EnterGiantRing
 sfx_SmallBumpers = SndID_Bumper
-sfx_SlotMachine = SndID_Beep
+sfx_SlotMachine = SndID_CasinoBonus
+
 ; Sound command IDs
 offset :=	zCommandIndex
-ptrsize :=	4
-idstart :=	$F8
+ptrsize :=	2
+idstart :=	$FA
 
 CmdID__First = idstart
 MusID_StopSFX =		id(CmdPtr_StopSFX)	; F8
@@ -944,8 +943,8 @@ MusID_SlowDown =	id(CmdPtr_SlowDown)	; FC
 MusID_Stop =		id(CmdPtr_Stop)		; FD
 CmdID__End =		id(CmdPtr__End)		; FE
 
-MusID_Pause =		$7E+$80			; FE
-MusID_Unpause =		$7F+$80			; FF
+MusID_Pause =		$7F			; FE
+MusID_Unpause =		$80			; FF
 
 ; 2P VS results screens
 offset := TwoPlayerResultsPointers

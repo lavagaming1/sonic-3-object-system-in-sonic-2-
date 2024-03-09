@@ -258,21 +258,6 @@ SFX_PSG_TRACK_COUNT = (zSFX_PSGEnd-zSFX_PSGStart)/zTrack.len
     CPU Z80UNDOC
     listing purecode
 
-; macro to perform a bank switch... after using this,
-; the start of zROMWindow points to the start of the given 68k address,
-; rounded down to the nearest $8000 byte boundary
-bankswitch macro addr68k
-	xor	a	; a = 0
-	ld	e,1	; e = 1
-	ld	hl,zBankRegister
-cnt	:= 0
-	rept 9
-		; this is either ld (hl),a or ld (hl),e
-		db (73h|((((addr68k)&(1<<(15+cnt)))==0)<<2))
-cnt		:= (cnt+1)
-	endm
-    endm
-
 ; macro to make a certain error message clearer should you happen to get it...
 rsttarget macro {INTLABEL}
 	if ($&7)||($>38h)
@@ -304,6 +289,7 @@ endpad := $
 ; function to turn a 68k address into a word the Z80 can use to access it,
 ; assuming the correct bank has been switched to first
 zmake68kPtr function addr,zROMWindow+(addr&7FFFh)
+zmake68kBank function addr,(((addr&3F8000h)/zROMWindow))
 
 
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
@@ -318,17 +304,11 @@ zPalModeByte:
 	db	0
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-    if OptimiseDriver=0	; This is redundant: the Z80 is slow enough to not need to worry about this
 	align	8
-;zsub_8
-zFMBusyWait:    rsttarget
-	; Performs the annoying task of waiting for the FM to not be busy
-	ld	a,(zYM2612_A0)
-	add	a,a
-	jr	c,zFMBusyWait
-	ret
-; End of function zFMBusyWait
-    endif
+; zsub_C63
+zBankSwitchToMusic:	rsttarget
+	ld	a,(zAbsVar.MusicBankNumber)
+	jp	zBankSwitch
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 	align	8
@@ -344,16 +324,8 @@ zWriteFMIorII:    rsttarget
 ;zsub_18
 zWriteFMI:    rsttarget
 	; Write reg/data pair to part I; 'a' is register, 'c' is data
-    if OptimiseDriver=0
-	push	af
-	rst	zFMBusyWait ; 'rst' is like 'call' but only works for 8-byte aligned addresses <= 38h
-	pop	af
-    endif
 	ld	(zYM2612_A0),a
 	push	af
-    if OptimiseDriver=0
-	rst	zFMBusyWait
-    endif
 	ld	a,c
 	ld	(zYM2612_D0),a
 	pop	af
@@ -365,16 +337,8 @@ zWriteFMI:    rsttarget
 ;zsub_28
 zWriteFMII:    rsttarget
 	; Write reg/data pair to part II; 'a' is register, 'c' is data
-    if OptimiseDriver=0
-	push	af
-	rst	zFMBusyWait
-	pop	af
-    endif
 	ld	(zYM2612_A1),a
 	push	af
-    if OptimiseDriver=0
-	rst	zFMBusyWait
-    endif
 	ld	a,c
 	ld	(zYM2612_D1),a
 	pop	af
@@ -389,7 +353,7 @@ zVInt:    rsttarget
 
 	push	af			; Save 'af'
 	exx				; Effectively backs up 'bc', 'de', and 'hl'
-	call	zBankSwitchToMusic	; Bank switch to the music (depending on which BGM is playing in my version)
+	rst	zBankSwitchToMusic	; Bank switch to the music (depending on which BGM is playing in my version)
 	xor	a			; Clear 'a'
 	ld	(zDoSFXFlag),a		; Not updating SFX (updating music)
 	ld	ix,zAbsVar		; ix points to zComRange
@@ -416,7 +380,7 @@ zUpdateEverything:
 	; Apparently if this is 80h, it does not play anything new,
 	; otherwise it cues up the next play (flag from 68K for new item)
 	ld	a,(zAbsVar.QueueToPlay)
-	cp	80h
+	or	a
 	call	nz,zPlaySoundByIndex		; If not 80h, we need to play something new!
 
 	; Spindash update
@@ -441,7 +405,7 @@ zUpdateEverything:
 	call	zUpdateMusic
 
 	; Now all of the SFX tracks are updated in a similar manner to "zUpdateMusic"...
-	bankswitch SoundIndex		; Bank switch to sound effects
+	call	zBankSwitchToSound	; Bank switch to sound effects
 
 	ld	a,80h
 	ld	(zDoSFXFlag),a		; Set zDoSFXFlag = 80h (updating sound effects)
@@ -473,11 +437,14 @@ zUpdateEverything:
 	; Otherwise it just mucks with the timing loop, forcing an update.
 zUpdateDAC:
 
-	bankswitch SndDAC_Start	; Bankswitch to the DAC data
+	ld	a,2Ah		; DAC port
+	ld	(zYM2612_A0),a	; Set DAC port register
 
 	ld	a,(zCurDAC)	; Get currently playing DAC sound
 	or	a
 	jp	m,+		; If one is queued (80h+), go to it!
+	ld	a,(zCurrentDACBank)	; Get current DAC bank
+	call	zBankSwitch		; Switch to current DAC sample's bank
 	exx			; Otherwise restore registers from mirror regs
 	ld	b,1		; b=1 (initial feed to the DAC "djnz" loops, i.e. UPDATE RIGHT AWAY)
 	pop	af
@@ -485,11 +452,19 @@ zUpdateDAC:
 	ret
 +
 	; If you get here, it's time to start a new DAC sound...
+	; Bankswitch to the DAC data
+	ld	hl,zCurDAC		; Get address of 'current DAC sound' value
+	res	7,(hl)			; Subtract 80h (first DAC index is 80h)
+	ld	a,(hl)			; Get current DAC sound value
+	add	a,zDACBanks&0FFh	; Offset into list
+	ld	(.writeme+1),a		; Store into the instruction after .writeme (self-modifying code)
+.writeme:
+	ld	a,(zDACBanks)		; Get DAC's bank value
+	ld	(zCurrentDACBank),a
+	call	zBankSwitch	
 	ld	a,80h
 	ex	af,af'	;'
-	ld	a,(zCurDAC)		; Get current DAC sound
-	sub	81h			; Subtract 81h (first DAC index is 81h)
-	ld	(zCurDAC),a		; Store that as current DAC sound
+	ld	a,(zCurDAC)		; Get currently playing DAC sound
 	; The following two instructions are dangerous: they discard the upper
 	; two bits of zCurDAC, meaning you can only have 40h DAC samples.
 	add	a,a
@@ -513,6 +488,13 @@ zloc_10B:
 	ei		; enable interrupts
 	ret
 ; End of function zVInt
+
+; 'jman2050' DAC decode lookup table
+	align 100h
+;zbyte_1B3
+zDACDecodeTbl:
+	db	   0,    1,   2,   4,   8,  10h,  20h,  40h
+	db	 80h,   -1,  -2,  -4,  -8, -10h, -20h, -40h
 
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
@@ -644,17 +626,14 @@ zWriteToDAC:
 	djnz	$		; Busy wait for specific amount of time in 'b'
 
 	di			; disable interrupts (while updating DAC)
-	ld	a,2Ah		; DAC port
-	ld	(zYM2612_A0),a	; Set DAC port register
 	ld	a,(hl)		; Get next DAC byte
 	rlca
 	rlca
 	rlca
 	rlca
 	and	0Fh		; UPPER 4-bit offset into zDACDecodeTbl
-	ld	(zloc_18B+2),a	; store into the instruction after zloc_18B (self-modifying code)
+	ld	iyl,a		; store into the instruction after zloc_18B (self-modifying code)
 	ex	af,af'		; shadow register 'a' is the 'd' value for 'jman2050' encoding
-zloc_18B:
 	add	a,(iy+0)	; Get byte from zDACDecodeTbl (self-modified to proper index)
 	ld	(zYM2612_D0),a	; Write this byte to the DAC
 	ex	af,af'		; back to regular registers
@@ -664,31 +643,34 @@ zloc_18B:
 	djnz	$		; Busy wait for specific amount of time in 'b'
 
 	di			; disable interrupts (while updating DAC)
-	push	af
-	pop	af
-	ld	a,2Ah		; DAC port
-	ld	(zYM2612_A0),a	; Set DAC port register
 	ld	b,c		; reload 'b' with wait value
 	ld	a,(hl)		; Get next DAC byte
 	inc	hl		; Next byte in DAC stream...
 	dec	de		; One less byte
+	nop
 	and	0Fh		; LOWER 4-bit offset into zDACDecodeTbl
-	ld	(zloc_1A8+2),a	; store into the instruction after zloc_1A8 (self-modifying code)
+	ld	iyl,a		; store into the instruction after zloc_1A8 (self-modifying code)
 	ex	af,af'		; shadow register 'a' is the 'd' value for 'jman2050' encoding
-zloc_1A8:
 	add	a,(iy+0)	; Get byte from zDACDecodeTbl (self-modified to proper index)
 	ld	(zYM2612_D0),a	; Write this byte to the DAC
 	ex	af,af'		; back to regular registers
 	ei			; enable interrupts (done updating DAC, busy waiting for next update)
-	jp	zWaitLoop	; Back to the wait loop; if there's more DAC to write, we come back down again!
+
+	bit	7,h		; has bank boundary been crossed?
+	jr	nz,zWaitLoop	; if not, branch
+	ld	h,80h		; correct address so it points to start of bank
+	di
+	push	hl
+	ld	hl,zCurrentDACBank
+	inc	(hl)		; set zCurrentDACBank to the next bank, since the boundary's been crossed
+	ld	a,(hl)
+	call	zBankSwitch	; bankswitch to this new bank
+	pop hl
+	ei
+
+	jr	zWaitLoop	; Back to the wait loop; if there's more DAC to write, we come back down again!
 
 ; ---------------------------------------------------------------------------
-; 'jman2050' DAC decode lookup table
-;zbyte_1B3
-zDACDecodeTbl:
-	db	   0,    1,   2,   4,   8,  10h,  20h,  40h
-	db	 80h,   -1,  -2,  -4,  -8, -10h, -20h, -40h
-
 	; The following two tables are used for when an SFX terminates
 	; its track to properly restore the music track it temporarily took
 	; over.  Note that an important rule here is that no SFX may use
@@ -1347,7 +1329,7 @@ zPauseMusic:
 	ld	b,MUSIC_DAC_FM_TRACK_COUNT	; 1 DAC + 6 FM
 	call	zResumeTrack
 
-	bankswitch SoundIndex		; Now for SFX
+	call	zBankSwitchToSound	; Now for SFX
 
 	ld	a,0FFh			; a = 0FFH
 	ld	(zDoSFXFlag),a		; Set flag to say we are updating SFX
@@ -1357,7 +1339,7 @@ zPauseMusic:
 	xor	a			; a = 0
 	ld	(zDoSFXFlag),a		; Clear SFX updating flag
     if OptimiseDriver=0
-	call	zBankSwitchToMusic	; Back to music (Pointless: music isn't updated until the next frame)
+	rst	zBankSwitchToMusic	; Back to music (Pointless: music isn't updated until the next frame)
 	pop	ix			; Restore ix (nothing uses this, beyond this point...)
     endif
 	ret
@@ -1395,7 +1377,7 @@ zResumeTrack:
 ;zsub_674
 zCycleQueue:
 	ld	a,(zAbsVar.QueueToPlay)		; Check if a sound request was made zComRange+08h
-	cp	80h				; Is queue slot equal to 80h?
+	or	a				; Is queue slot equal to 00h?
 	ret	nz				; If not, return
 	ld	hl,zAbsVar.SFXToPlay		; Get address of next sound
 	ld	a,(zAbsVar.SFXPriorityVal)	; Get current SFX priority
@@ -1443,16 +1425,16 @@ zlocQueueItem:
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 ; zsub_6B2:
 zPlaySoundByIndex:
-	or	a				; is it sound 00?
-	jp	z,zClearTrackPlaybackMem	; if yes, branch to RESET EVERYTHING!!
-    if MusID__First-1 == 80h
-	ret	p				; return if it was (invalidates 00h-7Fh; maybe we don't want that someday?)
-    else
-	cp	MusID__First
-	ret	c				; return if id is less than the first music id
-    endif
+	;or	a				; is it sound 00?
+	;jp	z,zClearTrackPlaybackMem	; if yes, branch to RESET EVERYTHING!!
+    ;if MusID__First-1 == 80h
+	;ret	p				; return if it was (invalidates 00h-7Fh; maybe we don't want that someday?)
+    ;else
+	;cp	MusID__First
+	;ret	c				; return if id is less than the first music id
+    ;endif
 
-	ld	(ix+zVar.QueueToPlay),80h	; Rewrite zComRange+8 flag so we know nothing new is coming in
+	ld	(ix+zVar.QueueToPlay),0		; Rewrite zComRange+8 flag so we know nothing new is coming in
 	cp	MusID__End			; is it music (less than index 20)?
 	jp	c,zPlayMusic			; if yes, branch to play the music
 	cp	SndID__First			; is it not a sound? (this check is redundant if MusID__End == SndID__First...)
@@ -1461,31 +1443,27 @@ zPlaySoundByIndex:
 	jp	c,zPlaySound_CheckRing		; if yes, branch to play the sound
 	cp	CmdID__First			; is it after the last regular sound but before the first special sound command (between 71 and 78)?
 	ret	c				; if yes, return (do nothing)
-	cp	MusID_Pause			; is it sound 7E or 7F (pause all or resume all)
-	ret	nc				; if yes, return (those get handled elsewhere)
+	;cp	MusID_Pause			; is it sound 7E or 7F (pause all or resume all)
+	;ret	nc				; if yes, return (those get handled elsewhere)
 	; Otherwise, this is a special command to the music engine...
 	sub	CmdID__First	; convert index 78-7D to a lookup into the following jump table
 	add	a,a
-	add	a,a
-	ld	(zloc_6D5+1),a	; store into the instruction after zloc_6D5 (self-modifying code)
+	add	a,zloc_6D5&0FFh
+	ld	(.writeme+1),a
+.writeme:
+	ld	hl,(zloc_6D5)
+	jp	(hl)
 
 zloc_6D5:
-	jr	$
 ; ---------------------------------------------------------------------------
 zCommandIndex:
 
-CmdPtr_StopSFX:		jp	zStopSoundEffects ; sound test index 78
-			db	0
-CmdPtr_FadeOut:		jp	zFadeOutMusic ; 79
-			db	0
-CmdPtr_SegaSound:	jp	zPlaySegaSound ; 7A
-			db	0
-CmdPtr_SpeedUp:		jp	zSpeedUpMusic ; 7B
-			db	0
-CmdPtr_SlowDown:	jp	zSlowDownMusic ; 7C
-			db	0
-CmdPtr_Stop:		jp	zStopSoundAndMusic ; 7D
-			db	0
+CmdPtr_StopSFX:		dw	zStopSoundEffects ; sound test index 78
+CmdPtr_FadeOut:		dw	zFadeOutMusic ; 79
+CmdPtr_SegaSound:	dw	zPlaySegaSound ; 7A
+CmdPtr_SpeedUp:		dw	zSpeedUpMusic ; 7B
+CmdPtr_SlowDown:	dw	zSlowDownMusic ; 7C
+CmdPtr_Stop:		dw	zStopSoundAndMusic ; 7D
 CmdPtr__End:
 ; ---------------------------------------------------------------------------
 ; zloc_6EF:
@@ -1501,13 +1479,23 @@ zPlaySegaSound:
 	ld	c,80h		; Command to enable DAC
 	rst	zWriteFMI
 
-	bankswitch Snd_Sega	; Want Sega sound
+	; RM: can't use the regular bankswitch function for this,
+	; so I used S3K's method...works fine so eh! :P
+	ld	a,zmake68kBank(Snd_Sega)	; Want Sega sound
+	ld	b, 8
+
+.bankloop:
+	ld	(zBankRegister),a
+	rrca
+	djnz	.bankloop
+	xor	a
+	ld	(zBankRegister),a
 
 	ld	hl,zmake68kPtr(Snd_Sega) ; was: 9E8Ch
 	ld	de,(Snd_Sega_End - Snd_Sega)/2	; was: 30BAh
 	ld	a,2Ah			; DAC data register
 	ld	(zYM2612_A0),a		; Select it
-	ld	c,80h			; If QueueToPlay is not this, stops Sega PCM
+	or	a			; If QueueToPlay is not this, stops Sega PCM
 
 -	ld	a,(hl)			; Get next PCM byte
 	ld	(zYM2612_D0),a		; Send to DAC
@@ -1518,7 +1506,7 @@ zPlaySegaSound:
 
 	nop
 	ld	a,(zAbsVar.QueueToPlay)	; Get next item to play
-	cp	c			; Is it 80h?
+	cp	a			; Is it 80h?
 	jr	nz,+			; If not, stop Sega PCM
 	ld	a,(hl)			; Get next PCM byte
 	ld	(zYM2612_D0),a		; Send to DAC
@@ -1533,7 +1521,7 @@ zPlaySegaSound:
 	or	e			; Is de zero?
 	jp	nz,-			; If not, loop
 +
-	call	zBankSwitchToMusic
+	rst	zBankSwitchToMusic
 	ld	a,(zAbsVar.DACEnabled)	; DAC status
 	ld	c,a			; c = DAC status
 	ld	a,2Bh			; DAC enable/disable register
@@ -1600,56 +1588,37 @@ zBGMLoad:
 	add	hl,de				; Offset by 16-bit version of song index to proper tempo
 	ld	a,(hl)				; Get value at this location -> 'a'
 	ld	(zAbsVar.TempoTurbo),a		; Store 'a' here (provides an alternate tempo or something for speed up mode)
-  ld   hl,zMasterPlaylist; Get address of the zMasterPlaylist
-   add   hl,de           ; Add the 16-bit offset here
-   add   hl,de           ; Add the 16-bit offset here
-   add   hl,de           ; Add the 16-bit offset here
-   add   hl,de           ; Add the 16-bit offset here
-   ld   a,(hl)           ; Get bank index
-   inc   hl               ; Advance pointer
-   ld   (zAbsVar.MusicBankNumber),a; Store bank index
-   ld   a,(hl)           ; Get song flags
-   inc   hl               ; Advance pointer
-   add   a,a               ; Adding a+a causes an overflow and a multiplication by 2
-   add   a,a               ; Now multiplied by 4
-   ld   c,a               ; Result -> 'c'
-   ccf                   ; Clear carry flag...
-   sbc   a,a               ; ... reverse subtract with carry that was set to zero ... umm.. a=0 in a funny way?
-   ld   (zAbsVar.IsPalFlag),a   ; Clear zIsPalFlag?
-   ld   a,c               ; Put prior multiply result back in
-   add   a,a               ; Now multiplied by 8!
-   sbc   a,a               ; This is nonzero if bit 5 of original a is set, zero otherwise (uncompressed song flag)
-   push   af           ; Backing up result...?
-   ld   e, (hl)           ; Read low byte of pointer into e
-   inc   hl               ; Advance pointer
-   ld   d, (hl)           ; Read high byte of pointer into d
-   push   hl; Save 'hl' (will be damaged by bank switch)
-   call   zBankSwitchToMusic; Bank switch to start of music in ROM!
-   pop   hl ; Restore 'hl'
+	ld	hl,zMasterPlaylist; Get address of the zMasterPlaylist
+	add	hl,de           ; Add the 16-bit offset here
+	add	hl,de           ; Add the 16-bit offset here
+	add	hl,de           ; Add the 16-bit offset here
+	add	hl,de           ; Add the 16-bit offset here
+	ld	a,(hl)           ; Get bank index
+	inc	hl               ; Advance pointer
+	ld	(zAbsVar.MusicBankNumber),a; Store bank index
+	ld	a,(hl)           ; Get song flags
+	inc	hl               ; Advance pointer
+	add	a,a               ; Adding a+a causes an overflow and a multiplication by 2
+	add	a,a               ; Now multiplied by 4
+	ld	c,a               ; Result -> 'c'
+	ccf                   ; Clear carry flag...
+	sbc	a,a               ; ... reverse subtract with carry that was set to zero ... umm.. a=0 in a funny way?
+	ld	(zAbsVar.IsPalFlag),a   ; Clear zIsPalFlag?
+	ld	a,c               ; Put prior multiply result back in
+	add	a,a               ; Now multiplied by 8!
+	sbc	a,a               ; This is nonzero if bit 5 of original a is set, zero otherwise (uncompressed song flag)
+	push	af           ; Backing up result...?
+	ld	e, (hl)           ; Read low byte of pointer into e
+	inc	hl               ; Advance pointer
+	ld	d, (hl)           ; Read high byte of pointer into d
+	push	hl; Save 'hl' (will be damaged by bank switch)
+	rst	zBankSwitchToMusic; Bank switch to start of music in ROM!
+	pop	hl ; Restore 'hl'
 	; If we bypass the Saxman decompressor, the Z80 engine starts
 	; with the assumption that we're already decompressed with 'de' pointing
 	; at the decompressed data (which just so happens to be the ROM window)
 	pop	af
-	or	a	; Was the uncompressed song flag set?
-	jr	nz,+	; Bypass the Saxman decompressor if so
 
-	; This begins a call to the Saxman decompressor:
-	ex	de,hl
-	exx
-	push	hl
-	push	de
-	push	bc
-    if OptimiseDriver=0
-	exx
-    endif
-	call	zSaxmanDec
-	exx
-	pop	bc
-	pop	de
-	pop	hl
-	exx
-	ld	de,zMusicData	; Saxman compressed songs start at zMusicData (1380h)
-+
 	; Begin common track init code
 	push	de
 	pop	ix				; ix = de (BGM's starting address)
@@ -1997,7 +1966,7 @@ zPlaySound_CheckSpindash:
 ; zloc_975:
 zPlaySound:
 
-	bankswitch SoundIndex			; Switch to SFX banks
+	call	zBankSwitchToSound		; Switch to SFX banks
 
 	ld	hl,zmake68kPtr(SoundIndex)	; 'hl' points to beginning of SFX bank in ROM window
 	ld	a,c				; 'c' -> 'a'
@@ -2349,7 +2318,7 @@ zClearTrackPlaybackMem:
 	ld	(hl),0				; Starting byte is 00h
 	ld	bc,(zTracksSFXEnd-zAbsVar)-1	; For 695 bytes...
 	ldir					; 695 bytes of clearing!  (Because it will keep copying the byte prior to the byte after; thus 00h repeatedly)
-	ld	a,80h
+	xor	a
 	ld	(zAbsVar.QueueToPlay),a		; Nothing is queued
 	call	zFMSilenceAll			; Silence FM
 	jp	zPSGSilenceAll			; Silence PSG
@@ -2378,6 +2347,8 @@ zInitMusicPlayback:
 	ld	b,(ix+zVar.SFXToPlay)		; SFX queue slot
 	ld	c,(ix+zVar.SFXStereoToPlay)	; Stereo SFX queue slot
 	push	bc
+	ld	c,(ix+zVar.SFXUnknown)		; Unknown SFX queue slot
+	push	bc
 	; The following clears all playback memory and non-SFX tracks
 	ld	hl,zAbsVar
 	ld	de,zAbsVar+1
@@ -2389,12 +2360,14 @@ zInitMusicPlayback:
 	ld	(ix+zVar.SFXToPlay),b		; SFX queue slot
 	ld	(ix+zVar.SFXStereoToPlay),c	; Stereo SFX queue slot
 	pop	bc
+	ld	(ix+zVar.SFXUnknown),b		; Unknown SFX queue slot
+	pop	bc
 	ld	(ix+zVar.SpeedUpFlag),b		; speed shoe flag
 	ld	(ix+zVar.FadeInCounter),c	; fade in frames
 	pop	bc
 	ld	(ix+zVar.SFXPriorityVal),b
 	ld	(ix+zVar.1upPlaying),c		; 1-up playing flag
-	ld	a,80h
+	xor	a
 	ld	(zAbsVar.QueueToPlay),a
 
     if FixDriverBugs
@@ -2565,21 +2538,21 @@ zFMNoteOff:
 
 ; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
 
-; performs a bank switch to where the music for the current track is at
-; (there are two possible bank locations for music)
+; performs a bank switch to where the sfx are at
 
-; zsub_C63:
-zBankSwitchToMusic:
-   ld   a,(zAbsVar.MusicBankNumber)
-   ld   hl, zBankRegister
-   ld   (hl), a
-   rept 7
-       rra
-       ld   (hl), a
-   endm
-   xor   a
-   ld   (hl), a
-   ret
+zBankSwitchToSound:
+	ld	a,zmake68kBank(SoundIndex)
+
+zBankSwitch:
+	ld	hl, zBankRegister
+	ld	(hl),a
+    rept 7
+	rra
+	ld	(hl),a
+    endm
+	xor	a
+	ld	(hl),a
+	ret
 ; End of function zBankSwitchToMusic
 
 ; ---------------------------------------------------------------------------
@@ -2824,7 +2797,7 @@ cfFadeInToPrevious:
 	ld	bc,zTracksSaveEnd-zTracksSaveStart	; for this many bytes
 	ldir					; Go!
 
-	call	zBankSwitchToMusic
+	rst	zBankSwitchToMusic
 	ld	a,(zSongDAC.PlaybackControl)	; Get DAC's playback bit
 	or	4
 	ld	(zSongDAC.PlaybackControl),a	; Set "SFX is overriding" on it (not normal, but will work for this purpose)
@@ -3278,13 +3251,13 @@ zloc_F1D:
 	ld	ix,(zMusicTrackOffs)		; self-modified code from just above; 'ix' points to corresponding Music FM track
 	bit	2,(ix+zTrack.PlaybackControl)	; If "SFX is overriding this track" is not set...
 	jp	z,+				; Skip this part (i.e. if SFX was not overriding this track, then nothing to restore)
-	call	zBankSwitchToMusic		; Bank switch back to music track
+	rst	zBankSwitchToMusic		; Bank switch back to music track
 	res	2,(ix+zTrack.PlaybackControl)	; Clear SFX is overriding this track from playback control
 	set	1,(ix+zTrack.PlaybackControl)	; Set track as resting bit
 	ld	a,(ix+zTrack.VoiceIndex)	; Get voice this track was using
 	call	zSetVoiceMusic			; And set it!  (takes care of volume too)
 
-	bankswitch SoundIndex
+	call	zBankSwitchToSound
 +
 	pop	ix	; restore 'ix'
 	pop	bc	; removing return address from stack; will not return to coord flag loop
@@ -3505,7 +3478,6 @@ byte_11E5:
 	db	0Eh,0Dh,0Ch,0Bh,0Ah,9,8,7,6,5,4,3,2,1,0,80h
 
 ;	END of zPSG_FlutterTbl ---------------------------
-zmake68kBank function addr,(((addr&3F8000h)/zROMWindow))
 zmakePlaylistEntry macro addr,val
    db   zmake68kBank(addr),val
    dw   zmake68kPtr(addr)
@@ -3562,6 +3534,8 @@ zSpedUpTempoTable:
 	db	0CDh,0AAh,0F2h,0DBh
 	db	0D5h,0F0h, 80h
 
+	align 16
+
 	; DAC sample pointers and lengths
 	ensure1byteoffset 1Ch
 DACSize macro Sample
@@ -3579,204 +3553,58 @@ zDACPtr_Scratch:	DACSize SndDAC_Scratch
 zDACPtr_Timpani:	DACSize SndDAC_Timpani
 zDACPtr_Tom:		DACSize SndDAC_Tom
 zDACPtr_Bongo:		DACSize SndDAC_Bongo
+zDACPtr_ElecTom:	DACSize SndDAC_ElecTom
+zDACPtr_Timbale:	DACSize SndDAC_Timbale
+
+	align 16
 
 	; something else for DAC sounds
 	; First byte selects one of the DAC samples.  The number that
 	; follows it is a wait time between each nibble written to the DAC
 	; (thus higher = slower)
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
-	nop
 	ensure1byteoffset 22h
 ; zbyte_124F:
 zDACMasterPlaylist:
 ; DAC samples IDs
 offset :=	zDACPtrTbl
 ptrsize :=	2+2
-idstart :=	81h
+idstart :=	80h
 
-	db	id(zDACPtr_Kick),17h		; 81h
-	db	id(zDACPtr_Snare),1		; 82h
-	db	id(zDACPtr_Clap),6		; 83h
-	db	id(zDACPtr_Scratch),8		; 84h
+	db	id(zDACPtr_Kick),7		; 81h
+	db	id(zDACPtr_Snare),7		; 82h
+	db	id(zDACPtr_Clap),7		; 83h
+	db	id(zDACPtr_Scratch),1Ah		; 84h
 	db	id(zDACPtr_Timpani),1Bh		; 85h
-	db	id(zDACPtr_Tom),0Ah		; 86h
-	db	id(zDACPtr_Bongo),1Bh		; 87h
+	db	id(zDACPtr_Tom),20h		; 86h
+	db	id(zDACPtr_Bongo),1Fh		; 87h
 	db	id(zDACPtr_Timpani),12h		; 88h
 	db	id(zDACPtr_Timpani),15h		; 89h
 	db	id(zDACPtr_Timpani),1Ch		; 8Ah
 	db	id(zDACPtr_Timpani),1Dh		; 8Bh
-	db	id(zDACPtr_Tom),2		; 8Ch
-	db	id(zDACPtr_Tom),5		; 8Dh
-	db	id(zDACPtr_Tom),8		; 8Eh
-	db	id(zDACPtr_Bongo),8		; 8Fh
-	db	id(zDACPtr_Bongo),0Bh		; 90h
-	db	id(zDACPtr_Bongo),12h		; 91h
+	db	id(zDACPtr_Tom),0Eh		; 8Ch
+	db	id(zDACPtr_Tom),14h		; 8Dh
+	db	id(zDACPtr_Tom),1Ah		; 8Eh
+	db	id(zDACPtr_Bongo),0Ah		; 8Fh
+	db	id(zDACPtr_Bongo),0Dh		; 90h
+	db	id(zDACPtr_Bongo),14h		; 91h
+	db	id(zDACPtr_ElecTom),5		; 92h
+	db	id(zDACPtr_ElecTom),9		; 93h
+	db	id(zDACPtr_ElecTom),0Ch		; 94h
+	db	id(zDACPtr_ElecTom),10h		; 95h
+	db	id(zDACPtr_Timbale),0Dh		; 96h
+	db	id(zDACPtr_Timbale),13h		; 97h
 
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-;zsub_1271
-zSaxmanDec:
-    if OptimiseDriver
-	xor	a
-	ld	b,a
-	ld	d,a
-	ld	e,a
-    else
-	exx
-	ld	bc,0
-	ld	de,0
-    endif
-	exx
-	ld	de,zMusicData
-	ld	c,(hl)
-	inc	hl
-	ld	b,(hl)			; bc = (hl) i.e. "size of song"
-	inc	hl
-	ld	(zGetNextByte+1),hl	; modify inst. @ zGetNextByte -- set to beginning of decompression stream
-    if OptimiseDriver=0
-	inc	bc
-    endif
-	ld	(zDecEndOrGetByte+1),bc	; modify inst. @ zDecEndOrGetByte -- set to length of song, +1
-
-;zloc_1288
-zSaxmanReadLoop:
-
-	exx				; shadow reg set
-    if OptimiseDriver
-	srl	b			; b >> 1 (just a mask that lets us know when we need to reload)
-	jr	c,+			; if it's set, we still have bits left in 'c'; jump to '+'
-	; If you get here, we're out of bits in 'c'!
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	c,a			; a -> 'c'
-	ld	b,7Fh			; b = 7Fh (7 new bits in 'c')
-+
-	srl	c			; test next bit of 'c'
-	exx				; normal reg set
-	jr	nc,+			; if bit not set, it's a compression bit; jump to '+'
-    else
-	srl	c			; c >> 1 (active control byte)
-	srl	b			; b >> 1 (just a mask that lets us know when we need to reload)
-	bit	0,b			; test next bit of 'b'
-	jr	nz,+			; if it's set, we still have bits left in 'c'; jump to '+'
-	; If you get here, we're out of bits in 'c'!
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	c,a			; a -> 'c'
-	ld	b,0FFh			; b = FFh (8 new bits in 'c')
-+
-	bit	0,c			; test next bit of 'c'
-	exx				; normal reg set
-	jr	z,+			; if bit not set, it's a compression bit; jump to '+'
-    endif
-	; If you get here, there's a non-compressed byte
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	(de),a			; store it directly to the target memory address
-	inc	de			; de++
-	exx				; shadow reg set
-	inc	de			; Also increase shadow-side 'de'... relative pointer only, does not point to output Z80_RAM
-	exx				; normal reg set
-	jr	zSaxmanReadLoop		; loop back around...
-+
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	c,a			; a -> 'c' (low byte of target address)
-	call	zDecEndOrGetByte	; get next byte -> 'a'
-	ld	b,a			; a -> 'b' (high byte of target address + count)
-	and	0Fh			; keep only lower four bits...
-	add	a,3			; add 3 (minimum 3 bytes are to be read in this mode)
-	push	af			; save 'a'...
-	ld	a,b			; b -> 'a' (low byte of target address)
-	rlca
-	rlca
-	rlca
-	rlca
-	and	0Fh			; basically (b >> 4) & 0xF (upper four bits now exclusively as lower four bits)
-	ld	b,a			; a -> 'b' (only upper four bits of value make up part of the address)
-	ld	a,c
-	add	a,12h
-	ld	c,a
-	adc	a,b
-	sub	c
-	and	0Fh
-	ld	b,a			; bc += 12h
-	pop	af			; restore 'a' (byte count to read; no less than 3)
-	exx				; shadow reg set
-	push	de			; keep current 'de' (relative pointer) value...
-	ld	l,a			; how many bytes we will read -> 'hl'
-	ld	h,0
-	add	hl,de			; add current relative pointer...
-	ex	de,hl			; effectively, de += a
-	exx				; normal reg set
-	pop	hl			; shadow 'de' -> 'hl' (relative pointer, prior to all bytes read, relative)
-	or	a			; Clear carry
-	sbc	hl,bc			; hl -= bc
-	jr	nc,+			; if result positive, jump to '+'
-	ex	de,hl			; current output pointer -> 'hl'
-	ld	b,a			; how many bytes to load -> 'b'
-
--	ld	(hl),0			; fill in zeroes that many times
-	inc	hl
-	djnz	-
-
-	ex	de,hl			; output pointer updated
-	jr	zSaxmanReadLoop		; loop back around...
-+
-	ld	hl,zMusicData		; point at beginning of decompression point
-	add	hl,bc			; move ahead however many bytes
-	ld	c,a
-	ld	b,0
-	ldir
-	jr	zSaxmanReadLoop
-; End of function zSaxmanDec
-
-
-; ||||||||||||||| S U B	R O U T	I N E |||||||||||||||||||||||||||||||||||||||
-
-
-; This is an ugly countdown to zero implemented in repeatedly modifying code!!
-; But basically, it starts at the full length of the song +1 (so it can decrement)
-; and waits until 'hl' decrements to zero
-;zsub_12E8
-zDecEndOrGetByte:
-	ld	hl,0			; "self-modified code" -- starts at full length of song +1, waits until it gets to 1...
-    if OptimiseDriver
-	ld	a,h
-	or	l
-	jr	z,+			; If 'h' and 'l' both equal zero, we quit!!
-    endif
-	dec	hl			; ... where this will be zero
-	ld	(zDecEndOrGetByte+1),hl	; "self-modifying code" -- update the count in case it's not zero
-    if OptimiseDriver=0
-	ld	a,h
-	or	l
-	jr	z,+			; If 'h' and 'l' both equal zero, we quit!!
-    endif
-;zloc_12F3
-zGetNextByte:
-	ld	hl,0			; "self-modified code" -- get address of next compressed byte
-	ld	a,(hl)			; put it into -> 'a'
-	inc	hl			; next byte...
-	ld	(zGetNextByte+1),hl	; change inst @ zGetNextByte so it loads next compressed byte
-	ret				; still going...
-+
-	pop	hl			; throws away return address to this function call so that next 'ret' exits decompressor (we're done!)
-	ret				; Exit decompressor
-; End of function zDecEndOrGetByte
+	ensure1byteoffset 9
+zDACBanks:
+	db	zmake68kBank(SndDAC_Kick)
+	db	zmake68kBank(SndDAC_Snare)
+	db	zmake68kBank(SndDAC_Clap)
+	db	zmake68kBank(SndDAC_Scratch)
+	db	zmake68kBank(SndDAC_Timpani)
+	db	zmake68kBank(SndDAC_Tom)
+	db	zmake68kBank(SndDAC_Bongo)
+	db	zmake68kBank(SndDAC_ElecTom)
+	db	zmake68kBank(SndDAC_Timbale)
 
 ; ---------------------------------------------------------------------------
 	; space for a few global variables
@@ -3791,6 +3619,7 @@ zSpindashPlayingCounter:	db 0 ; zbyte_1304
 zSpindashExtraFrequencyIndex:	db 0 ; zbyte_1305
 zSpindashActiveFlag:		db 0 ; zbyte_1306 ; -1 if spindash charge was the last sound that played
 zPaused:	db 0 ; zbyte_1307 ; 0 = normal, -1 = pause all sound and music
+zCurrentDACBank:	db 0
 
 
 

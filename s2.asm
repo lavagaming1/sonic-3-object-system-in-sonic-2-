@@ -29,7 +29,7 @@ padToPowerOfTwo = 0
 allOptimizations = 0
 ;	| If 1, enables all optimizations
 ;
-skipChecksumCheck = 0|allOptimizations
+skipChecksumCheck = 1|allOptimizations
 ;	| If 1, disables the unnecessary (and slow) bootup checksum calculation
 ;
 zeroOffsetOptimization = 0|allOptimizations
@@ -356,7 +356,7 @@ GameClrRAM:
 	dbf	d6,GameClrRAM	; clear RAM ($0000-$FDFF)
 
 	bsr.w	VDPSetupGame
-	bsr.w	JmpTo_SoundDriverLoad
+	jsr	SoundDriverLoad
 	bsr.w	JoypadInit
 	jsr     (SRAM_Load).l ; s ram wont even work without this lol
 	move.b	#GameModeID_SegaScreen,(Game_Mode).w ; set Game Mode to Sega Screen
@@ -477,10 +477,6 @@ Vint_Lag:
 	cmpi.b	#GameModeID_Level,(Game_Mode).w	; Zone play mode?
 	beq.s	loc_4C4
 
-	stopZ80			; stop the Z80
-	bsr.w	sndDriverInput	; give input to the sound driver
-	startZ80		; start the Z80
-
 	bra.s	VintRet
 ; ---------------------------------------------------------------------------
 
@@ -511,8 +507,7 @@ loc_526:
 
 loc_54A:
 	move.w	(Hint_counter_reserve).w,(a5)
-	move.w	#$8200|(VRAM_Plane_A_Name_Table/$400),(VDP_control_port).l	; Set scroll A PNT base to $C000
-	bsr.w	sndDriverInput
+	move.w	#$8200|(VRAM_Plane_A_Name_Table/$400),(a5)	; Set scroll A PNT base to $C000
 
 	startZ80
 
@@ -536,7 +531,6 @@ Vint0_noWater:
 
 	stopZ80
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
-	bsr.w	sndDriverInput
 	startZ80
 
 	bra.w	VintRet
@@ -643,7 +637,6 @@ loc_748:
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -654,11 +647,6 @@ loc_748:
 	movem.l	(Scroll_flags).w,d0-d3
 	movem.l	d0-d3,(Scroll_flags_copy).w
 	move.l	(Vscroll_Factor_P2).w,(Vscroll_Factor_P2_HInt).w
-	cmpi.b	#$5C,(Hint_counter_reserve+1).w
-	bhs.s	+
-	move.b	#1,(Do_Updates_in_H_int).w
-	jmp	(Set_Kos_Bookmark).l
-+
         bsr.s	Do_Updates
         jmp	(Set_Kos_Bookmark).l
 ; ---------------------------------------------------------------------------
@@ -685,7 +673,6 @@ Vint_Pause_specialStage:
 	stopZ80
 
 	bsr.w	ReadJoypads
-	jsr	(sndDriverInput).l
 	tst.b	(SS_Last_Alternate_HorizScroll_Buf).w
 	beq.s	loc_84A
 
@@ -763,7 +750,6 @@ SS_PNTA_Transfer_Table:	offsetTable
 	eori.b	#1,(SS_Alternate_PNT).w			; Toggle flag
 +
 	bsr.w	ProcessDMAQueue
-	jsr	(sndDriverInput).l
 
 	startZ80
 
@@ -897,7 +883,6 @@ loc_BD6:
 
 	bsr.w	ProcessDMAQueue
 	jsr	(DrawLevelTitleCard).l
-	jsr	(sndDriverInput).l
 
 	startZ80
 
@@ -933,7 +918,6 @@ Vint_Ending:
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 	movem.l	(Camera_RAM).w,d0-d7
 	movem.l	d0-d7,(Camera_RAM_copy).w
 	movem.l	(Scroll_flags).w,d0-d3
@@ -984,7 +968,6 @@ Vint_Menu:
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
 
 	bsr.w	ProcessDMAQueue
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -1015,8 +998,6 @@ loc_EDA:
 loc_EFE:
 	dma68kToVDP Sprite_Table,VRAM_Sprite_Attribute_Table,VRAM_Sprite_Attribute_Table_Size,VRAM
 	dma68kToVDP Horiz_Scroll_Buf,VRAM_Horiz_Scroll_Table,VRAM_Horiz_Scroll_Table_Size,VRAM
-
-	bsr.w	sndDriverInput
 
 	startZ80
 
@@ -1080,62 +1061,7 @@ PalToCRAM:
     endm
 	move.w	#$8ADF,4(a1)	; Write %1101 %1111 to register 10 (interrupt every 224th line)
 	movem.l	(sp)+,a0-a1
-	tst.b	(Do_Updates_in_H_int).w
-	bne.s	loc_1072
 	rte
-; ===========================================================================
-
-loc_1072:
-	clr.b	(Do_Updates_in_H_int).w
-	movem.l	d0-a6,-(sp)
-	bsr.w	Do_Updates
-	movem.l	(sp)+,d0-a6
-	rte
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-; Input our music/sound selection to the sound driver.
-
-sndDriverInput:
-	lea	(Music_to_play&$00FFFFFF).l,a0
-	lea	(Z80_RAM+zAbsVar).l,a1 ; $A01B80
-	cmpi.b	#$80,zAbsVar.QueueToPlay-zAbsVar(a1)	; If this (zReadyFlag) isn't $80, the driver is processing a previous sound request.
-	bne.s	loc_10C4	; So we'll wait until at least the next frame before putting anything in there.
-	move.b	0(a0),d0
-	beq.s	loc_10A4
-	clr.b	0(a0)
-	bra.s	loc_10AE
-; ---------------------------------------------------------------------------
-
-loc_10A4:
-	move.b	4(a0),d0	; If there was something in Music_to_play_2, check what that was. Else, just go to the loop.
-	beq.s	loc_10C4
-	clr.b	4(a0)
-
-loc_10AE:		; Check that the sound is not FE or FF
-	move.b	d0,d1	; If it is, we need to put it in $A01B83 as $7F or $80 respectively
-	subi.b	#MusID_Pause,d1
-	bcs.s	loc_10C0
-	addi.b	#$7F,d1
-	move.b	d1,zAbsVar.StopMusic-zAbsVar(a1)
-	bra.s	loc_10C4
-; ---------------------------------------------------------------------------
-
-loc_10C0:
-	move.b	d0,zAbsVar.QueueToPlay-zAbsVar(a1)
-
-loc_10C4:
-	moveq	#4-1,d1
-				; FFE4 (Music_to_play_2) goes to 1B8C (zMusicToPlay),
--	move.b	1(a0,d1.w),d0	; FFE3 (unk_FFE3) goes to 1B8B, (unknown)
-	beq.s	+		; FFE2 (SFX_to_play_2) goes to 1B8A (zSFXToPlay2),
-	tst.b	zAbsVar.SFXToPlay-zAbsVar(a1,d1.w)	; FFE1 (SFX_to_play) goes to 1B89 (zSFXToPlay).
-	bne.s	+
-	clr.b	1(a0,d1.w)
-	move.b	d0,zAbsVar.SFXToPlay-zAbsVar(a1,d1.w)
-+
-	dbf	d1,-
-	rts
-; End of function sndDriverInput
 
     if ~~removeJmpTos
 ; sub_10E0:
@@ -1158,6 +1084,7 @@ JmpTo_SegaScr_VInt ; JmpTo
 ; sub_10EC:
 JoypadInit:
 	stopZ80
+	waitZ80
 	moveq	#$40,d0
 	move.b	d0,(HW_Port_1_Control).l	; init port 1 (joypad 1)
 	move.b	d0,(HW_Port_2_Control).l	; init port 2 (joypad 2)
@@ -1272,22 +1199,27 @@ VDPSetupArray_End:
 Clear_DisplayData:
 ClearScreen:
 	stopZ80
+	
+	moveq	#0,d0
 
-	dmaFillVRAM 0,$0000,$40		; Fill first $40 bytes of VRAM with 0
-	dmaFillVRAM 0,VRAM_Plane_A_Name_Table,VRAM_Plane_Table_Size	; Clear Plane A pattern name table
-	dmaFillVRAM 0,VRAM_Plane_B_Name_Table,VRAM_Plane_Table_Size	; Clear Plane B pattern name table
+	lea	(VDP_control_port).l,a5
+	move.w	#$8F01,(a5)
+	dmaFillVRAM_reg2 d0,$0000,$40		; Fill first $40 bytes of VRAM with 0
+	dmaFillVRAM_reg2 d0,VRAM_Plane_A_Name_Table,VRAM_Plane_Table_Size	; Clear Plane A pattern name table
+	dmaFillVRAM_reg2 d0,VRAM_Plane_B_Name_Table,VRAM_Plane_Table_Size	; Clear Plane B pattern name table
 
 	tst.w	(Two_player_mode).w
 	beq.s	+
 
-	dmaFillVRAM 0,VRAM_Plane_A_Name_Table_2P,VRAM_Plane_Table_Size
+	dmaFillVRAM_reg2 d0,VRAM_Plane_A_Name_Table_2P,VRAM_Plane_Table_Size
 +
-	clr.l	(Vscroll_Factor).w
-	clr.l	(unk_F61A).w
+	move.w	#$8F02,(a5)
 
-	; Bug: These '+4's shouldn't be here; clearRAM accidentally clears an additional 4 bytes
-	clearRAM Sprite_Table,Sprite_Table_End+4
-	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf_End+4
+	move.l	d0,(Vscroll_Factor).w
+	move.l	d0,(unk_F61A).w
+
+	clearRAM2 Sprite_Table,Sprite_Table_End
+	clearRAM2 Horiz_Scroll_Buf,Horiz_Scroll_Buf_End
 
 	startZ80
 	rts
@@ -1295,45 +1227,20 @@ ClearScreen:
 
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-
-; JumpTo load the sound driver
-; sub_130A:
-JmpTo_SoundDriverLoad ; JmpTo
-	nop
-	jmp	(SoundDriverLoad).l
-; End of function JmpTo_SoundDriverLoad
-
-; ===========================================================================
-; unused mostly-leftover subroutine to load the sound driver
-; SoundDriverLoadS1:
-	move.w	#$100,(Z80_Bus_Request).l ; stop the Z80
-	move.w	#$100,(Z80_Reset).l ; reset the Z80
-	lea	(Z80_RAM).l,a1
-	move.b	#$F3,(a1)+	; di
-	move.b	#$F3,(a1)+	; di
-	move.b	#$C3,(a1)+	; jp
-	move.b	#0,(a1)+	; jp address low byte
-	move.b	#0,(a1)+	; jp address high byte
-	move.w	#0,(Z80_Reset).l
-	nop
-	nop
-	nop
-	nop
-	move.w	#$100,(Z80_Reset).l ; reset the Z80
-	move.w	#0,(Z80_Bus_Request).l ; start the Z80
-	rts
-
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ; If Music_to_play is clear, move d0 into Music_to_play,
 ; else move d0 into Music_to_play_2.
 ; sub_135E:
 PlayMusic:
-	tst.b	(Music_to_play).w
+	stopZ80
+	waitZ80
+	tst.b	(Z80_RAM+zAbsVar.QueueToPlay).l
 	bne.s	+
-	move.b	d0,(Music_to_play).w
+	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+	startZ80
 	rts
 +
-	move.b	d0,(Music_to_play_2).w
+	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
+	startZ80
 	rts
 ; End of function PlayMusic
 
@@ -1344,7 +1251,10 @@ PlayMusic:
 Play_Sound:
 Play_Sound_2:
 PlaySound:
-	move.b	d0,(SFX_to_play).w
+	stopZ80
+	waitZ80
+	move.b	d0,(Z80_RAM+zAbsVar.SFXStereoToPlay).l
+	startZ80
 	rts
 ; End of function PlaySound
 
@@ -1353,7 +1263,10 @@ PlaySound:
 ; play a sound in alternating speakers (as in the ring collection sound)
 ; sub_1376:
 PlaySoundStereo:
-	move.b	d0,(SFX_to_play_2).w
+	stopZ80
+	waitZ80
+	move.b	d0,(Z80_RAM+zAbsVar.SFXUnknown).l
+	startZ80
 	rts
 ; End of function PlaySoundStereo
 
@@ -1362,10 +1275,13 @@ PlaySoundStereo:
 ; play a sound if the source is onscreen
 ; sub_137C:
 PlaySoundLocal:
+	stopZ80
+	waitZ80
 	tst.b	render_flags(a0)
 	bpl.s	+	; rts
-	move.b	d0,(SFX_to_play).w
+	move.b	d0,(Z80_RAM+zAbsVar.SFXToPlay).l
 +
+	startZ80
 	rts
 ; End of function PlaySoundLocal
 
@@ -1385,10 +1301,13 @@ PauseGame:
 	move.b	(Ctrl_1_Press).w,d0 ; is Start button pressed?
 	or.b	(Ctrl_2_Press).w,d0 ; (either player)
 	andi.b	#button_start_mask,d0
-	beq.s	Pause_DoNothing	; if not, branch
+	beq.w	Pause_DoNothing	; if not, branch
 +
 	move.w	#1,(Game_paused).w	; freeze time
-	move.b	#MusID_Pause,(Music_to_play).w	; pause music
+	stopZ80
+	waitZ80
+	move.b	#MusID_Pause,(Z80_RAM+zAbsVar.StopMusic).l	; pause music
+	startZ80
 ; loc_13B2:
 Pause_Loop:
 	move.b	#VintID_Pause,(Vint_routine).w
@@ -1403,11 +1322,14 @@ Pause_Loop:
 ; ===========================================================================
 ; loc_13D4:
 Pause_ChkBC:
-    btst    #button_B,(Ctrl_1_Held).w ; is button B pressed?
-    bne.s    Pause_SlowMo        ; if yes, branch
-    btst    #button_C,(Ctrl_1_Press).w ; is button C pressed?
-    bne.s    Pause_SlowMo        ; if yes, branch
-    move.b    #MusID_Pause,(Music_to_play).l    ; pause music
+	btst	#button_B,(Ctrl_1_Held).w ; is button B pressed?
+	bne.s	Pause_SlowMo        ; if yes, branch
+	btst	#button_C,(Ctrl_1_Press).w ; is button C pressed?
+	bne.s	Pause_SlowMo        ; if yes, branch
+	stopZ80
+	waitZ80
+	move.b	#MusID_Pause,(Z80_RAM+zAbsVar.StopMusic).l    ; pause music
+	startZ80
 ; loc_13E4:
 Pause_ChkStart:
 	move.b	(Ctrl_1_Press).w,d0	; is Start button pressed?
@@ -1416,7 +1338,10 @@ Pause_ChkStart:
 	beq.s	Pause_Loop	; if not, branch
 ; loc_13F2:
 Pause_Resume:
-	move.b	#MusID_Unpause,(Music_to_play).w	; unpause the music
+	stopZ80
+	waitZ80
+	move.b	#MusID_Unpause,(Z80_RAM+zAbsVar.StopMusic).l	; unpause the music
+	startZ80
 ; loc_13F8:
 Unpause:
 	move.w	#0,(Game_paused).w	; unpause the game
@@ -1427,7 +1352,10 @@ Pause_DoNothing:
 ; loc_1400:
 Pause_SlowMo:
 	move.w	#1,(Game_paused).w
-	move.b	#MusID_Unpause,(Music_to_play).w
+	stopZ80
+	waitZ80
+	move.b	#MusID_Unpause,(Z80_RAM+zAbsVar.StopMusic).l
+	startZ80
 	rts
 ; End of function PauseGame
 
@@ -1928,7 +1856,6 @@ RunPLC_RAM:
 	adda.w	#NemDec_WriteAndStay_XOR-NemDec_WriteAndStay,a3
 +
 	andi.w	#$7FFF,d2
-	move.w	d2,(Plc_Buffer_Reg18).w
 	bsr.w	NemDecPrepare
 	move.b	(a0)+,d5
 	asl.w	#8,d5
@@ -1942,6 +1869,7 @@ RunPLC_RAM:
 	move.l	d0,(Plc_Buffer_RegC).w
 	move.l	d5,(Plc_Buffer_Reg10).w
 	move.l	d6,(Plc_Buffer_Reg14).w
+	move.w	d2,(Plc_Buffer_Reg18).w
 +
 	rts
 ; End of function RunPLC_RAM
@@ -2016,6 +1944,12 @@ ProcessDPLC_Pop:
 	moveq	#bytesToLcnt(Plc_Buffer_Only_End-Plc_Buffer-6),d0
 -	move.l	6(a0),(a0)+
 	dbf	d0,-
+ 
+    if (Plc_Buffer_Only_End-Plc_Buffer-6)&2
+	move.w	6(a0),(a0)
+    endif
+
+	clr.l	(Plc_Buffer_Only_End-6).w
 	rts
 
 ; End of function ProcessDPLC
@@ -2865,7 +2799,7 @@ PalCycle_SuperSonic_revert:	; runs the fade in transition backwards
 	move.w	(Palette_frame).w,d0
 	subq.w	#8,(Palette_frame).w	; previous frame
 	bcc.s	+			; branch, if it isn't the first frame
-	move.b	#0,(Palette_frame).w
+	move.w	#0,(Palette_frame).w
 	move.b	#0,(Super_Sonic_palette).w	; stop palette cycle
 +
 	lea	(Normal_palette+4).w,a1
@@ -2895,7 +2829,7 @@ PalCycle_SuperSonic_normal:
 	move.w	(Palette_frame).w,d0
 	addq.w	#8,(Palette_frame).w	; next frame
 	cmpi.w	#$78,(Palette_frame).w	; is it the last frame?
-	blo.s	+			; if not, branch
+	bls.s	+			; if not, branch
 	move.w	#$30,(Palette_frame).w	; reset frame counter (Super Sonic's normal palette cycle starts at $30. Everything before that is for the palette fade)
 +
 	lea	(Normal_palette+4).w,a1
@@ -3776,10 +3710,12 @@ SegaScreen:
 	bsr.w	PlayMusic ; stop music
 	bsr.w	ClearPLC
 	bsr.w	Pal_FadeToBlack
+	
+	moveq	#0,d0
 
-	clearRAM Misc_Variables,Misc_Variables_End
+	clearRAM2 Misc_Variables,Misc_Variables_End
 
-	clearRAM SegaScr_Object_RAM,SegaScr_Object_RAM_End ; fill object RAM with 0
+	clearRAM2 SegaScr_Object_RAM,SegaScr_Object_RAM_End ; fill object RAM with 0
 
 	lea	(VDP_control_port).l,a6
 	move.w	#$8004,(a6)		; H-INT disabled
@@ -3796,8 +3732,10 @@ SegaScreen:
 	andi.b	#$BF,d0
 	move.w	d0,(VDP_control_port).l
 	bsr.w	ClearScreen
+	
+	;moveq	#0,d0
 
-	dmaFillVRAM 0,VRAM_SegaScr_Plane_A_Name_Table,VRAM_SegaScr_Plane_Table_Size ; clear Plane A pattern name table
+	dmaFillVRAM_reg d0,VRAM_SegaScr_Plane_A_Name_Table,VRAM_SegaScr_Plane_Table_Size ; clear Plane A pattern name table
 
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_Sega_Logo),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_SEGA).l,a0
@@ -3846,8 +3784,6 @@ Sega_WaitPalette:
 	jsr	(BuildSprites).l
 	tst.b	(SegaScr_PalDone_Flag).w
 	beq.s	Sega_WaitPalette
-	move.b	#SndID_SegaSound,d0
-	bsr.w	PlaySound	; play "SEGA" sound
 	move.b	#VintID_SEGA,(Vint_routine).w
 	bsr.w	WaitForVint
 	move.w	#3*60,(Demo_Time_left).w	; 3 seconds
@@ -3908,7 +3844,7 @@ JmpTo_RunObjects ; JmpTo
 ; ===========================================================================
 ; loc_3998:
 TitleScreen:
-	move.b	#MusID_Stop,d0
+	move.b	#MusID_FadeOut,d0
 	bsr.w	PlayMusic
 	bsr.w	ClearPLC
 	bsr.w	Pal_FadeToBlack
@@ -3925,10 +3861,11 @@ TitleScreen:
 	move.w	#$8C81,(a6)		; H res 40 cells, no interlace, S/H disabled
 	bsr.w	ClearScreen
 
-	clearRAM Sprite_Table_Input,Sprite_Table_Input_End ; fill $AC00-$AFFF with $0
-	clearRAM TtlScr_Object_RAM,TtlScr_Object_RAM_End ; fill object RAM ($B000-$D5FF) with $0
-	clearRAM Misc_Variables,Misc_Variables_End ; clear CPU player RAM and following variables
-	clearRAM Camera_RAM,Camera_RAM_End ; clear camera RAM and following variables
+	moveq	#0,d0
+	clearRAM2 Sprite_Table_Input,Sprite_Table_Input_End ; fill $AC00-$AFFF with $0
+	clearRAM2 TtlScr_Object_RAM,TtlScr_Object_RAM_End ; fill object RAM ($B000-$D5FF) with $0
+	clearRAM2 Misc_Variables,Misc_Variables_End ; clear CPU player RAM and following variables
+	clearRAM2 Camera_RAM,Camera_RAM_End ; clear camera RAM and following variables
 
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_CreditText),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_CreditText).l,a0
@@ -3956,14 +3893,17 @@ TitleScreen:
 	move.l	#vdpComm(tiles_to_bytes(ArtTile_ArtNem_FontStuff_TtlScr),VRAM,WRITE),(VDP_control_port).l
 	lea	(ArtNem_FontStuff).l,a0
 	bsr.w	NemDec
-	move.b	#0,(Last_star_pole_hit).w
-	move.b	#0,(Last_star_pole_hit_2P).w
-	move.w	#0,(Debug_placement_mode).w
-	move.w	#0,(Demo_mode_flag).w
-	move.w	#0,(unk_FFDA).w
-	move.w	#0,(PalCycle_Timer).w
-	move.w	#0,(Two_player_mode).w
-	move.b	#0,(Level_started_flag).w
+	moveq	#0,d0
+	move.b	d0,(Last_star_pole_hit).w
+	move.b	d0,(Last_star_pole_hit_2P).w
+	move.w	d0,(Debug_placement_mode).w
+	move.w	d0,(Demo_mode_flag).w
+	move.w	d0,(unk_FFDA).w
+	move.w	d0,(PalCycle_Timer).w
+	move.w	d0,(Two_player_mode).w
+	move.b	d0,(Level_started_flag).w
+	move.b	#MusID_Stop,d0
+	bsr.w	PlayMusic
 
 	bsr.w	Pal_FadeToBlack
 	move	#$2700,sr
@@ -4193,7 +4133,7 @@ TailsNameCheat:
 	bchg	#7,(Graphics_Flags).w ; turn on the cheat that changes MILES to "TAILS"
 	move.b	#SndID_Ring,d0 ; play the ring sound for a successfully entered cheat
 	bsr.w	PlaySound
-+	move.w	#0,(Correct_cheat_entries).w
++	clr.w	(Correct_cheat_entries).w
 +	rts
 ; End of function TailsNameCheat
 
@@ -4351,7 +4291,7 @@ loc_5FD6:
 	move	#$2700,sr
 	bsr.w	ClearScreen
 	lea     (Std1PLCload).l,a2  ; cannot be used if you are not setting sr in 2700
-        jsr     SubLoopPLCentry
+        bsr.s     SubLoopPLCentry
 	jsr	(LoadTitleCard).l ; load title card patterns
 
 
@@ -6061,39 +6001,30 @@ SpecialStage:
 ; | so there's gonna be a lot of wasted cycles.                            |
 ; \------------------------------------------------------------------------/
 
-	dmaFillVRAM 0,VRAM_SS_Plane_A_Name_Table2,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 1
-	dmaFillVRAM 0,VRAM_SS_Plane_A_Name_Table1,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 2
-	dmaFillVRAM 0,VRAM_SS_Plane_B_Name_Table,VRAM_SS_Plane_Table_Size ; clear Plane B pattern name table
-	dmaFillVRAM 0,VRAM_SS_Horiz_Scroll_Table,VRAM_SS_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
+	moveq	#0,d0
 
-	clr.l	(Vscroll_Factor).w
-	clr.l	(unk_F61A).w
-	clr.b	(SpecialStage_Started).w
+	lea	(VDP_control_port).l,a5
+	move.w	#$8F01,(a5)
+	dmaFillVRAM_reg2 d0,VRAM_SS_Plane_A_Name_Table2,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 1
+	dmaFillVRAM_reg2 d0,VRAM_SS_Plane_A_Name_Table1,VRAM_SS_Plane_Table_Size ; clear Plane A pattern name table 2
+	dmaFillVRAM_reg2 d0,VRAM_SS_Plane_B_Name_Table,VRAM_SS_Plane_Table_Size ; clear Plane B pattern name table
+	dmaFillVRAM_reg2 d0,VRAM_SS_Horiz_Scroll_Table,VRAM_SS_Horiz_Scroll_Table_Size  ; clear Horizontal scroll table
+	move.w	#$8F02,(a5)
+
+	move.l	d0,(Vscroll_Factor).w
+	move.l	d0,(unk_F61A).w
+	move.b	d0,(SpecialStage_Started).w
 
 ; /------------------------------------------------------------------------\
 ; | Now we clear out some regions in main RAM where we want to store some  |
 ; | of our data structures.                                                |
 ; \------------------------------------------------------------------------/
-	; Bug: These '+4's shouldn't be here; clearRAM accidentally clears an additional 4 bytes
-	clearRAM SS_Sprite_Table,SS_Sprite_Table_End
-	clearRAM SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1_End
-	clearRAM SSRAMMiscStart,SSRAMMiscEnd
-	clearRAM SS_Sprite_Table_Input,SS_Sprite_Table_Input_End
-	clearRAM SS_Object_RAM,SS_Object_RAM_End
+	clearRAM2 SS_Sprite_Table,SS_Sprite_Table_End
+	clearRAM2 SS_Horiz_Scroll_Buf_1,SS_Horiz_Scroll_Buf_1_End
+	clearRAM2 SSRAMMiscStart,SSRAMMiscEnd
+	clearRAM2 SS_Sprite_Table_Input,SS_Sprite_Table_Input_End
+	clearRAM2 SS_Object_RAM,SS_Object_RAM_End
 
-	; However, the '+4' after SS_Misc_Variables_End is very useful. It resets the
-	; VDP_Command_Buffer queue, avoiding graphical glitches in the Special Stage.
-	; In fact, without reset of the VDP_Command_Buffer queue, Tails sprite DPLCs and other
-	; level DPLCs that are still in the queue erase the Special Stage graphics the next
-	; time ProcessDMAQueue is called.
-	; This '+4' doesn't seem to be intentional, because of the other useless '+4' above,
-	; and because a '+2' is enough to reset the VDP_Command_Buffer queue and fix this bug.
-	; This is a fortunate accident!
-	; Note that this is not a clean way to reset the VDP_Command_Buffer queue because the
-	; VDP_Command_Buffer_Slot address shall be updated as well. They tried to do that in a
-	; clean way after branching to ClearScreen (see below). But they messed up by doing it
-	; after several WaitForVint calls.
-	; You can uncomment the two lines below to clear the VDP_Command_Buffer queue intentionally.
 	clr.w	(VDP_Command_Buffer).w
 	move.l	#VDP_Command_Buffer,(VDP_Command_Buffer_Slot).w
 
@@ -11645,21 +11576,26 @@ OptionScreen_Controls:
 	moveq	#0,d2
 
 +
+	cmpi.b	#1,(Options_menu_box).w
+	bne.s	+
 	btst	#button_A,d0
 	beq.s	+
 	addi.b	#$10,d2
-	cmp.b	d3,d2
-	bls.s	+
-	moveq	#0,d2
+
++
+	cmpi.b	#1,(Options_menu_box).w
+	bne.s	+
+	btst	#button_B,d0
+	beq.s	+
+	subi.b	#$10,d2
 
 +
 	move.w	d2,(a1)
 	cmpi.b	#1,(Options_menu_box).w
 	bne.s	+	; rts
-	andi.w	#button_B_mask|button_C_mask,d0
+	andi.w	#button_C_mask,d0
 	beq.s	+	; rts
 	move.w	(Sound_test_sound).w,d0
-	addi.w	#$80,d0
 	jsrto	(PlayMusic).l, JmpTo_PlayMusic
 	lea	(level_select_cheat).l,a0
 	lea	(continues_cheat).l,a2
@@ -11675,7 +11611,7 @@ OptionScreen_Controls:
 ; word_917A:
 OptionScreen_Choices:
 	dc.l (3-1)<<24|(Player_option&$FFFFFF)
-	dc.l ($80-1)<<24|(Sound_test_sound&$FFFFFF)
+	dc.l $FF<<24|(Sound_test_sound&$FFFFFF)
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 
@@ -12043,29 +11979,27 @@ LevSelControls_CheckLR:
 	btst	#button_left,d1
 	beq.s	+
 	subq.b	#1,d0
-	bcc.s	+
-	moveq	#$7F,d0
 
 +
 	btst	#button_right,d1
 	beq.s	+
 	addq.b	#1,d0
-	cmpi.w	#$80,d0
-	blo.s	+
-	moveq	#0,d0
 
 +
 	btst	#button_A,d1
 	beq.s	+
 	addi.b	#$10,d0
-	andi.b	#$7F,d0
+
++
+	btst	#button_B,d1
+	beq.s	+
+	subi.b	#$10,d0
 
 +
 	move.w	d0,(Sound_test_sound).w
-	andi.w	#button_B_mask|button_C_mask,d1
+	andi.w	#button_C_mask,d1
 	beq.s	+	; rts
 	move.w	(Sound_test_sound).w,d0
-	addi.w	#$80,d0
 	jsrto	(PlayMusic).l, JmpTo_PlayMusic
 	lea	(debug_cheat).l,a0
 	lea	(super_sonic_cheat).l,a2
@@ -12286,7 +12220,7 @@ CheckCheats:	; This is called from 2 places: the options screen and the level se
 	move.b	#SndID_Ring,d0			; Play the ring sound
 	jsrto	(PlaySound).l, JmpTo_PlaySound
 +
-	move.w	#0,(Correct_cheat_entries).w	; Clear the number of correct entries
+	clr.w	(Correct_cheat_entries).w	; Clear the number of correct entries
 +
 	move.w	(Correct_cheat_entries_2).w,d0	; Do the same procedure with the other cheat
 	adda.w	d0,a2
@@ -12299,9 +12233,7 @@ CheckCheats:	; This is called from 2 places: the options screen and the level se
 	tst.w	d2				; Test this to determine which cheat to enable
 	bne.s	+				; If not 0, branch
 	move.b	#$F,(Continue_count).w		; Give 15 continues
-	; The next line causes the bug where the OOZ music plays until reset.
-	; Remove "&$7F" to fix the bug.
-	move.b	#SndID_ContinueJingle&$7F,d0	; Play the continue jingle
+	move.b	#SndID_ContinueJingle,d0	; Play the continue jingle
 	jsrto	(PlayMusic).l, JmpTo_PlayMusic
 	bra.s	++
 ; ===========================================================================
@@ -12310,7 +12242,7 @@ CheckCheats:	; This is called from 2 places: the options screen and the level se
 	move.b	#MusID_Emerald,d0		; Play the emerald jingle
 	jsrto	(PlayMusic).l, JmpTo_PlayMusic
 +
-	move.w	#0,(Correct_cheat_entries_2).w	; Clear the number of correct entries
+	clr.w	(Correct_cheat_entries_2).w	; Clear the number of correct entries
 +
 	rts
 ; ===========================================================================
@@ -23968,10 +23900,14 @@ robotnik_monitor:
 ; ---------------------------------------------------------------------------
 sonic_1up:
 	addq.w	#1,(Monitors_Broken).w
+	cmpi.b	#99,(Life_count).w
+	bhs.s	+
 	addq.b	#1,(Life_count).w
 	addq.b	#1,(Update_HUD_lives).w
 	move.w	#MusID_ExtraLife,d0
 	jmp	(PlayMusic).l	; Play extra life music
++
+	rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Tails 1up Monitor
@@ -23979,10 +23915,14 @@ sonic_1up:
 ; ---------------------------------------------------------------------------
 tails_1up:
 	addq.w	#1,(Monitors_Broken_2P).w
+	cmpi.b	#99,(Life_count_2P).w
+	bhs.s	+
 	addq.b	#1,(Life_count_2P).w
 	addq.b	#1,(Update_HUD_lives_2P).w
 	move.w	#MusID_ExtraLife,d0
 	jmp	(PlayMusic).l	; Play extra life music
++
+	rts
 ; ===========================================================================
 ; ---------------------------------------------------------------------------
 ; Super Ring Monitor
@@ -26168,6 +26108,8 @@ Obj6F_Init:
 	rts
 ; ===========================================================================
 +
+	clr.w	(SRAM_mask_interrupts_flag).w
+	jsr	(SaveGame_SpecialStage).l
 	movea.l	a0,a1
 	lea	byte_14752(pc),a2
 	moveq	#$C,d1
@@ -34185,6 +34127,7 @@ return_1A2DE:
 ; Called if Sonic is airborne, but not in a ball (thus, probably not jumping)
 ; loc_1A2E0: Obj01_MdJump
 Obj01_MdAir:
+	sf.b	spindash_flag(a0)
 	bsr.w	Sonic_JumpHeight
 	bsr.w	Sonic_ChgJumpDir
 	bsr.w	Sonic_LevelBound
@@ -34221,6 +34164,7 @@ Obj01_MdRoll:
 ;        Why they gave it a separate copy of the code, I don't know.
 ; loc_1A330: Obj01_MdJump2:
 Obj01_MdJump:
+	sf.b	spindash_flag(a0)
 	bsr.w	Sonic_JumpHeight
 	bsr.w	Sonic_ChgJumpDir
 	bsr.w	Sonic_LevelBound
@@ -34665,8 +34609,7 @@ return_1A7C4:
 Sonic_RollSpeed:
 	move.w	(Sonic_top_speed).w,d6
 	asl.w	#1,d6
-	move.w	(Sonic_acceleration).w,d5
-	asr.w	#1,d5	; natural roll deceleration = 1/2 normal acceleration
+	moveq	#6,d5	; natural roll deceleration = 1/2 normal acceleration
 	move.w	#$20,d4	; controlled roll deceleration... interestingly,
 			; this should be Sonic_deceleration/4 according to Tails_RollSpeed,
 			; which means Sonic is much better than Tails at slowing down his rolling when he's underwater
@@ -35092,9 +35035,9 @@ return_1AB36:
 ; loc_1AB38: test_set_SS:
 Sonic_CheckGoSuper:
 	tst.b	(Super_Sonic_flag).w	; is Sonic already Super?
-	bne.s	return_1ABA4		; if yes, branch
+	bne.w	return_1ABA4		; if yes, branch
 	cmpi.b	#7,(Emerald_count).w	; does Sonic have exactly 7 emeralds?
-	bne.s	return_1ABA4		; if not, branch
+	bne.w	return_1ABA4		; if not, branch
 	cmpi.w	#50,(Ring_count).w	; does Sonic have at least 50 rings?
 	blo.s	return_1ABA4		; if not, branch
     if gameRevision=2
@@ -35112,6 +35055,12 @@ Sonic_CheckGoSuper:
 	move.w	#$A00,(Sonic_top_speed).w
 	move.w	#$30,(Sonic_acceleration).w
 	move.w	#$100,(Sonic_deceleration).w
+	btst	#6,status(a0)	; Check if underwater, return if not
+	beq.s	+
+	move.w	#$500,(Sonic_top_speed).w
+	move.w	#$18,(Sonic_acceleration).w
+	move.w	#$80,(Sonic_deceleration).w
++	
 	move.b	#0,invincibility_time(a0)
 	bset	#status_sec_isInvincible,status_secondary(a0)	; make Sonic invincible
 	move.w	#SndID_SuperTransform,d0
@@ -35135,10 +35084,12 @@ return_1ABA4:
 Sonic_Super:
 	tst.b	(Super_Sonic_flag).w	; Ignore all this code if not Super Sonic
 	beq.w	return_1AC3C
+	cmpi.b	#1,(Super_Sonic_palette).w	; is Super Sonic's transformation sequence finished?
+	beq.s	return_1ABA4			; if not, branch
 	tst.b	(Update_HUD_timer).w
 	beq.s	Sonic_RevertToNormal ; ?
 	subq.w	#1,(Super_Sonic_frame_count).w
-	bpl.w	return_1AC3C
+	bhi.w	return_1AC3C
 	move.w	#60,(Super_Sonic_frame_count).w	; Reset frame counter to 60
 	tst.w	(Ring_count).w
 	beq.s	Sonic_RevertToNormal
@@ -35193,7 +35144,7 @@ Sonic_CheckSpindash:
 	move.w	#SndID_SpindashRev,d0
 	jsr	(PlaySound).l
 	addq.l	#4,sp
-	move.b	#1,spindash_flag(a0)
+	st.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 	cmpi.b	#$C,air_left(a0)	; if he's drowning, branch to not make dust
 	blo.s	+
@@ -35224,7 +35175,7 @@ Sonic_UpdateSpindash:
 	move.b	#7,x_radius(a0)
 	move.b	#AniIDSonAni_Roll,anim(a0)
 	addq.w	#5,y_pos(a0)	; add the difference between Sonic's rolling and standing heights
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	moveq	#0,d0
 	move.b	spindash_counter(a0),d0
 	add.w	d0,d0
@@ -35248,6 +35199,16 @@ Sonic_UpdateSpindash:
 	move.b	#0,(Sonic_Dust+anim).w
 	move.w	#SndID_SpindashRelease,d0	; spindash zoom sound
 	jsr	(PlaySound).l
+	
+	move.b	angle(a0),d0
+	jsr	(CalcSine).l
+	muls.w	inertia(a0),d1
+	asr.l	#8,d1
+	move.w	d1,x_vel(a0)
+	muls.w	inertia(a0),d0
+	asr.l	#8,d0
+	move.w	d0,y_vel(a0)
+
 	bra.s	Obj01_Spindash_ResetScr
 ; ===========================================================================
 ; word_1AD0C:
@@ -35861,7 +35822,7 @@ Sonic_HurtStop:
 	move.b	#AniIDSonAni_Walk,anim(a0)
 	subq.b	#2,routine(a0)	; => Obj01_Control
 	move.b	#$78,invulnerable_time(a0)
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 
 return_1B1C8:
 	rts
@@ -35905,7 +35866,7 @@ Obj01_Dead:
 ; loc_1B21C:
 CheckGameOver:
 	move.b	#1,(Scroll_lock).w
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	(Camera_Max_Y_pos_now).w,d0
 	addi.w	#$100,d0
 	cmp.w	y_pos(a0),d0
@@ -36790,7 +36751,7 @@ TailsCPU_Respawn:
 	subi.w	#$C0,d0
 	move.w	d0,y_pos(a0)
 	ori.w	#high_priority,art_tile(a0)
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 
 return_1BB88:
@@ -36923,7 +36884,7 @@ TailsCPU_Normal:
 	blo.s	TailsCPU_Normal_SonicOK		; if not, branch
 	; Sonic's dead; fly down to his corpse
 	move.w	#4,(Tails_CPU_routine).w	; => TailsCPU_Flying
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 	move.b	#$81,obj_control(a0)
 	move.b	#2,status(a0)
@@ -37315,8 +37276,8 @@ loc_1456C:
 		bhs.s	locret_1459C
 		tst.w	(Debug_placement_mode).w
 		bne.s	locret_1459C
-		cmpi.b	#1,spindash_flag(a1)
-		beq.s	locret_1459C
+		tst.b	spindash_flag(a1)
+		bne.s	locret_1459C
 		bsr.s	sub_1459E
 		clr.b 	double_jump_flag(a1)
 
@@ -37339,7 +37300,7 @@ sub_1459E:
 		move.b	#3,obj_control(a1)
 		bset	#1,status(a1)
 		bclr	#4,status(a1)
-		move.b	#0,spindash_flag(a1)
+		sf.b	spindash_flag(a1)
 		andi.b	#-4,render_flags(a1)
 		andi.b	#-2,status(a1)
 		move.b	status(a0),d0
@@ -37447,6 +37408,7 @@ Obj02_MdNormal:
 ; Called if Tails is airborne, but not in a ball (thus, probably not jumping)
 ; loc_1C032: Obj02_MdJump
 Obj02_MdAir:
+	sf.b	spindash_flag(a0)
 	tst.b	double_jump_flag(a0)
 	bne.s	Tails_FlyingSwimming
 	bsr.w	Tails_JumpHeight
@@ -37558,7 +37520,7 @@ Tails_FlyAnim_Tired:
 		move.b	(Timer_frames+1).w,d0
 		addq.b	#8,d0
 		andi.b	#$F,d0
-		bne.s	+
+		bne.s		+
       		move.w	#SndID_Tired,d0
 		jsr	(PlaySound).l	; play rolling sound
 
@@ -37645,6 +37607,7 @@ Tails_Roll_Stop_Flying:
 ;        Why they gave it a separate copy of the code, I don't know.
 ; loc_1C082: Obj02_MdJump2:
 Obj02_MdJump:
+	sf.b	spindash_flag(a0)
 	bsr.w	Tails_JumpHeight
 	bsr.w	Tails_ChgJumpDir
 	bsr.w	Tails_LevelBound
@@ -37989,11 +37952,8 @@ return_1C3A8:
 Tails_RollSpeed:
 	move.w	(Tails_top_speed).w,d6
 	asl.w	#1,d6
-	move.w	(Tails_acceleration).w,d5
-	asr.w	#1,d5	; natural roll deceleration = 1/2 normal acceleration
-	move.w	(Tails_deceleration).w,d4
-	asr.w	#2,d4	; controlled roll deceleration...
-			; interestingly, Tails is much worse at this than Sonic when underwater
+	moveq	#6,d5	; natural roll deceleration = 1/2 normal acceleration
+	move.w	#$20,d4	; controlled roll deceleration... 
     if status_sec_isSliding = 7
 	tst.b	status_secondary(a0)
 	bmi.w	Obj02_Roll_ResetScr
@@ -38461,7 +38421,7 @@ Tails_CheckSpindash:
 	move.w	#SndID_SpindashRev,d0
 	jsr	(PlaySound).l
 	addq.l	#4,sp
-	move.b	#1,spindash_flag(a0)
+	st.b	spindash_flag(a0)
 	move.w	#0,spindash_counter(a0)
 	cmpi.b	#$C,air_left(a0)	; if he's drowning, branch to not make dust
 	blo.s	loc_1C754
@@ -38493,7 +38453,7 @@ Tails_UpdateSpindash:
 	move.b	#7,x_radius(a0)
 	move.b	#AniIDTailsAni_Roll,anim(a0)
 	addq.w	#1,y_pos(a0)	; add the difference between Tails' rolling and standing heights
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	moveq	#0,d0
 	move.b	spindash_counter(a0),d0
 	add.w	d0,d0
@@ -39029,7 +38989,7 @@ Tails_HurtStop:
 	move.b	#AniIDTailsAni_Walk,anim(a0)
 	move.b	#2,routine(a0)	; => Obj02_Control
 	move.b	#$78,invulnerable_time(a0)
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 
 return_1CC4E:
 	rts
@@ -39056,7 +39016,7 @@ Obj02_CheckGameOver:
 	cmpi.w	#2,(Player_mode).w	; is it a Tails Alone game?
 	beq.w	CheckGameOver		; if yes, branch... goodness, code reuse
 	move.b	#1,(Scroll_lock_P2).w
-	move.b	#0,spindash_flag(a0)
+	sf.b	spindash_flag(a0)
 	move.w	(Tails_Max_Y_pos).w,d0
 	addi.w	#$100,d0
 	cmp.w	y_pos(a0),d0
@@ -65867,7 +65827,6 @@ Obj51_Init:
 	move.w	#$654,y_pos(a0)
 	move.b	#0,mainspr_mapframe(a0)
 	move.b	#$20,mainspr_width(a0)
-	move.b	#$80,mainspr_height(a0)
 	addq.b	#2,boss_subtype(a0)
 	move.b	#0,CNZBossRoutine_Angle(a0)
 	bset	#6,render_flags(a0)
@@ -86891,17 +86850,8 @@ Debug_Init:
 	clr.b	(Scroll_lock).w
 	move.b	#0,mapping_frame(a0)
 	move.b	#AniIDSonAni_Walk,anim(a0)
-	; S1 leftover
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w ; special stage mode? (you can't enter debug mode in S2's special stage)
-	bne.s	.islevel	; if not, branch
-	moveq	#6,d0		; force zone 6's debug object list (was the ending in S1)
-	bra.s	.selectlist
-; ===========================================================================
-.islevel:
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
-
-.selectlist:
 	lea	(JmpTbl_DbgObjLists).l,a2
 	add.w	d0,d0
 	adda.w	(a2,d0.w),a2
@@ -86915,15 +86865,9 @@ Debug_Init:
 	move.b	#1,(Debug_Speed).w
 ; loc_41B0C:
 Debug_Main:
-	; S1 leftover
-	moveq	#6,d0		; force zone 6's debug object list (was the ending in S1)
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w	; special stage mode? (you can't enter debug mode in S2's special stage)
-	beq.s	.isntlevel	; if yes, branch
 
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
-
-.isntlevel:
 	lea	(JmpTbl_DbgObjLists).l,a2
 	add.w	d0,d0
 	adda.w	(a2,d0.w),a2
@@ -87087,12 +87031,6 @@ Debug_ExitDebugMode:
 	move.b	#9,x_radius(a1)
 	move.w	(Camera_Min_Y_pos_Debug_Copy).w,(Camera_Min_Y_pos).w
 	move.w	(Camera_Max_Y_pos_Debug_Copy).w,(Camera_Max_Y_pos).w
-	; useless leftover; this is for S1's special stage
-	cmpi.b	#GameModeID_SpecialStage,(Game_Mode).w	; special stage mode?
-	bne.s	return_41CB6		; if not, branch
-	move.b	#AniIDSonAni_Roll,(MainCharacter+anim).w
-	bset	#2,(MainCharacter+status).w
-	bset	#1,(MainCharacter+status).w
 
 return_41CB6:
 	rts
@@ -87111,10 +87049,8 @@ Debug_ResetPlayerStats:
 	move.w	d0,x_vel(a1)
 	move.w	d0,y_vel(a1)
 	move.w	d0,inertia(a1)
-	; note: this resets the 'is underwater' flag, causing the bug where
-	; if you enter Debug Mode underwater, and exit it above-water, Sonic
-	; will still move as if he's underwater
-	move.b	#2,status(a1)
+	andi.b	#1<<6,status(a1) ; Preserve the 'is underwater' flag, and clear everything else.
+	ori.b	#2,status(a1)    ; Set the 'is rolling' flag.
 	move.b	#2,routine(a1)
 	move.b	#0,routine_secondary(a1)
 	rts
@@ -88715,13 +88651,13 @@ ArtUnc_Waterfall3:	BINCLUDE	"art/uncompressed/ARZ waterfall patterns - 3.bin"
 ; Uncompressed art
 ; Patterns for Sonic  ; ArtUnc_50000:
 ;---------------------------------------------------------------------------------------
-	align $20
+	align $8000
 ArtUnc_Sonic:	BINCLUDE	"art/uncompressed/Sonic's art.bin"
 ;---------------------------------------------------------------------------------------
 ; Uncompressed art
 ; Patterns for Tails  ; ArtUnc_64320:
 ;---------------------------------------------------------------------------------------
-	align $20
+	align $8000
 ArtUnc_Tails:	BINCLUDE	"art/uncompressed/Tails's art.bin"
 ;--------------------------------------------------------------------------------------
 ; Sprite Mappings
@@ -88748,7 +88684,7 @@ Map_Fireworm:  BINCLUDE "mappings/Map - Fireworm.bin"
        even
 ArtUnc_Fireworm: BINCLUDE "art/Fireworm.bin";BInclude "HPZ/FireWorm/Art/FireWorm_Head_Art.bin"                                     ;unused BINCLUDE "HPZ/Fireworm.bin"
        even
-DPLC_Fireworm: BINCLUDE "art/dplc/DPLC - Fireworm.asm"
+DPLC_Fireworm: BINCLUDE "mappings/spriteDPLC/DPLC - Fireworm.asm"
 	   even
 ;--------------------------------------------------------------------------------------
 ; Nemesis compressed art (34 blocks)
@@ -90666,18 +90602,6 @@ Snd_Driver:
 ; loc_ED04C:
 Snd_Driver_End:
 
-
-
-
-; ---------------------------------------------------------------------------
-; Filler (free space)
-; ---------------------------------------------------------------------------
-	; the DAC data has to line up with the end of the bank.
-
-	; actually it only has to fit within one bank, but we'll line it up to the end anyway
-	; because the padding gives the sound driver some room to grow
-	cnop -Size_of_DAC_samples, $8000
-   	align  $8000
 ; ---------------------------------------------------------------------------
 ; DAC samples
 ; ---------------------------------------------------------------------------
@@ -90688,6 +90612,7 @@ __LABEL__ label *
 __LABEL___End label *
 	endm
 	
+DACBank1:	startBank
 SndDAC_Start:
 SndDAC_Kick:	DAC	81.bin
 SndDAC_Snare:	DAC	82.bin
@@ -90697,25 +90622,13 @@ SndDAC_Timpani:	DAC	85.bin
 SndDAC_Tom:	DAC	86.bin
 SndDAC_Bongo:	DAC	87.bin
 SndDAC_End
+		finishBank
 
-	if SndDAC_End - SndDAC_Start > $FFFF
-		fatal "DAC samples must fit within $FFFF bytes, but you have $\{SndDAC_End-SndDAC_Start } bytes of DAC samples."
-	endif
-	if SndDAC_End - SndDAC_Start > Size_of_DAC_samples
-		fatal "Size_of_DAC_samples = $\{Size_of_DAC_samples}, but you have $\{SndDAC_End-SndDAC_Start} bytes of DAC samples."
-	endif
+DACBank2:	startBank
+SndDAC_ElecTom:	DAC	90-93.bin
+SndDAC_Timbale:	DAC	8D-8E.bin
+		finishBank
 
-; ---------------------------------------------------------------------------
-; Music pointers
-; ---------------------------------------------------------------------------
-; loc_F0000:
-MusicPoint1:	startBank
-Mus_HPZ:	INCLUDE	"sound/music/HPZ.asm"
-Mus_Drowning:	INCLUDE	"sound/music/Drowning.asm"
-Mus_Invincible:	INCLUDE	"sound/music/Invincible.asm"
-Mus_Continue:   INCLUDE	"sound/music/Continue.asm"
-
-	finishBank
    align  $8000
 ; --------------------------------------------------------------------
 ; Nemesis compressed art (20 blocks)
@@ -90849,34 +90762,23 @@ ArtNem_VinePulley:	BINCLUDE	"art/nemesis/Vine that lowers from MCZ.bin"
 	even
 ArtNem_MCZGateLog:	BINCLUDE	"art/nemesis/Drawbridge logs from MCZ.bin"
 
-; ----------------------------------------------------------------------------------
-; Filler (free space)
-; ----------------------------------------------------------------------------------
-	; the PCM data has to line up with the end of the bank.
-	cnop -Size_of_SEGA_sound, $8000
 
-; -------------------------------------------------------------------------------
-; Sega Intro Sound
-; 8-bit unsigned raw audio at 16Khz
-; -------------------------------------------------------------------------------
-; loc_F1E8C:
-Snd_Sega:	BINCLUDE	"sound/PCM/SEGA.bin"
-Snd_Sega_End:
+; ---------------------------------------------------------------------------
+; Music bank
+; ---------------------------------------------------------------------------
 
-	if Snd_Sega_End - Snd_Sega > $8000
-		fatal "Sega sound must fit within $8000 bytes, but you have a $\{Snd_Sega_End-Snd_Sega} byte Sega sound."
-	endif
-	if Snd_Sega_End - Snd_Sega > Size_of_SEGA_sound
-		fatal "Size_of_SEGA_sound = $\{Size_of_SEGA_sound}, but you have a $\{Snd_Sega_End-Snd_Sega} byte Sega sound."
-	endif
+MusicPoint1:	startBank
+Mus_HPZ:	INCLUDE	"sound/music/HPZ.asm"
+Mus_Drowning:	INCLUDE	"sound/music/Drowning.asm"
+Mus_Invincible:	INCLUDE	"sound/music/Invincible.asm"
+Mus_Continue:   INCLUDE	"sound/music/Continue.asm"
+	finishBank
 
 ; ------------------------------------------------------------------------------
-; Music pointers
+; Music bank
 ; ------------------------------------------------------------------------------
-; loc_F8000:
+
 MusicPoint2:	startBank
-
-; loc_F803C:
 Mus_CNZ_2P:	INCLUDE	"sound/music/CNZ_2p.asm"
 Mus_EHZ:	INCLUDE	"sound/music/EHZ.asm"
 Mus_MTZ:	INCLUDE	"sound/music/MTZ.asm"
@@ -90890,8 +90792,10 @@ Mus_Options:	INCLUDE	"sound/music/Options.asm"
 Mus_Ending:	INCLUDE	"sound/music/Ending.asm"
 Mus_EndBoss:	INCLUDE	"sound/music/End_Boss.asm"
 	finishBank
-   align  $8000
-soundBankStart := *
+
+; ------------------------------------------------------------------------------
+; Music bank
+; ------------------------------------------------------------------------------
 
 MusicPoint3:	startBank	
 Mus_CPZ:	INCLUDE	"sound/music/CPZ.asm"
@@ -90911,6 +90815,7 @@ Mus_Emerald:	INCLUDE	"sound/music/Got emerald.asm"
 Mus_Credits:	INCLUDE	"sound/music/Credits.asm"
 Mus_SaveScreen:	INCLUDE	"sound/music/Menu.asm"
 	finishBank
+
 ; ------------------------------------------------------------------------------------------
 ; Sound effect pointers
 ; ------------------------------------------------------------------------------------------
@@ -91093,6 +90998,14 @@ Sound6D:	include "sound/sfx/ED - Error.asm"
 Sound6E:	include "sound/sfx/EE - Mecha Sonic Buzz.asm"
 Sound6F:	include "sound/sfx/EF - Large Laser.asm"
 Sound70:	include "sound/sfx/F0 - Oil Slide.asm"
+
+; -------------------------------------------------------------------------------
+; Sega Intro Sound
+; 8-bit unsigned raw audio at 16Khz
+; -------------------------------------------------------------------------------
+; loc_F1E8C:
+Snd_Sega:	BINCLUDE	"sound/PCM/SEGA.bin"
+Snd_Sega_End:
 	finishBank
 
 ; end of 'ROM'

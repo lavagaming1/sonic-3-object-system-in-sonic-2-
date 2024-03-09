@@ -12,53 +12,52 @@ Snd_Menu_Header:
 	smpsHeaderFM        Snd_Menu_FM5,	$0C, $19
 	smpsHeaderPSG       Snd_Menu_PSG1,	$00, $06, $00, fTone_0C
 	smpsHeaderPSG       Snd_Menu_PSG2,	$00, $06, $00, fTone_0C
-	smpsHeaderPSG       Snd_Menu_PSG3,	$00, $04, $00, fTone_0C
+	smpsHeaderPSG       Snd_Menu_PSG3,	$00, $04, $00, fTone_02
 
-; Unreachable
-	smpsStop
 Snd_Menu_Call00:
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $12, dKick
-	dc.b	$06, dKick, dMidTom, dLowTom, $0C
+	dc.b	dKick, $12, dKick, $06, dKick, dElectricHighTom, $0C, dKick, $06, dKick, $12, dKick
+	dc.b	$06, dKick, dElectricMidTom, dElectricLowTom, $0C
 	smpsReturn
+
 Snd_Menu_DAC:
 	dc.b	nRst, $2A
 
 Snd_Menu_Loop00:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $03, Snd_Menu_Loop00
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $02, dHiTimpani
-	dc.b	$03, dHiTimpani, $01, dHiTimpani, $0C, dHiTimpani, $06, dHiTimpani, $08, dHiTimpani, dMidTimpani
+	dc.b	dKick, $12, dKick, $06, dKick, dElectricHighTom, $0C, dKick, $06, dKick, $02, dHigherMetalHit
+	dc.b	$03, dHigherMetalHit, $01, dHigherMetalHit, $0C, dHigherMetalHit, $06, dHigherMetalHit, $08, dHigherMetalHit, dMidMetalHit
 
 Snd_Menu_Loop01:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $03, Snd_Menu_Loop01
-	dc.b	dLowTom, $06, dLowTom, dLowTom, $12, dLowTom, $06, dLowTom, dLowTom, $1E, dMidTom, $18
+	dc.b	dElectricLowTom, $06, dElectricLowTom, dElectricLowTom, $12, dElectricLowTom, $06, dElectricLowTom, dElectricLowTom, $1E, dElectricMidTom, $18
 
 Snd_Menu_Loop02:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $07, Snd_Menu_Loop02
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, dHiTimpani, $0C
-	dc.b	dHiTimpani, $06, dHiTimpani, $0C, dLowTom
+	dc.b	dKick, $12, dKick, $06, dKick, dElectricHighTom, $0C, dKick, $06, dKick, dHigherMetalHit, $0C
+	dc.b	dHigherMetalHit, $06, dHigherMetalHit, $0C, dElectricLowTom
 
 Snd_Menu_Loop03:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $02, Snd_Menu_Loop03
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $12, dKick
-	dc.b	$06, dKick, dMidTom, dLowTom, $0C, dLowTom, $06, dLowTom, dLowTom, $12, dLowTom, $06
-	dc.b	dLowTom, dLowTom, $1E, dMidTom, $18
+	dc.b	dKick, $12, dKick, $06, dKick, dElectricHighTom, $0C, dKick, $06, dKick, $12, dKick
+	dc.b	$06, dKick, dElectricMidTom, dElectricLowTom, $0C, dElectricLowTom, $06, dElectricLowTom, dElectricLowTom, $12, dElectricLowTom, $06
+	dc.b	dElectricLowTom, dElectricLowTom, $1E, dElectricMidTom, $18
 
 Snd_Menu_Loop04:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $03, Snd_Menu_Loop04
-	dc.b	dLowTom, $06, dKick, $0C, dLowTom, $06, dKick, dLowTom, dLowTom, dMidTom, $0C, dKick
-	dc.b	$12, dKick, $06, dKick, dHiTom, $0C
+	dc.b	dElectricLowTom, $06, dKick, $0C, dElectricLowTom, $06, dKick, dElectricLowTom, dElectricLowTom, dElectricMidTom, $0C, dKick
+	dc.b	$12, dKick, $06, dKick, dElectricHighTom, $0C
 
 Snd_Menu_Loop05:
 	smpsCall            Snd_Menu_Call00
 	smpsLoop            $01, $02, Snd_Menu_Loop05
-	dc.b	dKick, $12, dKick, $06, dKick, dHiTom, $0C, dKick, $06, dKick, $12, dKick
-	dc.b	$06, dKick, dMidTom, dLowTom, $0C, dLowTom, dKick, $06, dLowTom, $0C, dKick, $06
-	dc.b	dLowTom, nRst, $36
+	dc.b	dKick, $12, dKick, $06, dKick, dElectricHighTom, $0C, dKick, $06, dKick, $12, dKick
+	dc.b	$06, dKick, dElectricMidTom, dElectricLowTom, $0C, dElectricLowTom, dKick, $06, dElectricLowTom, $0C, dKick, $06
+	dc.b	dElectricLowTom, nRst, $36
 	smpsJump            Snd_Menu_Loop00
 
 ; Unreachable
@@ -616,12 +615,8 @@ Snd_Menu_Jump06:
 	smpsCall            Snd_Menu_Call05
 	smpsJump            Snd_Menu_Jump06
 
-; Unreachable
-	smpsStop
-
 ; PSG3 Data
 Snd_Menu_PSG3:
-	smpsPSGvoice        fTone_02
 	smpsPSGform         $E7
 	dc.b	nRst, $2A
 
@@ -629,25 +624,25 @@ Snd_Menu_Jump05:
 	smpsCall            Snd_Menu_Call01
 	smpsCall            Snd_Menu_Call01
 	smpsCall            Snd_Menu_Call01
-	smpsFMAlterVol      $FD, $D3
-	dc.b	$06
-	smpsFMAlterVol      $03, $D3
-	dc.b	$03, nBb6, nBb6, $06, nBb6, nBb6, nBb6, nBb6, nBb6, $0C
-	smpsFMAlterVol      $FD, $D3
-	dc.b	$0C, nBb6, $06, nBb6, $08, nBb6, nBb6, $02
-	smpsFMAlterVol      $03, $80
-	dc.b	$06
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1, $06
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, $03, nMaxPSG1, nMaxPSG1, $06, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, $0C
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1, $0C, nMaxPSG1, $06, nMaxPSG1, $08, nMaxPSG1, nMaxPSG1, $02
+	smpsPSGAlterVol     $03
+	dc.b	nRst, $06
 	smpsCall            Snd_Menu_Call01
 	smpsCall            Snd_Menu_Call01
-	smpsFMAlterVol      $FD, $D3
-	dc.b	$06
-	smpsFMAlterVol      $03, $D3
-	dc.b	$03, nBb6
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1, $06
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, $03, nMaxPSG1
 
 Snd_Menu_Loop06:
-	dc.b	nBb6, $06
+	dc.b	nMaxPSG1, $06
 	smpsLoop            $00, $0D, Snd_Menu_Loop06
-	dc.b	nBb6, $32, nBb6, $34
+	dc.b	nMaxPSG1, $32, nMaxPSG1, $34
 	smpsCall            Snd_Menu_Call02
 	smpsCall            Snd_Menu_Call02
 	smpsCall            Snd_Menu_Call02
@@ -655,63 +650,66 @@ Snd_Menu_Loop06:
 	smpsCall            Snd_Menu_Call02
 	smpsCall            Snd_Menu_Call02
 	smpsCall            Snd_Menu_Call02
-	dc.b	nBb6, $06, nBb6, $03, nBb6, nBb6, $06, nBb6, nBb6, nBb6, nBb6, nBb6
+	dc.b	nMaxPSG1, $06, nMaxPSG1, $03, nMaxPSG1, nMaxPSG1, $06, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1
 	dc.b	$36
 	smpsCall            Snd_Menu_Call01
 	smpsCall            Snd_Menu_Call01
-	smpsFMAlterVol      $FD, $D3
-	dc.b	$06
-	smpsFMAlterVol      $03, $D3
-	dc.b	$03, nBb6
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1, $06
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, $03, nMaxPSG1
 
 Snd_Menu_Loop07:
-	dc.b	nBb6, $06
+	dc.b	nMaxPSG1, $06
 	smpsLoop            $00, $0D, Snd_Menu_Loop07
-	dc.b	nBb6, $32, nBb6, $34, nBb6, $06, nBb6, $03, nBb6, nBb6, $06
-	smpsFMAlterVol      $FD, $D3
-	smpsFMAlterVol      $03, $D3
-	dc.b	nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6
+	dc.b	nMaxPSG1, $32, nMaxPSG1, $34, nMaxPSG1, $06, nMaxPSG1, $03, nMaxPSG1, nMaxPSG1, $02
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, nMaxPSG1, $06, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1
 
 Snd_Menu_Loop08:
-	dc.b	nBb6, $06, nBb6, $03, nBb6, nBb6, $06
-	smpsFMAlterVol      $FD, $D3
-	smpsFMAlterVol      $03, $D3
-	dc.b	nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6
+	dc.b	nMaxPSG1, $06, nMaxPSG1, $03, nMaxPSG1, nMaxPSG1, $02
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, nMaxPSG1, $06, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1
 	smpsLoop            $00, $06, Snd_Menu_Loop08
-	dc.b	nBb6, $06, nBb6, $03, nBb6, nBb6, $06
-	smpsFMAlterVol      $FD, $D3
-	smpsFMAlterVol      $03, $D3
-	dc.b	nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6
-	dc.b	nBb6, $03, nBb6, nBb6, $06
-	smpsFMAlterVol      $FD, $D3
-	smpsFMAlterVol      $03, $D3
-	dc.b	nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6, nBb6
-	dc.b	nBb6, $03, nBb6, nBb6, $06
-	smpsFMAlterVol      $FD, $D3
-	dc.b	nBb6
+	dc.b	nMaxPSG1, $06, nMaxPSG1, $03, nMaxPSG1, nMaxPSG1, $02
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, nMaxPSG1, $06, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1
+	dc.b	nMaxPSG1, $03, nMaxPSG1, nMaxPSG1, $02
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, nMaxPSG1, $06, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1, nMaxPSG1
+	dc.b	nMaxPSG1, $03, nMaxPSG1, nMaxPSG1, $02
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1
+	smpsPSGAlterVol     $03
+	dc.b	nMaxPSG1, nMaxPSG1, $06
 	smpsJump            Snd_Menu_Jump05
 
 Snd_Menu_Call01:
-	smpsFMAlterVol      $FD, $D3
-	dc.b	$06
-	smpsFMAlterVol      $03, $D3
-	dc.b	$03, nBb6
+	smpsPSGAlterVol     $FD
+	dc.b	nMaxPSG1, $06
+	smpsPSGAlterVol     $03
+	dc.b	$03, nMaxPSG1
 
 Snd_Menu_Loop0A:
-	dc.b	nBb6, $06
+	dc.b	nMaxPSG1, $06
 	smpsLoop            $01, $0E, Snd_Menu_Loop0A
 	smpsReturn
 
 Snd_Menu_Call02:
-	dc.b	nBb6, $06, nBb6, $03, nBb6
+	dc.b	nMaxPSG1, $06, nMaxPSG1, $03, nMaxPSG1
 
 Snd_Menu_Loop09:
-	dc.b	nBb6, $06
+	dc.b	nMaxPSG1, $06
 	smpsLoop            $01, $0E, Snd_Menu_Loop09
 	smpsReturn
-
-; Unreachable
-	smpsStop
 
 SaveScreenVoices:
 ; Synth Bass 2
