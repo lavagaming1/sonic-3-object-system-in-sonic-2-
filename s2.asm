@@ -29146,7 +29146,6 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  beq.s  .fail
                  lea   Sprite_Lister_Table.l,a4
                  move.l    LinkListHead.w,a5 ; slot unused addr
-                 move.l    a4,a3
 
                  moveq  #$4F,d1
      .LoopFind:
@@ -29155,10 +29154,13 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  adda.w #SpriteRenderSize,a4
                  dbf    d1,.LoopFind
                  rts
-   .Found:
+   .Found:                      
+
+
                  move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
                  move.w    a0,SpriteObAddr(a4)   ; connect object ram
                  move.l    a4,SpriteNextOb(a5)
+
                  move.l    a5,SpritePrevOb(a4) ; previous slot
 
                  move.l     a4,LinkListHead.w  ; update this for next objects
