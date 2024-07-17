@@ -34,6 +34,7 @@ render_flags =		  4 ; bitfield ; refer to SCHG for details
 height_pixels =		  6 ; byte
 width_pixels =		  7 ; byte
 priority =		  8 ; word ; in units of $80
+prioritylist =            8
 art_tile =		 $A ; word ; PCCVH AAAAAAAAAAA ; P = priority, CC = palette line, V = y-flip; H = x-flip, A = starting cell index of art
 mappings =		 $C ; long
 x_pos =			$10 ; word, or long when extra precision is required
@@ -1040,7 +1041,21 @@ AniIDTailsAni_Fly			= id(TailsAni_Fly_ptr)			; 32 ; $20
 
 ; Other sizes
 palette_line_size =	$10*2	; 16 word entries
+; ---------------------------------------------------------------------------
+SpriteCurrentUnusedSize = $4*$1F4
+SpriteQeueSize = $3F*SpriteRenderSize
+;RenderSpriteProperties  varables inside spriter_lister
+SpriteRenderSize = $C  ; the size of each slot
 
+SpriteInUse   = $0
+SpriteBit     = $1
+SpriteObAddr =  $2
+SpriteNextOb =  $4
+SpritePrevOb =  $8
+;----------------------------------------------------------------------------
+SpriteListHeadAddr = -$10 ; used to memorize the last addr ( the end) the buffer we use -10 is a varable
+
+; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
 ; I run the main 68k RAM addresses through this function
 ; to let them work in both 16-bit and 32-bit addressing modes.
@@ -1056,7 +1071,11 @@ Sprite_table_buffer_P2_2: =	ramaddr(   $FF7D80 ) ; $280 bytes ; alternate sprite
 RAM_start:
 RAM_Start:
 
-Chunk_Table:			ds.b	$8000	; was "Metablock_Table"
+Chunk_Table:			ds.b	$1000	; was "Metablock_Table"
+Sprite_Lister_Table: 
+
+                                ds.b    $2000
+                                ds.b    $5000
 Chunk_Table_End:
 
 Level_Layout:			ds.b	$1000

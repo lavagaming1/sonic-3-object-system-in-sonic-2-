@@ -3925,7 +3925,7 @@ TitleScreen:
 	move.w	#$8C81,(a6)		; H res 40 cells, no interlace, S/H disabled
 	bsr.w	ClearScreen
 
-	clearRAM Sprite_Table_Input,Sprite_Table_Input_End ; fill $AC00-$AFFF with $0
+	;clearRAM Sprite_Table_Input,Sprite_Table_Input_End ; fill $AC00-$AFFF with $0
 	clearRAM TtlScr_Object_RAM,TtlScr_Object_RAM_End ; fill object RAM ($B000-$D5FF) with $0
 	clearRAM Misc_Variables,Misc_Variables_End ; clear CPU player RAM and following variables
 	clearRAM Camera_RAM,Camera_RAM_End ; clear camera RAM and following variables
@@ -4013,6 +4013,7 @@ TitleScreen:
 	clr.w	(Ctrl_1).w
 	move.l	#Obj0E,(IntroSonic).w ; load Obj0E (flashing intro star)
 	move.b	#2,(IntroSonic+subtype).w				; Sonic
+	jsr     InitSpriterManager
 	jsr	(RunObjects).l
 	jsr	(BuildSprites).l
 	
@@ -4391,7 +4392,8 @@ loc_5FD6:
 	bsr.w	LoadPLC
 ; loc_3F48:
 Level_ClrRam:
-	clearRAM Sprite_Table_Input,Sprite_Table_Input_End
+	;clearRAM Sprite_Table_Input,Sprite_Table_Input_End
+	
 	clearRAM Object_RAM,Object_RAM_End ; clear object RAM
 	clearRAM MiscLevelVariables,MiscLevelVariables_End
 	clearRAM Misc_Variables,Misc_Variables_End
@@ -4493,6 +4495,7 @@ Level_PlayBgm:
 	move.b	(a1,d0.w),d0		; load from music playlist
 	move.w	d0,(Level_Music).w	; store level music
 	bsr.w	PlayMusic		; play level music
+	jsr      InitSpriterManager
 	move.l	#Obj34,(TitleCard).w ; load Obj34 (level title card) at $FFFFB080
 ; loc_40DA:
 Level_TtlCard:
@@ -4522,7 +4525,7 @@ Level_TtlCard:
 	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf_End
 
 	bsr.w	LoadZoneTiles
-
+        jsr      InitSpriterManager
 	jsrto	(loadZoneBlockMaps).l, JmpTo_loadZoneBlockMaps
         jsr	(LoadAnimatedBlocks).l
 	jsrto	(DrawInitialBG).l, JmpTo_DrawInitialBG
@@ -9006,7 +9009,8 @@ Obj5E:
 	move.l	#Obj5E_MapUnc_7070,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_SpecialHUD,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
-	move.b	#0,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#0,priority(a0)
 	move.b	#1,routine(a0)
 	bset	#6,render_flags(a0)
 	moveq	#0,d1
@@ -9159,7 +9163,8 @@ Obj5F_Init:
 	move.l	#Obj5F_MapUnc_7240,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_SpecialStart,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
-	move.b	#1,priority(a0)
+	InsertSpriteMacro $0
+;	move.b	#1,priority(a0)
 	move.b	#2,routine(a0)
 
 ; loc_718A:
@@ -9179,7 +9184,7 @@ loc_71B4:
     if ~~removeJmpTos
 	bne.w	JmpTo_DisplaySprite
     else
-	bne.s	JmpTo_DisplaySprite
+	bne.w	JmpTo_DisplaySprite
     endif
 	moveq	#6,d6
 
@@ -10063,7 +10068,8 @@ ObjDB_Sonic_Init:
 	move.l	#Mapunc_Sonic,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtUnc_Sonic,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
-	move.b	#2,priority(a0)
+	InsertSpriteMacro $0
+;	move.b	#2,priority(a0)
 	move.b	#$20,anim(a0)
 
 ; loc_7BD2:
@@ -10103,7 +10109,8 @@ ObjDB_Tails_Init:
 	move.l	#ObjDA_MapUnc_7CB6,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_ContinueTails,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
-	move.b	#2,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#2,priority(a0)
 	move.b	#0,anim(a0)
 
 ; loc_7C52:
@@ -10481,7 +10488,8 @@ Obj21_Init:
  	move.w	#make_art_tile(ArtTile_ArtNem_1P2PWins,0,0),art_tile(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo2_Adjust2PArtPointer
 	move.b	#0,render_flags(a0)
-	move.b	#0,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#0,priority(a0)
 	moveq	#2,d1
 	move.b	(SS_Total_Won).w,d0	; d0 = SS_Total_Won_1P
 	sub.b	(SS_Total_Won+1).w,d0	;    - SS_Total_Won_2P
@@ -12938,7 +12946,8 @@ ObjCC_Init:
 	move.w	#$100,x_vel(a0)
 	move.w	#-$80,y_vel(a0)
 	move.b	#$14,objoff_39(a0)
-	move.b	#3,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#3,priority(a0)
 	move.w	#4,(Ending_VInt_Subrout).w
 	move.l	a0,-(sp)
 	lea	(MapEng_EndingTailsPlane).l,a0
@@ -13309,7 +13318,8 @@ ObjCE_Init:
 	jsrto	(LoadSubObject_Part3).l, JmpTo_LoadSubObject_Part3
 	move.l	#ObjCF_MapUnc_ADA2,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,0,1),art_tile(a0)
-	move.b	#1,priority(a0)
+	InsertSpriteMacro $0
+;	move.b	#1,priority(a0)
 	jsr	(Adjust2PArtPointer).l
 	move.b	#$C,mapping_frame(a0)
 	cmpi.w	#4,(Ending_Routine).w
@@ -13404,7 +13414,8 @@ ObjCF_Init:
 	jsrto	(LoadSubObject_Part3).l, JmpTo_LoadSubObject_Part3
 	move.l	#ObjCF_MapUnc_ADA2,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,0,1),art_tile(a0)
-	move.b	#3,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#3,priority(a0)
 	jsr	(Adjust2PArtPointer).l
 	move.b	#5,mapping_frame(a0)
 	move.b	#2,anim(a0)
@@ -20140,7 +20151,7 @@ Obj11_child1		= objoff_34	; pointer to first set of bridge segments
 Obj11_child2		= objoff_38	; pointer to second set of bridge segments, if applicable
 
 ; Sprite_F66C:
-Obj11:  
+Obj11:
 	btst	#6,render_flags(a0)	; is this a child sprite object?
 	bne.w	+			; if yes, branch
 	moveq	#0,d0
@@ -20164,7 +20175,8 @@ Obj11_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Obj11_MapUnc_FC70,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_EHZ_Bridge,2,0),art_tile(a0)
-	move.b	#3,priority(a0)
+	;InsertSpriteMacro $0
+;	move.b	#3,priority(a0)
 	cmpi.b	#hidden_palace_zone,(Current_Zone).w	; is this an HPZ bridge?
 	bne.s	+			; if not, branch
 	addq.b	#4,routine(a0)
@@ -20218,6 +20230,10 @@ Obj11_MakeBdgSegment:
 	move.l	mappings(a0),mappings(a1)
 	move.w	art_tile(a0),art_tile(a1)
 	move.b	render_flags(a0),render_flags(a1)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	bset	#6,render_flags(a1)
 	move.b	#$40,mainspr_width(a1)
 	move.b	d1,mainspr_childsprites(a1)
@@ -20685,7 +20701,8 @@ Obj15_Init:
 	move.l	#Obj15_MapUnc_101E8,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_OOZSwingPlat,2,0),art_tile(a0)
 	move.b	#4,render_flags(a0) ; set normal sprites
-	move.b	#3,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#3,priority(a0)
 	move.b	#$20,width_pixels(a0)
 	move.b	#$10,y_radius(a0)
 	move.w	y_pos(a0),objoff_3C(a0)
@@ -21236,7 +21253,8 @@ Obj17_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_GHZ_Spiked_Log,2,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
-	move.b	#3,priority(a0)
+	InsertSpriteMacro $0
+;	move.b	#3,priority(a0)
 	move.b	#8,width_pixels(a0)
 	move.w	y_pos(a0),d2
 	move.w	x_pos(a0),d3
@@ -21405,7 +21423,8 @@ Obj18_Init:
 +
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#4,priority(a0)
 	move.w	y_pos(a0),objoff_30(a0)
 	move.w	y_pos(a0),objoff_38(a0)
 	move.w	x_pos(a0),objoff_36(a0)
@@ -21792,7 +21811,8 @@ Obj1A_Init:
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,2,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $0
+;	move.b	#4,priority(a0)
 	move.b	#7,collapsing_platform_delay_counter(a0)
 	move.b	subtype(a0),mapping_frame(a0)
 	move.l	#Obj1A_DelayData,collapsing_platform_delay_pointer(a0)
@@ -21904,7 +21924,8 @@ Obj1F_Init:
 	move.l	#Obj1F_MapUnc_10F0C,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_MZ_Platform,2,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#4,priority(a0)
 	move.b	#7,collapsing_platform_delay_counter(a0)
 	move.b	#$44,width_pixels(a0)
 	lea	(Obj1F_DelayData_EvenSubtype).l,a4
@@ -22232,12 +22253,17 @@ Obj1C_Init:
 	bsr.w	Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
 	move.b	(a1)+,width_pixels(a0)
-	move.b	(a1)+,priority(a0)
+;	move.b	(a1)+,priority(a0)
+        addq.w  #1,a1
+        InsertSpriteMacro 0
 	lea	Obj1C_Radii(pc),a1
 	move.b	(a1,d1.w),d1
 	beq.s	BranchTo_MarkObjGone	; if the radius is zero, branch
 	move.b	d1,y_radius(a0)
 	bset	#4,render_flags(a0)
+
+
+
 
 BranchTo_MarkObjGone ; BranchTo
 	bra.w	MarkObjGone
@@ -22729,7 +22755,10 @@ Obj28_Init:
 	move.b	#$C,y_radius(a0)
 	move.b	#4,render_flags(a0)
 	bset	#0,render_flags(a0)
-	move.b	#6,priority(a0)
+	;move.b	#6,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	#8,width_pixels(a0)
 	move.b	#7,anim_frame_duration(a0)
 	bra.w	DisplaySprite
@@ -23063,9 +23092,11 @@ Obj29_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Numbers,0,1),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
-	move.b	#1,priority(a0)
+;	move.b	#1,priority(a0)
 	move.b	#8,width_pixels(a0)
 	move.w	#-$300,y_vel(a0)	; set initial speed (upwards)
+
+	InsertSpriteMacro 0
 
 Obj29_Main:
 	tst.w	y_vel(a0)		; test speed
@@ -23141,7 +23172,8 @@ Obj25_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Ring,1,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
-	move.b	#2,priority(a0)
+	;move.b	#2,priority(a0)
+	InsertSpriteMacro 0
 	move.b	#$47,collision_flags(a0)
 	move.b	#8,width_pixels(a0)
 ; Obj_25_sub_2:
@@ -23154,7 +23186,7 @@ Obj25_Animate:
 Obj25_Collect:
 	addq.b	#2,routine(a0)
 	move.b	#0,collision_flags(a0)
-	move.b	#1,priority(a0)
+
 	bsr.s	CollectRing
 ; Obj_25_sub_6:
 Obj25_Sparkle:
@@ -23297,7 +23329,11 @@ Obj37_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Ring,1,0),art_tile(a1)
 	bsr.w	Adjust2PArtPointer2
 	move.b	#$84,render_flags(a1)
-	move.b	#3,priority(a1)
+;	move.b	#3,priority(a1)
+        movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.b	#$47,collision_flags(a1)
 	move.b	#8,width_pixels(a1)
 	move.b	#-1,(Ring_spill_anim_counter).w
@@ -23377,7 +23413,10 @@ loc_121D0:
 Obj37_Collect:
 	addq.b	#2,routine(a0)
 	move.b	#0,collision_flags(a0)
-	move.b	#1,priority(a0)
+	;move.b	#1,priority(a0)
+
+;	InsertSpriteMacro 0
+
 	bsr.w	CollectRing
 ; Obj_37_sub_6:
 Obj37_Sparkle:
@@ -23663,7 +23702,10 @@ Obj26_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Powerups,0,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
-	move.b	#3,priority(a0)
+;	move.b	#3,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	#$F,width_pixels(a0)
 
 	lea	(Object_Respawn_Table).w,a2
@@ -23879,7 +23921,10 @@ Obj2E_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Powerups,0,1),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#$24,render_flags(a0)
-	move.b	#3,priority(a0)
+	;move.b	#3,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	#8,width_pixels(a0)
 	move.w	#-$300,y_vel(a0)
 	moveq	#0,d0
@@ -24406,7 +24451,8 @@ Obj0E_Init:
 	addq.b	#2,routine(a0)	; useless, because it's overwritten with the subtype below
 	move.l	#Obj0E_MapUnc_136A8,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_TitleSprites,0,0),art_tile(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	InsertSpriteMacro 0
 	move.b	subtype(a0),routine(a0)
 	bra.s	Obj0E
 ; ===========================================================================
@@ -24681,7 +24727,8 @@ Obj0E_LogoTop_Init:
 	bmi.s	+
 	move.b	#$A,mapping_frame(a0)
 +
-	move.b	#2,priority(a0)
+	;move.b	#2,priority(a0)
+	InsertSpriteMacro 0
 	move.w	#$120,x_pixel(a0)
 	move.w	#$E8,y_pixel(a0)
 
@@ -24707,7 +24754,8 @@ Obj0E_SkyPiece_Init:
 	addq.b	#2,routine_secondary(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,0,0),art_tile(a0)
 	move.b	#$11,mapping_frame(a0)
-	move.b	#2,priority(a0)
+	;move.b	#2,priority(a0)
+	InsertSpriteMacro 0
 	move.w	#$100,x_pixel(a0)
 	move.w	#$F0,y_pixel(a0)
 
@@ -24733,7 +24781,8 @@ Obj0E_LargeStar_Init:
 	move.b	#$C,mapping_frame(a0)
 	ori.w	#high_priority,art_tile(a0)
 	move.b	#2,anim(a0)
-	move.b	#1,priority(a0)
+;	move.b	#1,priority(a0)
+        InsertSpriteMacro 0
 	move.w	#$100,x_pixel(a0)
 	move.w	#$A8,y_pixel(a0)
 	move.w	#4,objoff_2E(a0)
@@ -24796,7 +24845,8 @@ off_1320E:	offsetTable
 Obj0E_SonicHand_Init:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#9,mapping_frame(a0)
-	move.b	#3,priority(a0)
+	;move.b	#3,priority(a0)
+	InsertSpriteMacro 0
 	move.w	#$145,x_pixel(a0)
 	move.w	#$BF,y_pixel(a0)
 
@@ -24831,7 +24881,8 @@ off_1325A:	offsetTable
 Obj0E_TailsHand_Init:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#$13,mapping_frame(a0)
-	move.b	#3,priority(a0)
+;	move.b	#3,priority(a0)
+        InsertSpriteMacro 0
 	move.w	#$10F,x_pixel(a0)
 	move.w	#$D5,y_pixel(a0)
 
@@ -24864,7 +24915,8 @@ off_132A2:	offsetTable
 Obj0E_SmallStar_Init:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#$C,mapping_frame(a0)
-	move.b	#5,priority(a0)
+	;move.b	#5,priority(a0)
+	InsertSpriteMacro 0
 	move.w	#$170,x_pixel(a0)
 	move.w	#$80,y_pixel(a0)
 	move.b	#3,anim(a0)
@@ -25068,7 +25120,11 @@ TitleScreen_SetFinalState:
 	bsr.w	TitleScreen_InitSprite
 	move.l	#Obj0E,(a1) ; load obj0E (flashing intro star) at $FFFFB1C0
 	move.b	#$A,routine(a1)				; Sonic's hand
-	move.b	#2,priority(a1)
+	;move.b	#2,priority(a1)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.b	#9,mapping_frame(a1)
 	move.b	#4,routine_secondary(a1)
 	move.w	#$141,x_pixel(a1)
@@ -25079,14 +25135,22 @@ TitleScreen_SetFinalState:
 	move.b	#4,routine(a1)				; Tails
 	move.b	#4,mapping_frame(a1)
 	move.b	#6,routine_secondary(a1)
-	move.b	#3,priority(a1)
+	;move.b	#3,priority(a1)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.w	#$C8,x_pixel(a1)
 	move.w	#$A0,y_pixel(a1)
 	lea	(IntroTailsHand).w,a1
 	bsr.w	TitleScreen_InitSprite
 	move.l	#Obj0E,(a1) ; load obj0E
 	move.b	#$10,routine(a1)			; Tails' hand
-	move.b	#2,priority(a1)
+	;move.b	#2,priority(a1)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.b	#$13,mapping_frame(a1)
 	move.b	#4,routine_secondary(a1)
 	move.w	#$10D,x_pixel(a1)
@@ -25136,7 +25200,11 @@ TitleScreen_InitSprite:
 
 	move.l	#Obj0E_MapUnc_136A8,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_TitleSprites,0,0),art_tile(a1)
-	move.b	#4,priority(a1)
+	;move.b	#4,priority(a1)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	rts
 ; End of function TitleScreen_InitSprite
 
@@ -25167,6 +25235,9 @@ Obj0F_Init:
 	bsr.w	Adjust2PArtPointer
 	andi.b	#1,(Title_screen_option).w
 	move.b	(Title_screen_option).w,mapping_frame(a0)
+
+	InsertSpriteMacro 0
+
 
 ; loc_13644:
 Obj0F_Main:
@@ -25656,7 +25727,10 @@ Obj39_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Game_Over,0,1),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	move.b	#0,render_flags(a0)
-	move.b	#0,priority(a0)
+	;move.b	#0,priority(a0)
+
+	InsertSpriteMacro 0
+       
 ; loc_13FCC:
 Obj39_SlideIn:
 	moveq	#$10,d1
@@ -26209,6 +26283,8 @@ Obj6F_InitEmeraldText:
 BranchTo2_Obj34_MoveTowardsTargetPosition
 	bra.w	Obj34_MoveTowardsTargetPosition
 ; ===========================================================================
+ .DelWhenGotEmerald:
+        jmp     DeleteObject
 ;loc_14484
 Obj6F_InitResultTitle:
 	cmpi.b	#7,(Emerald_count).w
@@ -26218,7 +26294,7 @@ Obj6F_InitResultTitle:
 ; ===========================================================================
 +
 	tst.b	(Got_Emerald).w
-	beq.w	DeleteObject
+	beq.w	BranchTo2_Obj34_MoveTowardsTargetPosition.DelWhenGotEmerald
 	moveq	#1,d0		; "Sonic got a"
 +
 	cmpi.w	#2,(Player_mode).w
@@ -26230,6 +26306,7 @@ Obj6F_InitResultTitle:
 +
 	move.b	d0,mapping_frame(a0)
 	bra.w	Obj34_MoveTowardsTargetPosition
+
 ; ===========================================================================
 ;loc_144B6
 Obj6F_Emerald6:
@@ -27201,7 +27278,11 @@ Obj36_Init:
 	move.l	#Obj36_MapUnc_15B68,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_Spikes,1,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.b	subtype(a0),d0
 	andi.b	#$F,subtype(a0)		; lower 4 bits determine behavior, upper bits need to be removed
 	andi.w	#$F0,d0
@@ -28124,10 +28205,8 @@ MarkObjGone_P2:
 ; freeObject:
 Delete_Current_Sprite:
 DeleteObject:
+        jsr    ObjRemoveFromList ; remove this object from sprite list first then delete it
 	movea.l	a0,a1
-
-; sub_164E8:
-DeleteObject2:
 	moveq	#0,d1
 
 	moveq	#bytesToLcnt(next_object),d0 ; we want to clear up to the next object
@@ -28140,12 +28219,30 @@ DeleteObject2:
 
 	rts
 ; End of function DeleteObject2
+DeleteObject2:
+        movem.l a1-a6,-(sp)
+        move.l  a0,a3
+        move.l  a1,a0
+        jsr    ObjRemoveFromList ; remove this object from sprite list first then delete it
+        move.l  a3,a0
+        movem.l (sp)+,a1-a6
+	moveq	#0,d1
 
+	moveq	#bytesToLcnt(next_object),d0 ; we want to clear up to the next object
+	; delete the object by setting all of its bytes to 0
+-	move.l	d1,(a1)+
+	dbf	d0,-
+    if object_size&3
+	move.w	d1,(a1)+
+    endif
+
+	rts
 
 
 
 
 Draw_Sprite:
+                rts
 		lea	(Sprite_Table_Input).w,a1
 		adda.w	priority(a0),a1
 
@@ -28174,6 +28271,7 @@ loc_1ABDC:
 
 ; sub_16512:
 DisplaySprite:
+        rts
         lea     (Sprite_Table_Input).w,a1
         moveq   #0,d0
 	move.b  priority(a0),d0
@@ -28206,6 +28304,7 @@ PriorityId:    dc.w  0
 
 ; sub_16512:
 DisplaySprite2:
+        rts
         lea     (Sprite_Table_Input).w,a2
         moveq   #0,d0
 	move.b  priority(a1),d0
@@ -28231,6 +28330,7 @@ return_1652E:
 
 ; loc_16530:
 DisplaySprite3:
+        rts
 	lea	(Sprite_Table_Input).w,a1
 	adda.w	d0,a1
 	cmpi.w	#$7E,(a1)
@@ -28975,16 +29075,112 @@ loc_1B1EC:
 
 Render_Sprites_CompetitionMode:
       rts
+InitSpriterManager:       ; routine that clears this part of chunk table ram
+             ;clearRAM Sprite_Lister_Table,Sprite_Lister_Table_End
+             lea       Sprite_Lister_Table.l,a1
+             moveq     #$7,d1
+
+             moveq     #0,d2
+             moveq     #0,d3
+             moveq     #0,d4
+             moveq     #0,d5
+             moveq     #0,d6
+             movea.l   #0,a2
+             movea.l   #0,a3
+  .LoopSpriteListLevel:
+             moveq     #$4F,d0
+  .LoopClearSpriteList:
+             movem.w   d2-d6/a2-a3,(a1)
+             adda.l    #$C,a1
+             dbf       d0,.LoopClearSpriteList
+             dbf       d1,.LoopSpriteListLevel
+
+
+
+
+             lea       Sprite_Lister_Table.l,a4
+             move.l    #0,SpriteListHeadAddr(a4)
+             move.l    #Sprite_Lister_Table-$C,SpritePrevOb(a4)
+             suba.w    #$C,a4
+             move.l    #Sprite_Lister_Table,SpriteNextOb(a4)
+             rts
 ; ---------------------------------------------------------------------------
 ; Subroutine to convert mappings (etc) to proper Megadrive sprites
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
+          tst.w     prioritylist(a0) ; does object contain displa flag ?
+          beq.s     .NodeNotFound
+
+          lea     RAM_Start.l,a2
+
+          move.w  prioritylist(a0),d0
+          adda.w  d0,a2
+
+      ; a2 points to the node to be removed
+         move.l   SpritePrevOb(a2),a5 ; get the previous node
+         move.l   SpriteNextOb(a2),a4 ; get the next node
+
+; Update the next node's prev pointer, if next node exists
+         move.l    a4,d1
+         beq.s    .SkipNextUpdate
+         move.l   a5, SpritePrevOb(a4)
+         .SkipNextUpdate:
+
+        ; Update the previous node's next pointer, if previous node exists
+         move.l    a5,d1
+         beq.s    .SkipPrevUpdate
+         move.l   a4, SpriteNextOb(a5)
+ .SkipPrevUpdate:
+
+; If a2 was the head, update the head pointer
+          lea      Sprite_Lister_Table.l,a3
+          move.l   SpriteListHeadAddr(a3),d0
+          cmp.l    d0,a2
+          bne.s    .SkipHeadUpdate
+          move.l   a4, SpriteListHeadAddr(a3)
+ .SkipHeadUpdate:
+
+
+         clr.w    SpriteInUse(a2)
+         clr.w    SpriteObAddr(a2)
+         clr.l    SpriteNextOb(a2)
+         clr.l    SpritePrevOb(a2)
+
+
+
+      .NodeNotFound:
+         rts
+InitDrawingSprites: ; routine that inserts object in SpritesListTable which contains sprites for next and previous routine and the object ram addr
+                 lea   Sprite_Lister_Table.l,a4
+                 move.l    SpriteListHeadAddr(a4),a5 ; slot unused addr
+                 move.l    a4,a3
+
+                 moveq  #$4F,d1
+     .LoopFind:
+                 tst.l  SpriteInUse(a4)
+                 beq.s  .Found
+                 adda.w #SpriteRenderSize,a4
+                 dbf    d1,.LoopFind
+                 rts
+   .Found:
+                 move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
+                 move.w    a0,SpriteObAddr(a4)   ; connect object ram
+                 move.l    a4,SpriteNextOb(a5)
+                 move.l    a5,SpritePrevOb(a4) ; previous slot
+
+                 move.l     a4,SpriteListHeadAddr(a3)  ; update this for next objects
+                 move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+   .fail:
+                 rts
+
+
 
 ; sub_16604:
 BuildSprites:
-	tst.w	(Two_player_mode).w
-	bne.w	BuildSprites_2P
+;	tst.w	(Two_player_mode).w
+;	bne.w	BuildSprites_2P
 	lea	(Sprite_Table).w,a2
 	moveq	#0,d5
 	moveq	#0,d4
@@ -28993,16 +29189,20 @@ BuildSprites:
 	jsrto	(BuildHUD).l, JmpTo_BuildHUD
 	bsr.w	BuildRings
 +
-	lea	(Sprite_Table_Input).w,a4
-	moveq	#7,d7	; 8 priority levels
+	lea	(Sprite_Lister_Table).l,a4
+	move.l   a4,d6
+	;moveq	#7,d7	; 8 priority levels
 ; loc_16628:
 BuildSprites_LevelLoop:
-	tst.w	(a4)	; does this level have any objects?
-	beq.w	BuildSprites_NextLevel	; if not, check the next one
-	moveq	#2,d6
+;	tst.w	(a4)	; does this level have any objects?
+;	beq.w	BuildSprites_NextLevel	; if not, check the next one
+;	moveq	#2,d6
+        tst.b    SpriteInUse(a4) ; is first slot on this loading ?
+        beq.w    BuildSprites_NextLevel ; if not ingore it
+        movea.w  SpriteObAddr(a4),a0 ; load first entry
 ; loc_16630:
 BuildSprites_ObjLoop:
-	movea.w	(a4,d6.w),a0 ; a0=object
+;	movea.w	(a4,d6.w),a0 ; a0=object
 	andi.b	#$7F,render_flags(a0)	; clear on-screen flag
 	move.b	render_flags(a0),d0
 	move.b	d0,d4
@@ -29073,13 +29273,21 @@ BuildSprites_DrawSprite:
 	ori.b	#$80,render_flags(a0)	; set on-screen flag
 ; loc_166F2:
 BuildSprites_NextObj:
-	addq.w	#2,d6	; load next object
-	subq.w	#2,(a4)	; decrement object count
-	bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
+        movea.l  SpriteNextOb(a4),d0 ; is there anext node ?
+        beq.w    BuildSprites_NextLevel   ; if not then stop list from going further
+        movea.l  d0,a4  ; update to next ; update to next node
+
+        movea.w  SpriteObAddr(a4),a0 ; load object ram
+        bra.w    BuildSprites_ObjLoop   ; go to routine responsible for function after that routine is done it comes back to Render_Sprites_NextObj after the function is done
+	;addq.w	#2,d6	; load next object
+	;subq.w	#2,(a4)	; decrement object count
+	;bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
 ; loc_166FA:
 BuildSprites_NextLevel:
-	lea	$80(a4),a4	; load next priority level
-	dbf	d7,BuildSprites_LevelLoop	; loop
+        move.l   d6,a3
+        move.l   a4,SpriteListHeadAddr(a3)  ; memeorize this so we dont have to loop  ( head) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
+;	lea	$80(a4),a4	; load next priority level
+;	dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
 	cmpi.b	#80,d5	; was the sprite limit reached?
 	beq.s	+	; if it was, branch
@@ -31756,7 +31964,10 @@ Obj41_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_VrtclSprng,0,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
 	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
+;	move.b	#4,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	subtype(a0),d0
 	lsr.w	#3,d0
 	andi.w	#$E,d0
@@ -32578,7 +32789,10 @@ loc_1922C:
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#$18,width_pixels(a0)
-	move.b	#4,priority(a0)
+;	move.b	#4,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.w	#$3C3C,(Loser_Time_Left).w
 
 ; loc_1924C: Obj_0D_sub_2:
@@ -33413,7 +33627,7 @@ loc_19B56:
 	bmi.s	loc_19B8E
 	sub.w	d3,y_pos(a1)
 	subq.w	#1,y_pos(a1)
-	bsr.w	RideObject_SetRide
+	jsr	RideObject_SetRide
 	move.w	d6,d4
 	addi.b	#($10-p1_standing_bit+p1_touch_top_bit),d4
 	bset	d4,d6	; This sets bits 4 (Sonic) or 5 (Tails) of high word of d6
@@ -33853,7 +34067,7 @@ loc_19F4C:
 ; Object 01 - Sonic
 ; ----------------------------------------------------------------------------
 ; Sprite_19F50: Object_Sonic:
-Obj01: 
+Obj01:
 	; a0=character
 	tst.w	(Debug_placement_mode).w	; is debug mode being used?
 	beq.s	Obj01_Normal			; if not, branch
@@ -33883,7 +34097,8 @@ Obj01_Init:
 	move.b	#$13,default_y_radius(a0)
 	move.b	#9,default_x_radius(a0)
 	move.l	#Mapunc_Sonic,mappings(a0)
-	move.b	#2,priority(a0)
+	InsertSpriteMacro $0
+	;move.b	#2,priority(a0)
 	move.b	#$18,width_pixels(a0)
 	move.b	#4,render_flags(a0)
 	move.b	#0,character_id(a0)
@@ -36549,7 +36764,10 @@ Obj02_Init:
 	move.b	#$F,y_radius(a0) ; this sets Tails' collision height (2*pixels) to less than Sonic's height
 	move.b	#9,x_radius(a0)
 	move.l	#MapUnc_Tails,mappings(a0)
-	move.b	#2,priority(a0)
+	;move.b	#2,priority(a0)
+
+	InsertSpriteMacro 0
+       
 	move.b	#$18,width_pixels(a0)
 	move.b	#$84,render_flags(a0) ; render_flags(Tails) = $80 | initial render_flags(Sonic)
 	move.b	#1,character_id(a0)
@@ -39639,7 +39857,10 @@ Obj05_Init:
 	move.l	#MapUnc_Tails,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtUnc_Tails_Tails,0,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
-	move.b	#2,priority(a0)
+;	move.b	#2,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	#$18,width_pixels(a0)
 	move.b	#4,render_flags(a0)
 
@@ -40226,7 +40447,10 @@ Obj38:
 	move.l	#Obj38_Shield,(a0)
 	move.l	#Obj38_MapUnc_1DBE4,mappings(a0)
 	move.b	#4,render_flags(a0)
-	move.b	#1,priority(a0)
+;	move.b	#1,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	#$18,width_pixels(a0)
 	move.w	#make_art_tile(ArtTile_ArtUnc_Shield,0,0),art_tile(a0)
 	bsr.w	Adjust2PArtPointer
@@ -40358,13 +40582,15 @@ loc_1DA44:
 loc_1DA74:
 	add.b	d0,objoff_38(a0)
 	move.w	#$80,d0
-	bra.w	DisplaySprite3
+	rts
+	;bra.w	DisplaySprite3
 ; ===========================================================================
-
+starsJmpToDelete:
+        jmp    DeleteObject
 loc_1DA80:
 	movea.w	parent(a0),a1 ; a1=character
 	btst	#status_sec_isInvincible,status_secondary(a1)
-	beq.w	DeleteObject
+	beq.w	starsJmpToDelete
 	cmpi.w	#2,(Player_mode).w
 	beq.s	loc_1DAA4
 	lea	(Sonic_Pos_Record_Index).w,a5
@@ -40425,7 +40651,7 @@ loc_1DAE4:
 loc_1DB20:
 	add.b	d0,objoff_38(a0)
 	move.w	#$80,d0
-	bra.w	DisplaySprite3
+	rts
 ; ===========================================================================
 
 loc_1DB2C:
@@ -40502,7 +40728,8 @@ Obj08_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Obj08_MapUnc_1DF5E,mappings(a0)
 	ori.b	#4,render_flags(a0)
-	move.b	#1,priority(a0)
+	;move.b	#1,priority(a0)
+	InsertSpriteMacro 0
 	move.b	#$10,width_pixels(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_SonicDust,0,0),art_tile(a0)
 	move.w	#MainCharacter,parent(a0)
@@ -40601,7 +40828,7 @@ Obj08_CheckSkid:
 ; loc_1DE64:
 Obj08_SkidDust:
 	subq.b	#1,obj08_dust_timer(a0)
-	bpl.s	loc_1DEE0
+	bpl.w	loc_1DEE0
 	move.b	#3,obj08_dust_timer(a0)
 	bsr.w	SingleObjLoad
 	bne.s	loc_1DEE0
@@ -40618,7 +40845,12 @@ Obj08_SkidDust:
 	addq.b	#2,routine(a1)
 	move.l	mappings(a0),mappings(a1)
 	move.b	render_flags(a0),render_flags(a1)
-	move.b	#1,priority(a1)
+	;move.b	#1,priority(a1)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
+
 	move.b	#4,width_pixels(a1)
 	move.w	art_tile(a0),art_tile(a1)
 	move.w	parent(a0),parent(a1)
@@ -42388,7 +42620,9 @@ Obj79_Init:
 	jsrto	(Adjust2PArtPointer).l, JmpTo3_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#8,width_pixels(a0)
-	move.b	#5,priority(a0)
+;	move.b	#5,priority(a0)
+	InsertSpriteMacro 0
+
 	lea	(Object_Respawn_Table).w,a2
 	moveq	#0,d0
 	move.b	respawn_index(a0),d0
@@ -42450,7 +42684,11 @@ Obj79_CheckActivation:
 	move.w	art_tile(a0),art_tile(a1)
 	move.b	#4,render_flags(a1)
 	move.b	#8,width_pixels(a1)
-	move.b	#4,priority(a1)
+	;move.b	#4,priority(a1)
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.b	#2,mapping_frame(a1)
 	move.w	#$20,objoff_3A(a1)
 	move.w	a0,parent(a1)
@@ -43482,7 +43720,10 @@ Obj03_Init:
 	jsrto	(Adjust2PArtPointer).l, JmpTo7_Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
 	move.b	#$10,width_pixels(a0)
-	move.b	#5,priority(a0)
+;	move.b	#5,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	subtype(a0),d0
 	btst	#2,d0
 	beq.s	Obj03_Init_CheckX
@@ -44302,7 +44543,10 @@ Obj49_Init:
 	move.b	#4,render_flags(a0)
 	move.b	#$20,width_pixels(a0)
 	move.w	x_pos(a0),objoff_34(a0)
-	move.b	#0,priority(a0)
+;	move.b	#0,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	#$80,y_radius(a0)
 	bset	#4,render_flags(a0)
 ; loc_20BEA:
@@ -44583,12 +44827,13 @@ Obj27_Init:
 	move.l	#Obj27_MapUnc_21120,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKosM_Explosion,0,0),art_tile(a0)
 	move.b	#4,render_flags(a0)
-	move.b	#1,priority(a0)
+	;move.b	#1,priority(a0)
 Exploation_Settings:
 	move.b	#0,collision_flags(a0)
 	move.b	#$C,width_pixels(a0)
 	move.b	#3,anim_frame_duration(a0)
 	move.b	#0,mapping_frame(a0)
+	InsertSpriteMacro 0
 	move.w	#SndID_Explosion,d0
 	jmp	(PlaySound).l
 
@@ -45040,7 +45285,7 @@ loc_21562:
 	bhs.s	return_215BE
 	tst.b	obj_control(a1)
 	bne.s	return_215BE
-	bsr.w	RideObject_SetRide
+	jsr	RideObject_SetRide
 	rts
 ; ---------------------------------------------------------------------------
 
@@ -45068,7 +45313,7 @@ loc_215A8:
 	subi.w	#$10,d1
 	cmpi.w	#$30,d1
 	bhs.s	return_215BE
-	bsr.w	RideObject_SetRide
+	jsr	RideObject_SetRide
 
 return_215BE:
 	rts
@@ -45234,7 +45479,7 @@ Obj06_Cylinder:
 	addq.w	#3,d2
 	move.w	d2,y_pos(a1)
 	move.b	#1,flip_turned(a1) ; face the other way
-	bsr.w	RideObject_SetRide
+	jsr	RideObject_SetRide
 	move.w	#AniIDSonAni_Run,anim(a1)
 	move.b	#0,(a2)
 	tst.w	inertia(a1)
@@ -59487,11 +59732,14 @@ Obj4B_Init:
 
 	ori.b	#4,render_flags(a0)
 	move.b	#$A,collision_flags(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+
+	InsertSpriteMacro 0
+
 	move.b	#$10,width_pixels(a0)
 	move.b	#$10,y_radius(a0)
 	move.b	#$18,x_radius(a0)
-	move.b	#3,priority(a0)
+;	move.b	#3,priority(a0)
 	addq.b	#2,routine(a0)	; => Obj4B_Main
 
 	; load exhaust flame object
@@ -59503,7 +59751,11 @@ Obj4B_Init:
 	move.l	#Obj4B_MapUnc_2D2EA,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Buzzer,0,0),art_tile(a1)
 
-	move.b	#4,priority(a1)
+;	move.b	#4,priority(a1)
+       	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.b	#$10,width_pixels(a1)
 	move.b	status(a0),status(a1)
 	move.b	render_flags(a0),render_flags(a1)
@@ -59621,14 +59873,18 @@ Obj4B_DoneShooting:
 ; loc_2D24E
 Obj4B_ShootProjectile:
 	jsr	(SingleObjLoad2).l	; Find next open object space
-	bne.s	+
+	bne.w	+
 
 	move.l	#Obj4B,(a1) ; load obj4B
 	move.b	#6,routine(a1)	; => Obj4B_Projectile
 	move.l	#Obj4B_MapUnc_2D2EA,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_Buzzer,0,0),art_tile(a1)
 	jsrto	(Adjust2PArtPointer2).l, JmpTo7_Adjust2PArtPointer2
-	move.b	#4,priority(a1)
+	;move.b	#4,priority(a1) 
+	movem.l d1/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1/a0-a1
 	move.b	#$98,collision_flags(a1)
 	move.b	#$10,width_pixels(a1)
 	move.b	status(a0),status(a1)
@@ -59731,7 +59987,8 @@ Obj5C_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Masher,0,0),art_tile(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo58_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	InsertSpriteMacro 0
 	move.b	#9,collision_flags(a0)
 	move.b	#$10,width_pixels(a0)
 	move.w	#-$400,y_vel(a0)
@@ -73535,7 +73792,9 @@ Obj98_Index:	offsetTable
 ; ===========================================================================
 ; loc_376FA:
 Obj98_Init: ;;
-	bra.w	LoadSubObject
+	bsr.w	LoadSubObject
+	InsertSpriteMacro 0
+        rts
 ; ===========================================================================
 ; loc_376FE:
 Obj98_Main:
@@ -73880,6 +74139,7 @@ return_37A80:
 Flicker_Set = status+1
 Obj9C:
 	bsr.w	LoadSubObject
+	InsertSpriteMacro 0
 	move.l  #Obj9C_Main,(a0)
 ; ===========================================================================
 ; loc_37A98:
@@ -73989,6 +74249,9 @@ Obj9D_Index:	offsetTable
 Obj9D_Init:
 	bsr.w	LoadSubObject
 	move.b	#$10,Obj9D_timer(a0)
+
+	InsertSpriteMacro 0
+
 	rts
 ; ===========================================================================
 ; loc_37C1C: Obj9D_Main:
@@ -77193,6 +77456,7 @@ ObjB0_Init:
 	move.w	#2,(SegaScr_VInt_Subrout).w
 	bset	#0,render_flags(a0)
 	bset	#0,status(a0)
+	InsertSpriteMacro $0
 
 	; Initialize streak horizontal offsets for Sonic going left.
 	; 9 full lines (8 pixels) + 6 pixels, 2-byte interleaved entries for PNT A and PNT B
