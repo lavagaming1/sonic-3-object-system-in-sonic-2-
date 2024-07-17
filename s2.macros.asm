@@ -77,7 +77,16 @@ clearRAM macro startaddr,endaddr
 	move.b	d0,(a1)+
     endif
     endm
+MacroChunksMoveto       macro
+    moveq    #0,d3
+    endm
+MacroChunksMoveto2 macro
 
+    add.l  (ChunkAddr).w,d3
+
+
+
+    endm
 ; tells the Z80 to stop, and waits for it to finish stopping (acquire bus)
 stopZ80 macro
 	move.w	#$100,(Z80_Bus_Request).l ; stop the Z80

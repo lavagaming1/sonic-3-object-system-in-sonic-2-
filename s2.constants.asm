@@ -1094,7 +1094,7 @@ TitleCard_ActNumber:            ds.b  object_size
 TitleCard_Background:           ds.b  object_size
 TitleCard_Bottom:               ds.b  object_size
 TitleCard_Left:                 ds.b  object_size
-Dynamic_Object_RAM:	        ds.b object_size*$52	; $1A04 bytes ; 90 objects
+Dynamic_Object_RAM:	        ds.b object_size*$51	; $1A04 bytes ; 90 objects
 Dynamic_Object_RAM_End =	*
 Level_object_RAM:             = Dynamic_Object_RAM_End	; $4EA bytes ; various fixed in-level objects
 ;--------------------------------------------------------------------------------------------
@@ -1135,6 +1135,10 @@ Tails_InvincibilityStars:
 				ds.b	object_size
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
+
+                                ds.b    $46     
+ChunkAddr:                                
+                                ds.l    1
 
 Object_RAM_End:
 Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff

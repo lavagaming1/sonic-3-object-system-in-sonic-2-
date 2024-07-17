@@ -17863,14 +17863,17 @@ GetBlockAddr:
 	lsr.w	#4,d0		; divide by 16 (overall division of 128)
 	andi.w	#$7F,d0
 	add.w	d3,d0		; get offset of current 128x128 in the level layout table
-	moveq	#-1,d3
-	clr.w	d3		; d3 = $FFFF0000
+	; move.l  (ChunkAddr).w,d3
+	MacroChunksMoveto
+;	moveq	#-1,d3
+;	clr.w	d3		; d3 = $FFFF0000
 	move.b	(a4,d0.w),d3	; get tile ID of the current 128x128 tile
 	lsl.w	#7,d3		; multiply by 128, the size in bytes of a 128x128 in RAM
 	andi.w	#$70,d4		; round down to nearest 16-pixel boundary
 	andi.w	#$E,d5		; force this to be a multiple of 16
 	add.w	d4,d3		; add vertical offset of current 16x16
 	add.w	d5,d3		; add horizontal offset of current 16x16
+	MacroChunksMoveto2
 	movea.l	d3,a0		; store address, in the metablock table, of the current 16x16
 	movem.l	(sp)+,d4-d5
 	rts
@@ -18085,11 +18088,9 @@ loc_E234:
 GetBlockPtr:
 	add.w	(a3),d5
 	add.w	4(a3),d4
-	movea.l	(BlocksAddr).w,a1
-;	jsr    FixBlocksIn2Pmode
-;	movem.l	d1/a0-a1,-(sp)
-;	jsr    Correct_AnimatedTiles
-      ;  movem.l	(sp)+,d1/a0-a1
+	;lea	(Block_Table).w,a1
+	move.l  (BlocksAddr).w,a1
+
 	move.w	d4,d3		; d3 = camera Y pos + offset
 	add.w	d3,d3
 	andi.w	#$F00,d3	; limit to units of $100 ($100 = $80 * 2, $80 = height of a 128x128)
@@ -18098,14 +18099,17 @@ GetBlockPtr:
 	lsr.w	#4,d0		; divide by 16 (overall division of 128)
 	andi.w	#$7F,d0
 	add.w	d3,d0		; get offset of current 128x128 in the level layout table
-	moveq	#-1,d3
-	clr.w	d3		; d3 = $FFFF0000
+	;move.l  (ChunkAddr).w,d3
+	MacroChunksMoveto
+;	moveq	#-1,d3
+;	clr.w	d3		; d3 = $FFFF0000
 	move.b	(a4,d0.w),d3	; get tile ID of the current 128x128 tile
 	lsl.w	#7,d3		; multiply by 128, the size in bytes of a 128x128 in RAM
 	andi.w	#$70,d4		; round down to nearest 16-pixel boundary
 	andi.w	#$E,d5		; force this to be a multiple of 16
 	add.w	d4,d3		; add vertical offset of current 16x16
 	add.w	d5,d3		; add horizontal offset of current 16x16
+	MacroChunksMoveto2
 	movea.l	d3,a0		; store address, in the metablock table, of the current 16x16
 	move.w	(a0),d3
 	andi.w	#$3FF,d3
@@ -18326,12 +18330,13 @@ loadZoneBlockMaps:
         ;movea.l  ApmAddr.w,a0
 
 
-	move.l	(a2)+,d0
-	andi.l	#$FFFFFF,d0	; pointer to chunk mappings
-	movea.l	d0,a0
-
-	lea	(Chunk_Table).l,a1
-	jsrto	(KosDec).l, JmpTo_KosDec
+;	move.l	(a2)+,d0
+;	andi.l	#$FFFFFF,d0	; pointer to chunk mappings
+;	movea.l	d0,a0
+ ;
+;	lea	(Chunk_Table).l,a1
+;	jsrto	(KosDec).l, JmpTo_KosDec
+        move.l   (a2)+,(ChunkAddr).w
 	bsr.w	loadLevelLayout
 
 	movea.l	(sp)+,a2	; zone specific pointer in LevelArtPointers
@@ -41155,8 +41160,10 @@ Find_Tile:
 	lsr.w	#4,d1	; x_pos/128 = x_of_chunk
 	andi.w	#$7F,d1
 	add.w	d1,d0	; d0 is relevant chunk ID now
-	moveq	#-1,d1
-	clr.w	d1		; d1 is now $FFFF0000 = Chunk_Table
+	moveq   #0,d1 ; set d1 as 0 temporarly
+	;move.l  (ChunkAddr).w,d1
+;	moveq	#-1,d1
+;	clr.w	d1		; d1 is now $FFFF0000 = Chunk_Table
 	lea	(Level_Layout).w,a1
 	move.b	(a1,d0.w),d1	; move 128*128 chunk ID to d1
 	add.w	d1,d1
@@ -41166,6 +41173,7 @@ Find_Tile:
 	add.w	d0,d1
 	andi.w	#$E,d4	; x_pos/8
 	add.w	d4,d1
+	add.l   (ChunkAddr).w,d1 ; add chunk addr to 0 to get the correct amount without alinging
 	movea.l	d1,a1	; address of block ID
 	rts
 ; ===========================================================================
@@ -89814,7 +89822,7 @@ ArtKos_HTZ:	BINCLUDE	"art/kosinski/HTZ_Supp.bin"
       even
 ;-----------------------------------------------------------------------------------
 ; EHZ/HTZ 128x128 block mappings (Kosinski compression)
-BM128_EHZ:	BINCLUDE	"mappings/128x128/EHZ_HTZ.bin"
+BM128_EHZ:	BINCLUDE	"mappings/128x128/EHZ_HTZ.unc"
       even
 ;-----------------------------------------------------------------------------------
 ; MTZ 16x16 block mappings (Kosinski compression)
@@ -89827,7 +89835,7 @@ ArtKos_MTZ:	BINCLUDE	"art/kosinski/MTZ.bin"
          even
 ;-----------------------------------------------------------------------------------
 ; MTZ 128x128 block mappings (Kosinski compression)
-BM128_MTZ:	BINCLUDE	"mappings/128x128/MTZ.bin"
+BM128_MTZ:	BINCLUDE	"mappings/128x128/MTZ.unc"
         even
 ;-----------------------------------------------------------------------------------
 ; HPZ 16x16 block mappings (Kosinski compression)
@@ -89849,7 +89857,7 @@ ArtKos_OOZ:	BINCLUDE	"art/kosinski/OOZ.bin"
       even
 ;-----------------------------------------------------------------------------------
 ; OOZ 128x128 block mappings (Kosinski compression)
-BM128_OOZ:	BINCLUDE	"mappings/128x128/OOZ.bin"
+BM128_OOZ:	BINCLUDE	"mappings/128x128/OOZ.unc"
    even
 ;-----------------------------------------------------------------------------------
 ; MCZ 16x16 block mappings (Kosinski compression)
@@ -89862,7 +89870,7 @@ ArtKos_MCZ:	BINCLUDE	"art/kosinski/MCZ.bin"
       even
 ;-----------------------------------------------------------------------------------
 ; MCZ 128x128 block mappings (Kosinski compression)
-BM128_MCZ:	BINCLUDE	"mappings/128x128/MCZ.bin"
+BM128_MCZ:	BINCLUDE	"mappings/128x128/MCZ.unc"
       even
 ;-----------------------------------------------------------------------------------
 ; CNZ 16x16 block mappings (Kosinski compression)
@@ -89885,7 +89893,7 @@ ArtKos_CNZ:	BINCLUDE	"art/kosinski/CNZ.bin"
       even
 ;-----------------------------------------------------------------------------------
 ; CNZ 128x128 block mappings (Kosinski compression)
-BM128_CNZ:	BINCLUDE	"mappings/128x128/CNZ.bin"
+BM128_CNZ:	BINCLUDE	"mappings/128x128/CNZ.unc"
         even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ 16x16 block mappings (Kosinski compression)
@@ -89898,7 +89906,7 @@ ArtKos_CPZ:	BINCLUDE	"art/kosinski/CPZ_DEZ.bin"
          even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ 128x128 block mappings (Kosinski compression)
-BM128_CPZ:	BINCLUDE	"mappings/128x128/CPZ_DEZ.bin"
+BM128_CPZ:	BINCLUDE	"mappings/128x128/CPZ_DEZ.unc"
         even
 ;-----------------------------------------------------------------------------------
 ; ARZ 16x16 block mappings (Kosinski compression)
@@ -89911,7 +89919,7 @@ ArtKos_ARZ:	BINCLUDE	"art/kosinski/ARZ.bin"
         even
 ;-----------------------------------------------------------------------------------
 ; ARZ 128x128 block mappings (Kosinski compression)
-BM128_ARZ:	BINCLUDE	"mappings/128x128/ARZ.bin"
+BM128_ARZ:	BINCLUDE	"mappings/128x128/ARZ.unc"
           even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ 16x16 block mappings (Kosinski compression)
@@ -89929,7 +89937,7 @@ ArtKos_WFZ:	BINCLUDE	"art/kosinski/WFZ_Supp.bin"
          even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ 128x128 block mappings (Kosinski compression)
-BM128_WFZ:	BINCLUDE	"mappings/128x128/WFZ_SCZ.bin"
+BM128_WFZ:	BINCLUDE	"mappings/128x128/WFZ_SCZ.unc"
            even
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ;-----------------------------------------------------------------------------------
