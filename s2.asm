@@ -42674,11 +42674,10 @@ Obj79_CheckActivation:
 	move.w	art_tile(a0),art_tile(a1)
 	move.b	#4,render_flags(a1)
 	move.b	#8,width_pixels(a1)
-	;move.b	#4,priority(a1)
-	movem.l d1/a0-a1,-(sp)
+	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
 	InsertSpriteMacro 0
-        movem.l  (sp)+,d1/a0-a1
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.b	#2,mapping_frame(a1)
 	move.w	#$20,objoff_3A(a1)
 	move.w	a0,parent(a1)
