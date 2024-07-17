@@ -1072,7 +1072,7 @@ RAM_start:
 RAM_Start:
 
 Chunk_Table:			ds.b	$1000	; was "Metablock_Table"
-Sprite_Lister_Table: 
+Sprite_Lister_Table:
 
                                 ds.b    $2000
                                 ds.b    $5000
@@ -1155,7 +1155,9 @@ Tails_InvincibilityStars:
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
-                                ds.b    $46     
+                                ds.b    $42
+LinkListHead:                                
+                                ds.l    1
 ChunkAddr:                                
                                 ds.l    1
 

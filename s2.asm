@@ -24681,6 +24681,7 @@ Obj0E_Tails_Init:
 	move.w	#$D8,x_pixel(a0)
 	move.w	#$D8,y_pixel(a0)
 	move.b	#1,anim(a0)
+	InsertSpriteMacro 0
 	rts
 ; ===========================================================================
 
@@ -28220,23 +28221,9 @@ DeleteObject:
 	rts
 ; End of function DeleteObject2
 DeleteObject2:
-        movem.l a1-a6,-(sp)
-        move.l  a0,a3
-        move.l  a1,a0
-        jsr    ObjRemoveFromList ; remove this object from sprite list first then delete it
-        move.l  a3,a0
-        movem.l (sp)+,a1-a6
-	moveq	#0,d1
+        move.l #DeleteObject,(a1)
+        rts
 
-	moveq	#bytesToLcnt(next_object),d0 ; we want to clear up to the next object
-	; delete the object by setting all of its bytes to 0
--	move.l	d1,(a1)+
-	dbf	d0,-
-    if object_size&3
-	move.w	d1,(a1)+
-    endif
-
-	rts
 
 
 
@@ -29099,7 +29086,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
 
              lea       Sprite_Lister_Table.l,a4
-             move.l    #0,SpriteListHeadAddr(a4)
+             move.l    #0,LinkListHead.w
              move.l    #Sprite_Lister_Table-$C,SpritePrevOb(a4)
              suba.w    #$C,a4
              move.l    #Sprite_Lister_Table,SpriteNextOb(a4)
@@ -29108,7 +29095,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 ; Subroutine to convert mappings (etc) to proper Megadrive sprites
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||  
 ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
           tst.w     prioritylist(a0) ; does object contain displa flag ?
           beq.s     .NodeNotFound
@@ -29136,10 +29123,10 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
 ; If a2 was the head, update the head pointer
           lea      Sprite_Lister_Table.l,a3
-          move.l   SpriteListHeadAddr(a3),d0
+          move.l   LinkListHead.w,d0
           cmp.l    d0,a2
           bne.s    .SkipHeadUpdate
-          move.l   a4, SpriteListHeadAddr(a3)
+          move.l   a4, LinkListHead.w
  .SkipHeadUpdate:
 
 
@@ -29153,8 +29140,12 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
       .NodeNotFound:
          rts
 InitDrawingSprites: ; routine that inserts object in SpritesListTable which contains sprites for next and previous routine and the object ram addr
+                 tst.w prioritylist(a0)
+                 bne.s  .fail
+                 tst.l  mappings(a0)
+                 beq.s  .fail
                  lea   Sprite_Lister_Table.l,a4
-                 move.l    SpriteListHeadAddr(a4),a5 ; slot unused addr
+                 move.l    LinkListHead.w,a5 ; slot unused addr
                  move.l    a4,a3
 
                  moveq  #$4F,d1
@@ -29170,7 +29161,7 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  move.l    a4,SpriteNextOb(a5)
                  move.l    a5,SpritePrevOb(a4) ; previous slot
 
-                 move.l     a4,SpriteListHeadAddr(a3)  ; update this for next objects
+                 move.l     a4,LinkListHead.w  ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
                  rts
@@ -29284,8 +29275,7 @@ BuildSprites_NextObj:
 	;bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
 ; loc_166FA:
 BuildSprites_NextLevel:
-        move.l   d6,a3
-        move.l   a4,SpriteListHeadAddr(a3)  ; memeorize this so we dont have to loop  ( head) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
+        move.l   a4,LinkListHead.w  ; memeorize this so we dont have to loop  ( head) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
 ;	lea	$80(a4),a4	; load next priority level
 ;	dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
