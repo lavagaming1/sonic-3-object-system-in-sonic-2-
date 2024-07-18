@@ -29111,9 +29111,9 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
           move.w  prioritylist(a0),d0
           adda.w  d0,a2
-          cmpi.w  #Sprite_Lister_Table_End-RAM_start,d0
+          cmpi.w  #Sprite_Lister_Table_End-RAM_Start,d0
           bhs.s   .NodeNotInDebugThis
-          cmpi.w  #Sprite_Lister_Table-RAM_start,d0
+          cmpi.w  #Sprite_Lister_Table-RAM_Start,d0
           blo.s   .NodeNotInDebugThis
      ; a2 points to the node to be removed
        move.l   SpritePrevOb(a2),a5 ; get the previous node

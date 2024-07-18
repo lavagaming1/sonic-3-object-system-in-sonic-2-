@@ -1073,8 +1073,10 @@ RAM_Start:
 
 Chunk_Table:			ds.b	$1000	; was "Metablock_Table"
 Sprite_Lister_Table:
+                                ds.b    $1000
+Sprite_Lister_Table_End:
+                                ds.b    $1000 ; will use this later 
 
-                                ds.b    $2000
 SpriteEntriesUnused:
                                 ds.b    $1000
                                 ds.b    $4000
