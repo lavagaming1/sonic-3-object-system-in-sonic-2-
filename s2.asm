@@ -4,7 +4,7 @@
 ; Aurochs,   2005: Translated to AS and annotated
 ; Xenowhirl, 2007: More annotation, overall cleanup, Z80 disassembly
 ; ---------------------------------------------------------------------------
-; NOTES:                                 
+; NOTES:
 ;
 ; Set your editor's tab width to 8 characters wide for viewing this file.
 ;
@@ -16,7 +16,8 @@
 
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; ASSEMBLY OPTIONS:
-;
+; 
+__DEBUG__ equ	1	; enabled KDebug integrations and assertions
     ifndef gameRevision
 gameRevision = 2
     endif
@@ -52,6 +53,9 @@ useFullWaterTables = 0
 ; AS-specific macros and assembler settings
 	CPU 68000
 	include "s2.macrosetup.asm"
+; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+; MD Debugger definitions
+	include "ErrorDebugger/Debugger.asm"
 
 ; >>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
 ; Equates section - Names for variables.
@@ -72,18 +76,18 @@ StartOfRom:
 	fatal "StartOfRom was $\{*} but it should be 0"
     endif
 Vectors:
- dc.l System_Stack       , EntryPoint    , BusError              , AddressError   ; 4
-        dc.l IllegalInstrError , ZeroDivideError, CHKExceptionError, TRAPVError         ; 8
-        dc.l PrivilegeViolation, TraceError     , LineAEmulation   , LineFEmulation ; 12
-        dc.l ErrorTrap          , ErrorTrap     , ErrorTrap     , ErrorTrap     ; 16
-        dc.l ErrorTrap          , ErrorTrap     , ErrorTrap     , ErrorTrap     ; 20
-        dc.l ErrorTrap          , ErrorTrap     , ErrorTrap     , ErrorTrap     ; 24
-        dc.l SpuriousException , ErrorTrap      , ErrorTrap     , ErrorTrap     ; 28
-        dc.l H_Int                      , ErrorTrap     , V_Int         , ErrorTrap     ; 32
-        dc.l TrapVector         , TrapVector    , TrapVector    , TrapVector    ; 36
-        dc.l TrapVector         , TrapVector    , TrapVector    , TrapVector    ; 40
-        dc.l TrapVector         , TrapVector    , TrapVector    , TrapVector    ; 44
-        dc.l TrapVector         , TrapVector    , TrapVector    , TrapVector    ; 48
+        dc.l 0, EntryPoint    , BusError              , AddressError   ; 4
+        dc.l IllegalInstr , ZeroDivide, ChkInstr, TrapvInstr         ; 8
+        dc.l PrivilegeViol, Trace     , Line1010Emu   , Line1111Emu ; 12
+        dc.l ErrorExcept          , ErrorExcept     , ErrorExcept     , ErrorExcept     ; 16
+        dc.l ErrorExcept          , ErrorExcept     , ErrorExcept     , ErrorExcept     ; 20
+        dc.l ErrorExcept          , ErrorExcept     , ErrorExcept     , ErrorExcept     ; 24
+        dc.l ErrorExcept , ErrorExcept      , ErrorExcept     , ErrorExcept     ; 28
+        dc.l H_Int                      , ErrorExcept     , V_Int         , ErrorTrap     ; 32
+        dc.l ErrorExcept         , ErrorExcept    , ErrorExcept    , ErrorExcept    ; 36
+        dc.l ErrorExcept         , ErrorExcept    , ErrorExcept    , ErrorExcept    ; 40
+        dc.l ErrorExcept         , ErrorExcept    , ErrorExcept    , ErrorExcept    ; 44
+        dc.l ErrorExcept         , ErrorExcept    , ErrorExcept    , ErrorExcept    ; 48
         dc.l ErrorTrap          , ErrorTrap     , ErrorTrap     , ErrorTrap     ; 52
         dc.l ErrorTrap          , ErrorTrap     , ErrorTrap     , ErrorTrap     ; 56
         dc.l ErrorTrap          , ErrorTrap     , ErrorTrap     , ErrorTrap     ; 60
@@ -132,6 +136,7 @@ ErrorTrap:
 ; ===========================================================================
 ; loc_206:
 EntryPoint:
+        lea     (System_Stack).w,sp
 	tst.l	(HW_Port_1_Control-1).l	; test ports A and B control
 	bne.s	PortA_Ok	; If so, branch.
 	tst.w	(HW_Expansion_Control-1).l	; test port C control
@@ -302,7 +307,7 @@ PSGInitValues_End:
 
 	even
 ; loc_300:
-        include "_inc/src/Debugger.asm"
+        
 GameProgram:
 	tst.w	(VDP_control_port).l
 ; loc_306:
@@ -319,20 +324,20 @@ CheckSumCheck:
 
 ; loc_328:
 ChecksumTest:
-    if skipChecksumCheck=0	; checksum code
-	movea.l	#EndOfHeader,a0	; start checking bytes after the header ($200)
-	movea.l	#ROMEndLoc,a1	; stop at end of ROM
-	move.l	(a1),d0
-	moveq	#0,d1
+ ;   if skipChecksumCheck=0	; checksum code
+;	movea.l	#EndOfHeader,a0	; start checking bytes after the header ($200)
+;	movea.l	#ROMEndLoc,a1	; stop at end of ROM
+;	move.l	(a1),d0
+;	moveq	#0,d1
 ; loc_338:
-ChecksumLoop:
-	add.w	(a0)+,d1
-	cmp.l	a0,d0
-	bhs.s	ChecksumLoop
-	movea.l	#Checksum,a1	; read the checksum
-	cmp.w	(a1),d1	; compare correct checksum to the one in ROM
-	bne.w	ChecksumError	; if they don't match, branch
-    endif
+;ChecksumLoop:
+;	add.w	(a0)+,d1
+;	cmp.l	a0,d0
+;	bhs.s	ChecksumLoop
+;	movea.l	#Checksum,a1	; read the checksum
+;	cmp.w	(a1),d1	; compare correct checksum to the one in ROM
+;	bne.w	ChecksumError	; if they don't match, branch
+  ;  endif
 ;checksum_good:
 	lea	(System_Stack).w,a6
 	moveq	#0,d7
@@ -91449,6 +91454,7 @@ Sound70:	include "sound/sfx/F0 - Oil Slide.asm"
 	finishBank
 
 ; end of 'ROM'
+
 	if padToPowerOfTwo && (*)&(*-1)
 		cnop	-1,2<<lastbit(*-1)
 		dc.b	0
@@ -91460,7 +91466,9 @@ paddingSoFar	:= paddingSoFar+1
 		; "About" because it will be off by the same amount that Size_of_Snd_driver_guess is incorrect (if you changed it), and because I may have missed a small amount of internal padding somewhere
 		message "ROM size is $\{*} bytes (\{*/1024.0} kb). About $\{paddingSoFar} bytes are padding. "
 	endif
-	; share these symbols externally (WARNING: don't rename, move or remove these labels!)
+	; share these symbols externally (WARNING: don't rename, move or remove these labels!)   
 	shared word_728C_user,Obj5F_MapUnc_7240,off_3A294,MapRUnc_Sonic,movewZ80CompSize
+        include	"ErrorDebugger/ErrorHandler.asm"
+        even 
 EndOfRom:
 	END

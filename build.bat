@@ -73,6 +73,9 @@ IF NOT EXIST s2.p goto LABLERROR5
 REM // combine the assembler output into a rom
 "win32/s2p2bin" %s2p2bin_args% s2.p s2built.bin s2.h
 
+REM REM // append symbol table
+IF EXIST s2built.bin "ErrorDebugger/convsym.exe" s2.lst s2built.bin -in as_lst -a -range 0 FFFFFF
+
 REM // fix some pointers and things that are impossible to fix from the assembler without un-splitting their data
 IF EXIST s2built.bin "win32/fixpointer" s2.h s2built.bin   off_3A294 MapRUnc_Sonic $2D 0 4   word_728C_user Obj5F_MapUnc_7240 2 2 1  
 
