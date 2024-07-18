@@ -23876,6 +23876,7 @@ Obj26_SpawnIcon:
 	bsr.w	SingleObjLoad
 	bne.s	Obj26_SpawnSmoke
 	move.L	#Obj2E,(a1) ; load obj2E
+
 	move.w	x_pos(a0),x_pos(a1)		; Set icon's position
 	move.w	y_pos(a0),y_pos(a1)
 	move.b	anim(a0),anim(a1)
@@ -23922,8 +23923,8 @@ Obj2E_Init:
 	bsr.w	Adjust2PArtPointer
 	move.b	#$24,render_flags(a0)
 	;move.b	#3,priority(a0)
-
-	InsertSpriteMacro 0
+;        clr.w  prioritylist(a0)
+;	InsertSpriteMacro 0
 
 	move.b	#8,width_pixels(a0)
 	move.w	#-$300,y_vel(a0)
@@ -23958,6 +23959,7 @@ loc_128C6:			; Determine correct mappings offset.
 	adda.w	(a1,d0.w),a1
 	addq.w	#2,a1
 	move.l	a1,mappings(a0)
+	InsertSpriteMacro 0
 ; loc_128DE:
 Obj2E_Raise:
 	bsr.s	+
@@ -27282,7 +27284,7 @@ Obj36_Init:
 	;move.b	#4,priority(a0)
 
 	InsertSpriteMacro 0
-    
+
 	move.b	subtype(a0),d0
 	andi.b	#$F,subtype(a0)		; lower 4 bits determine behavior, upper bits need to be removed
 	andi.w	#$F0,d0
@@ -40566,6 +40568,10 @@ loc_1D9A4:
 	move.b	#4,objoff_12(a1)		; => loc_1DA80
 	move.l	#Obj35_MapUnc_1DCBC,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtUnc_Invincible_stars,0,0),art_tile(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	bsr.w	Adjust2PArtPointer2
 	move.b	#4,render_flags(a1)
 	bset	#6,render_flags(a1)
@@ -63111,13 +63117,16 @@ Obj56_Index:	offsetTable
 Obj56_Init:
 	move.l	#Obj56_MapUnc_2FAF8,mappings(a0)	; main object
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,1,0),art_tile(a0) ; vehicle with ability to fly, bottom part
+
+	InsertSpriteMacro 0
+
 	ori.b	#4,render_flags(a0)
 	move.b	#$81,subtype(a0)
 	move.w	#$29D0,x_pos(a0)
 	move.w	#$426,y_pos(a0)
 	move.b	#$20,width_pixels(a0)
 	move.b	#$14,y_radius(a0)
-	move.b	#4,priority(a0)
+
 	move.b	#$F,collision_flags(a0)
 	move.b	#8,collision_property(a0)	; hitcount
 	addq.b	#2,routine(a0)
@@ -63134,7 +63143,10 @@ Obj56_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,0,0),art_tile(a1)
 	move.b	#4,render_flags(a1)
 	move.b	#$20,width_pixels(a1)
-	move.b	#4,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.b	#$E,routine(a1)
@@ -63152,7 +63164,10 @@ Obj56_Init:
 	move.b	#4,render_flags(a1)
 	move.b	#$30,width_pixels(a1)
 	move.b	#$10,y_radius(a1)
-	move.b	#3,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.w	#$2AF0,x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.b	#6,routine(a1)
@@ -63170,7 +63185,10 @@ Obj56_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_EggChoppers,1,0),art_tile(a1)
 	move.b	#4,render_flags(a1)
 	move.b	#$40,width_pixels(a1)
-	move.b	#3,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.w	#$1E,EHzBossCountDown(a1)
@@ -63190,7 +63208,10 @@ loc_2F098:
 
 	move.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
-	move.b	#2,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.b	#$10,y_radius(a1)
 	move.b	#$10,x_radius(a1)
 	move.w	#$2AF0,x_pos(a1)
@@ -63213,7 +63234,10 @@ loc_2F098:
 
 	move.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
-	move.b	#2,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.b	#$10,y_radius(a1)
 	move.b	#$10,x_radius(a1)
 	move.w	#$2AF0,x_pos(a1)
@@ -63236,7 +63260,10 @@ loc_2F098:
 
 	move.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
-	move.b	#3,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.b	#$10,y_radius(a1)
 	move.b	#$10,x_radius(a1)
 	move.w	#$2AF0,x_pos(a1)
@@ -63259,7 +63286,10 @@ loc_2F098:
 
 	move.b	#4,render_flags(a1)
 	move.b	#$20,width_pixels(a1)
-	move.b	#2,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.w	#$2AF0,x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	addi.w	#-$36,x_pos(a1)
@@ -63407,7 +63437,10 @@ loc_2F3A2:	; Obj56_VehicleMain_SubA_0:
 	jsrto	(Adjust2PArtPointer2).l, JmpTo9_Adjust2PArtPointer2
 	move.b	#4,render_flags(a1)
 	move.b	#$20,width_pixels(a1)
-	move.b	#3,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	addi.w	#$C,y_pos(a1)
@@ -63588,7 +63621,7 @@ loc_2F5C6:	; Obj56_Propeller_Sub2
 	bpl.s	loc_2F5E8
 	cmpi.w	#-$10,EHzBossCountDown(a0)
 	ble.w	JmpTo52_DeleteObject
-	move.b	#4,priority(a0)
+	InsertSpriteMacro 0
 	addi.w	#1,y_pos(a0)	; move down
 	bra.w	JmpTo35_DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -63712,8 +63745,8 @@ loc_2F714:	; Obj56_Wheel_Sub2:
 	btst	#1,EhzBossStatus(a1)
 	beq.w	JmpTo35_DisplaySprite	; boss not moving yet (inactive)
 	addq.b	#2,routine_secondary(a0)
-	cmpi.b	#2,priority(a0)
-	bne.s	BranchTo_JmpTo35_DisplaySprite
+;	cmpi.b	#2,priority(a0)
+;	bne.s	BranchTo_JmpTo35_DisplaySprite
 	move.w	y_pos(a0),d0
 	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	add.w	d0,Wheels_Ypos(a1)
@@ -63742,8 +63775,8 @@ loc_2F768:
 
 loc_2F77E:
 	move.w	#$100,y_vel(a0)
-	cmpi.b	#2,priority(a0)
-	bne.s	loc_2F798
+;	cmpi.b	#2,priority(a0)
+;	bne.s	loc_2F798
 	move.w	y_pos(a0),d0
 	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	add.w	d0,Wheels_Ypos(a1)
@@ -63760,8 +63793,8 @@ loc_2F7A6:	; Obj56_Wheel_Sub6:
 	addq.b	#2,routine_secondary(a0)	; Sub8
 	move.w	#$A,EHzBossCountDown(a0)
 	move.w	#-$300,y_vel(a0)	; first bounce higher
-	cmpi.b	#2,priority(a0)
-	beq.w	JmpTo35_DisplaySprite
+;	cmpi.b	#2,priority(a0)
+;	beq.w	JmpTo35_DisplaySprite
 	neg.w	x_vel(a0)	; into other direction
 	bra.w	JmpTo35_DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -84217,7 +84250,12 @@ loc_3F228:
 	sub.w	d0,y_pos(a1)
 	move.w	y_pos(a1),objoff_46(a1)
 	move.b	(a2)+,width_pixels(a1)
-	move.b	(a2)+,priority(a1)
+	;move.b	(a2)+,priority(a1)
+	addq.w   #1,a2
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.b	(a2)+,mapping_frame(a1)
 
 loc_3F272:
