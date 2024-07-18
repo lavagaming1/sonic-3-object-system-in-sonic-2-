@@ -1075,7 +1075,9 @@ Chunk_Table:			ds.b	$1000	; was "Metablock_Table"
 Sprite_Lister_Table:
 
                                 ds.b    $2000
-                                ds.b    $5000
+SpriteEntriesUnused:
+                                ds.b    $1000
+                                ds.b    $4000
 Chunk_Table_End:
 
 Level_Layout:			ds.b	$1000
@@ -1090,7 +1092,7 @@ CompressionBuffer_End
 TempArray_LayerDef:		ds.b	$200	; used by some layer deformation routines
 Decomp_Buffer:			ds.b	$200
 
-Sprite_Table_Input:		ds.b	$400	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
+Sprite_Table_Input:		ds.b	$200	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
 Sprite_Table_Input_End:
 
 Object_RAM:
@@ -1155,11 +1157,13 @@ Tails_InvincibilityStars:
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
-                                ds.b    $42
-LinkListHead:                                
+                                ds.b    $40
+LinkListHead:
                                 ds.l    1
-ChunkAddr:                                
+ChunkAddr:
                                 ds.l    1
+SpriteEnableFlag:                                 
+                                ds.w    1
 
 Object_RAM_End:
 Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff
@@ -1539,7 +1543,7 @@ Misc_Variables_End:
 Sprite_Table:			ds.b	$280	; Sprite attribute table buffer
 Sprite_Table_End:
 				ds.b	$80	; unused, but SAT buffer can spill over into this area when there are too many sprites on-screen
-
+                                ds.b    $200
 Normal_palette:			ds.b	palette_line_size	; main palette for non-underwater parts of the screen
 Normal_palette_line2:		ds.b	palette_line_size
 Normal_palette_line3:		ds.b	palette_line_size

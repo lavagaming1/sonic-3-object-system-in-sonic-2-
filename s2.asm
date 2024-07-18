@@ -1286,7 +1286,7 @@ ClearScreen:
 	clr.l	(unk_F61A).w
 
 	; Bug: These '+4's shouldn't be here; clearRAM accidentally clears an additional 4 bytes
-	clearRAM Sprite_Table,Sprite_Table_End+4
+	clearRAM Sprite_Table,Sprite_Table_End
 	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf_End+4
 
 	startZ80
@@ -27280,10 +27280,9 @@ Obj36_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Spikes,1,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
 	;move.b	#4,priority(a0)
-	movem.l d1/a0-a1,-(sp)
-	move.l  a1,a0
+
 	InsertSpriteMacro 0
-        movem.l  (sp)+,d1/a0-a1
+    
 	move.b	subtype(a0),d0
 	andi.b	#$F,subtype(a0)		; lower 4 bits determine behavior, upper bits need to be removed
 	andi.w	#$F0,d0
@@ -29087,9 +29086,8 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
              lea       Sprite_Lister_Table.l,a4
              move.l    a4,LinkListHead.w
-            ; move.l    #Sprite_Lister_Table-$C,SpritePrevOb(a4)
-            ; suba.w    #$C,a4
-            ; move.l    #Sprite_Lister_Table,SpriteNextOb(a4)
+             clr.w     SpriteEnableFlag.w
+
              rts
 ; ---------------------------------------------------------------------------
 ; Subroutine to convert mappings (etc) to proper Megadrive sprites
@@ -29105,58 +29103,66 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
           move.w  prioritylist(a0),d0
           adda.w  d0,a2
-
-      ; a2 points to the node to be removed
-         move.l   SpritePrevOb(a2),a5 ; get the previous node
-         move.l   SpriteNextOb(a2),a4 ; get the next node
+          cmpi.w  #$2000,d0
+          bhs.s   .NodeNotFound
+          cmpi.w  #$1000,d0
+          blo.s   .NodeNotFound
+     ; a2 points to the node to be removed
+       move.l   SpritePrevOb(a2),a5 ; get the previous node
+      move.l   SpriteNextOb(a2),a4 ; get the next node
 
 ; Update the next node's prev pointer, if next node exists
-         move.l    a4,d1
-         beq.s    .SkipNextUpdate
-         move.l   a5, SpritePrevOb(a4)
-         .SkipNextUpdate:
+        move.l    a4,d1
+        beq.s    .SkipNextUpdate
+        move.l   a5, SpritePrevOb(a4)
+        .SkipNextUpdate:
 
         ; Update the previous node's next pointer, if previous node exists
-         move.l    a5,d1
-         beq.s    .SkipPrevUpdate
-         move.l   a4, SpriteNextOb(a5)
+        move.l    a5,d1
+        beq.s    .SkipPrevUpdate
+        move.l   a4, SpriteNextOb(a5)
  .SkipPrevUpdate:
 
 ; If a2 was the head, update the head pointer
-          lea      Sprite_Lister_Table.l,a3
           move.l   LinkListHead.w,d0
           cmp.l    d0,a2
           bne.s    .SkipHeadUpdate
           move.l   a4, LinkListHead.w
  .SkipHeadUpdate:
 
-
          clr.w    SpriteInUse(a2)
          clr.w    SpriteObAddr(a2)
          clr.l    SpriteNextOb(a2)
          clr.l    SpritePrevOb(a2)
-
+         bsr.w    UpdateHeadList
 
 
       .NodeNotFound:
          rts
-  SpritesFindHeadList: ; unused because LinkListHead.w exists now
-         lea   Sprite_Lister_Table.l,a6
+  UpdateHeadList:
+
+          lea    Sprite_Lister_Table.l,a6
+
+
   .FindSpritesLoop:
-         movea.l  SpriteNextOb(a6),d1 ; is there anext node ?
+         move.l  SpriteNextOb(a6),d1 ; is there anext node ?
 
 
          beq.w    .FoundSlotEnd   ; if not then stop list from going further
          movea.l  d1,a6  ; update to next ; update to next node
          bra.s    .FindSpritesLoop
     .FoundSlotEnd:
-          move.l   a6,a5
-         rts
+          move.l   a6,LinkListHead.w
+     .fail:
+          rts
 InitDrawingSprites: ; routine that inserts object in SpritesListTable which contains sprites for next and previous routine and the object ram addr
-                 tst.w prioritylist(a0)
-                 bne.s  .fail
+
+                 tst.w  prioritylist(a0)
+                 bne.s   .fail
+
                  tst.l  mappings(a0)
                  beq.s  .fail
+                 lea    SpriteEntriesUnused.l,a6
 
 
 
@@ -29164,8 +29170,7 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  lea   Sprite_Lister_Table.l,a4
 
                  move.l    LinkListHead.w,a5 ; slot unused addr
-                 tst.w     SpriteInUse(a5)
-                 beq.s     .InitFirstSprite
+
                  moveq     #$4F,d1
 .loopFindGap:
                  tst.w     SpriteInUse(a4)  ; Check if the slot is in use
@@ -29190,11 +29195,11 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
                  rts
-   .InitFirstSprite:
-                 move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
-                 move.w    a0,SpriteObAddr(a4)   ; connect object ram 
-                  move.l     a4,LinkListHead.w  ; update this for next objects
-                 move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+   ;.InitFirstSprite:
+    ;             move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
+     ;            move.w    a0,SpriteObAddr(a4)   ; connect object ram
+      ;            move.l     a4,LinkListHead.w  ; update this for next objects
+       ;          move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
                                  rts
 
 
@@ -34119,6 +34124,11 @@ Obj01_Init:
 	move.b	#$13,default_y_radius(a0)
 	move.b	#9,default_x_radius(a0)
 	move.l	#Mapunc_Sonic,mappings(a0)
+;	lea      Sprite_Lister_Table.l,a4
+;        move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
+ ;       move.w    a0,SpriteObAddr(a4)   ; connect object ram
+  ;      move.l     a4,LinkListHead.w  ; update this for next objects
+   ;     move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
 	InsertSpriteMacro $0
 	;move.b	#2,priority(a0)
 	move.b	#$18,width_pixels(a0)
@@ -36786,10 +36796,19 @@ Obj02_Init:
 	move.b	#$F,y_radius(a0) ; this sets Tails' collision height (2*pixels) to less than Sonic's height
 	move.b	#9,x_radius(a0)
 	move.l	#MapUnc_Tails,mappings(a0)
+	InsertSpriteMacro $0
 	;move.b	#2,priority(a0)
 
-	InsertSpriteMacro 0
-       
+	;lea      Sprite_Lister_Table+$C.l,a4
+	;lea      Sprite_Lister_Table.l,a5
+        ;move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
+        ;move.l    #Sprite_Lister_Table,SpritePrevOb(a4)
+        ;move.l    a4,SpriteNextOb(a5)
+        ;move.w    a0,SpriteObAddr(a4)   ; connect object ram
+       ; move.l     a4,LinkListHead.w  ; update this for next objects
+        ;move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+        ;st        SpriteEnableFlag.w
+
 	move.b	#$18,width_pixels(a0)
 	move.b	#$84,render_flags(a0) ; render_flags(Tails) = $80 | initial render_flags(Sonic)
 	move.b	#1,character_id(a0)
@@ -40566,7 +40585,7 @@ loc_1D9A4:
 loc_1DA0C:
 	movea.w	parent(a0),a1 ; a1=character
 	btst	#status_sec_isInvincible,status_secondary(a1)
-	beq.w	DeleteObject
+	beq.w	+
 	move.w	x_pos(a1),d0
 	move.w	d0,x_pos(a0)
 	move.w	y_pos(a1),d1
@@ -40581,6 +40600,8 @@ loc_1DA34:
 	bpl.s	loc_1DA44
 	clr.w	objoff_3C(a0)
 	bra.s	loc_1DA34
++
+	jmp     DeleteObject
 ; ===========================================================================
 
 loc_1DA44:
@@ -43214,7 +43235,7 @@ Obj44_BumpCharacter:
 	moveq	#1,d0
 	movea.w	a1,a3
 	jsr	(AddPoints2).l
-	bsr.w	SingleObjLoad
+	jsr	SingleObjLoad
 	bne.s	return_1F83C
 	move.l	#Obj29,(a1) ; load obj29
 	move.w	x_pos(a0),x_pos(a1)
@@ -43415,7 +43436,7 @@ loc_1FA2A:
 	jsr	(RandomNumber).l
 	andi.w	#$1F,d0
 	move.w	d0,objoff_3C(a0)
-	bsr.w	SingleObjLoad
+	jsr	SingleObjLoad
 	bne.s	loc_1FAA6
 	move.l	(a0),(a1) ; load obj24
 	move.w	x_pos(a0),x_pos(a1)
@@ -73814,6 +73835,7 @@ Obj98_Index:	offsetTable
 ; loc_376FA:
 Obj98_Init: ;;
 	bsr.w	LoadSubObject
+	clr.w   prioritylist(a0)
 	InsertSpriteMacro 0
         rts
 ; ===========================================================================
@@ -74270,7 +74292,7 @@ Obj9D_Index:	offsetTable
 Obj9D_Init:
 	bsr.w	LoadSubObject
 	move.b	#$10,Obj9D_timer(a0)
-
+        clr.w   prioritylist(a0)
 	InsertSpriteMacro 0
 
 	rts
