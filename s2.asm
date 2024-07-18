@@ -29086,17 +29086,18 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
 
              lea       Sprite_Lister_Table.l,a4
-             move.l    #0,LinkListHead.w
-             move.l    #Sprite_Lister_Table-$C,SpritePrevOb(a4)
-             suba.w    #$C,a4
-             move.l    #Sprite_Lister_Table,SpriteNextOb(a4)
+             move.l    a4,LinkListHead.w
+            ; move.l    #Sprite_Lister_Table-$C,SpritePrevOb(a4)
+            ; suba.w    #$C,a4
+            ; move.l    #Sprite_Lister_Table,SpriteNextOb(a4)
              rts
 ; ---------------------------------------------------------------------------
 ; Subroutine to convert mappings (etc) to proper Megadrive sprites
 ; ---------------------------------------------------------------------------
 
-; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||  
+; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
 ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
+
           tst.w     prioritylist(a0) ; does object contain displa flag ?
           beq.s     .NodeNotFound
 
@@ -29139,34 +29140,63 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
       .NodeNotFound:
          rts
+  SpritesFindHeadList: ; unused because LinkListHead.w exists now
+         lea   Sprite_Lister_Table.l,a6
+  .FindSpritesLoop:
+         movea.l  SpriteNextOb(a6),d1 ; is there anext node ?
+
+
+         beq.w    .FoundSlotEnd   ; if not then stop list from going further
+         movea.l  d1,a6  ; update to next ; update to next node
+         bra.s    .FindSpritesLoop
+    .FoundSlotEnd:
+          move.l   a6,a5
+         rts
 InitDrawingSprites: ; routine that inserts object in SpritesListTable which contains sprites for next and previous routine and the object ram addr
                  tst.w prioritylist(a0)
                  bne.s  .fail
                  tst.l  mappings(a0)
                  beq.s  .fail
-                 lea   Sprite_Lister_Table.l,a4
-                 move.l    LinkListHead.w,a5 ; slot unused addr
 
-                 moveq  #$4F,d1
-     .LoopFind:
-                 tst.l  SpriteInUse(a4)
-                 beq.s  .Found
-                 adda.w #SpriteRenderSize,a4
-                 dbf    d1,.LoopFind
-                 rts
-   .Found:                      
+
+
+
+                 lea   Sprite_Lister_Table.l,a4
+
+                 move.l    LinkListHead.w,a5 ; slot unused addr
+                 tst.w     SpriteInUse(a5)
+                 beq.s     .InitFirstSprite
+                 moveq     #$4F,d1
+.loopFindGap:
+                 tst.w     SpriteInUse(a4)  ; Check if the slot is in use
+                 beq.s     .Found           ; If not, we found our slot
+
+                 adda.w    #SpriteRenderSize, a4 ; Move to the next slot
+                 dbf       d1, .loopFindGap      ; Decrement counter and loop
+
+                  rts                             ; Return if no empty slot is found (should not happen if the list has free slots)
+
+.Found:
+
 
 
                  move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
                  move.w    a0,SpriteObAddr(a4)   ; connect object ram
-                 move.l    a4,SpriteNextOb(a5)
 
-                 move.l    a5,SpritePrevOb(a4) ; previous slot
+                 move.l  a4,SpriteNextOb(a5) ; link new slot to old slot
+                 move.l  a5,SpritePrevOb(a4) ; link a1 to new slot
 
                  move.l     a4,LinkListHead.w  ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
                  rts
+   .InitFirstSprite:
+                 move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
+                 move.w    a0,SpriteObAddr(a4)   ; connect object ram 
+                  move.l     a4,LinkListHead.w  ; update this for next objects
+                 move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+                                 rts
+
 
 
 
