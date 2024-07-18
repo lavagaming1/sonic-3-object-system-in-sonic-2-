@@ -22794,7 +22794,8 @@ Obj28_InitRandom:
 	move.b	#$C,y_radius(a0)
 	move.b	#4,render_flags(a0)
 	bset	#0,render_flags(a0)
-	move.b	#6,priority(a0)
+	InsertSpriteMacro 0
+	;move.b	#6,priority(a0)
 	move.b	#8,width_pixels(a0)
 	move.b	#7,anim_frame_duration(a0)
 	move.b	#2,mapping_frame(a0)
@@ -29110,10 +29111,10 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
           move.w  prioritylist(a0),d0
           adda.w  d0,a2
-          cmpi.w  #$2000,d0
-          bhs.s   .NodeNotFound
-          cmpi.w  #$1000,d0
-          blo.s   .NodeNotFound
+          cmpi.w  #Sprite_Lister_Table_End-RAM_start,d0
+          bhs.s   .NodeNotInDebugThis
+          cmpi.w  #Sprite_Lister_Table-RAM_start,d0
+          blo.s   .NodeNotInDebugThis
      ; a2 points to the node to be removed
        move.l   SpritePrevOb(a2),a5 ; get the previous node
       move.l   SpriteNextOb(a2),a4 ; get the next node
@@ -29146,10 +29147,14 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
       .NodeNotFound:
          rts
+  .NodeNotInDebugThis:
+           KDebug.WriteLine "Terrible Value Found: %<.l a0 sym> (ptr=%<.l (a0) sym>)"
+           rts
   UpdateHeadList:
 
           lea    Sprite_Lister_Table.l,a6
-
+          tst.w  SpriteInUse(a6)
+          beq.s  .fail
 
   .FindSpritesLoop:
          move.l  SpriteNextOb(a6),d1 ; is there anext node ?
@@ -32956,7 +32961,10 @@ loc_19398:
 	move.w	#make_art_tile(ArtTile_ArtNem_Ring,1,0),art_tile(a1)
 	bsr.w	Adjust2PArtPointer2
 	move.b	#4,render_flags(a1)
-	move.b	#2,priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 0
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.b	#8,width_pixels(a1)
 
 return_19406:
