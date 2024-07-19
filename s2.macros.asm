@@ -88,7 +88,7 @@ MacroChunksMoveto2 macro
 
     endm
 InsertSpriteMacro macro layer
-       move.w   #layer,d1
+       moveq    #layer,d1
        jsr      InitDrawingSprites
        endm
 ; tells the Z80 to stop, and waits for it to finish stopping (acquire bus)

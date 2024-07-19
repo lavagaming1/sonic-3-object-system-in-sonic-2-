@@ -1043,9 +1043,10 @@ AniIDTailsAni_Fly			= id(TailsAni_Fly_ptr)			; 32 ; $20
 palette_line_size =	$10*2	; 16 word entries
 ; ---------------------------------------------------------------------------
 SpriteCurrentUnusedSize = $4*$1F4
-SpriteQeueSize = $3F*SpriteRenderSize
-;RenderSpriteProperties  varables inside spriter_lister
 SpriteRenderSize = $C  ; the size of each slot
+SpriteQeueSize = $4F*SpriteRenderSize
+;RenderSpriteProperties  varables inside spriter_lister
+
 
 SpriteInUse   = $0
 SpriteBit     = $1
