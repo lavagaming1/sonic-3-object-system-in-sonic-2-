@@ -4398,7 +4398,7 @@ loc_5FD6:
 ; loc_3F48:
 Level_ClrRam:
 	;clearRAM Sprite_Table_Input,Sprite_Table_Input_End
-	
+	jsr      InitSpriterManager
 	clearRAM Object_RAM,Object_RAM_End ; clear object RAM
 	clearRAM MiscLevelVariables,MiscLevelVariables_End
 	clearRAM Misc_Variables,Misc_Variables_End
@@ -4488,7 +4488,7 @@ Level_WaterPal:
 ; loc_40AE:
 Level_GetBgm:
 	tst.w	(Demo_mode_flag).w
-	bmi.s	+
+	bmi.w	+
 	moveq	#0,d0
 	move.b	(Current_Zone).w,d0
 	lea_	MusicList,a1
@@ -4500,7 +4500,13 @@ Level_PlayBgm:
 	move.b	(a1,d0.w),d0		; load from music playlist
 	move.w	d0,(Level_Music).w	; store level music
 	bsr.w	PlayMusic		; play level music
-	jsr      InitSpriterManager
+
+;	move.b	#VintID_TitleCard,(Vint_routine).w
+;	jsr	(Process_Kos_Queue).l
+;	bsr.w	WaitForVint
+;	jsr	(RunObjects).l
+;	jsr	(BuildSprites).l  ; give me a frame to spawn sonic and tail
+;
 	move.l	#Obj34,(TitleCard).w ; load Obj34 (level title card) at $FFFFB080
 ; loc_40DA:
 Level_TtlCard:
@@ -4530,14 +4536,15 @@ Level_TtlCard:
 	clearRAM Horiz_Scroll_Buf,Horiz_Scroll_Buf_End
 
 	bsr.w	LoadZoneTiles
-        jsr      InitSpriterManager
+
+	bsr.w	InitPlayers
 	jsrto	(loadZoneBlockMaps).l, JmpTo_loadZoneBlockMaps
         jsr	(LoadAnimatedBlocks).l
 	jsrto	(DrawInitialBG).l, JmpTo_DrawInitialBG
 	jsr	(ConvertCollisionArray).l
 	bsr.w	LoadCollisionIndexes
 	bsr.w	WaterEffects
-	bsr.w	InitPlayers
+
 	move.w	#0,(Ctrl_1_Logical).w
 	move.w	#0,(Ctrl_2_Logical).w
 	move.w	#0,(Ctrl_1).w
@@ -5964,7 +5971,7 @@ LoadZoneTiles:
 	move.w	(a1),d4
 	move.w	#0,d2
 	jsr	(Queue_Kos_Module).l
-	
+
    .ZoneTileVint:
 	move.b	#VintID_TitleCard,(Vint_routine).w
 	jsr	(Process_Kos_Queue).l
@@ -25347,7 +25354,7 @@ Obj34_Init:
 	lea	(a0),a1
 	lea	Obj34_TitleCardData(pc),a2
 
-	moveq	#(Obj34_TitleCardData_End-Obj34_TitleCardData)/$A-1,d1
+	moveq	#(Obj34_TitleCardData_End-Obj34_TitleCardData)/$A-1,d6
 -	move.l	#Obj34,(a1) ; load obj34
 	move.b	(a2)+,routine(a1)
 	move.l	#Obj34_MapUnc_147BA,mappings(a1)
@@ -25359,8 +25366,22 @@ Obj34_Init:
 	move.w	(a2)+,titlecard_x_target(a1)
 	move.w	(a2)+,y_pixel(a1)
 	move.b	#0,render_flags(a1)
+;	movem.l d1-d0/a0-a2,-(sp)
+;	move.l  a1,a0
+;	clr.w   prioritylist(a0)
+;;	InsertSpriteMacro 1
+     ;   lea     RAM_Start.l,a3
+    ;    move.w  prioritylist(a0),d5
+   ;     beq.s   .Countinue
+  ;      adda.w  d5,a3
+ ;       clr.b   SpriteBit(a3)
+; .Countinue:
+      ;  movem.l  (sp)+,d1-d0/a0-a2
+
+
+
 	lea	next_object(a1),a1 ; a1=object
-	dbf	d1,-
+	dbf	d6,-
 
 	move.w	#$26,(TitleCard_Bottom+titlecard_location).w
 	clr.w	(Vscroll_Factor_FG).w
@@ -25509,20 +25530,35 @@ Obj34_ActNumber:	; the act number, coming in
 
 ; sub_13E1C:
 Obj34_MoveTowardsTargetPosition:
+        lea     RAM_Start.l,a2
+        move.w  prioritylist(a0),d5
+        beq.s   .TargetAnyway
+        adda.w  d5,a2
+ .TargetAnyway:
+
 	moveq	#$10,d0			; set speed
 	move.w	x_pixel(a0),d1		; get the X position
 	cmp.w	titlecard_x_target(a0),d1 ; compare with target position
-	beq.s	++			; if it reached its target position, branch
-	bhi.s	+			; if it's beyond the target position, branch
+	beq.s	.WithinScreen			; if it reached its target position, branch
+	bhi.s	.BeyondAndMove			; if it's beyond the target position, branch
 	neg.w	d0			; negate the speed
-+
+ .BeyondAndMove:
 	sub.w	d0,x_pixel(a0)		; move the object
 	cmpi.w	#$200,x_pixel(a0)	; is it beyond $200?
-	bhi.s	++			; if yes, return
-+
-	bra.w	DisplaySprite
+	bhi.s	.DisableDisplay			; if yes, return
+ .WithinScreen:
+        tst.w   prioritylist(a0) ; im checking to disable data editing because this code isnt ready
+        beq.s   .return
+	move.b  #'N',SpriteBit(a2) ; set as displaying
+	rts
 ; ---------------------------------------------------------------------------
-+	rts
+
+ .DisableDisplay:
+        tst.w   prioritylist(a0) ; im checking to disable data editing because this code isnt ready
+        beq.s   .return
+        clr.b   SpriteBit(a2)
+  .return:
+        rts
 ; End of function Obj34_MoveTowardsTargetPosition
 
 ; ===========================================================================
@@ -25558,44 +25594,61 @@ Obj34_LeftPartOut:	; red part on the left, going out
 Obj34_BottomPartOut:	; yellow part at the bottom, going out
 	move.w	titlecard_location(a0),d0
 	cmpi.w	#$28,d0
-	bne.s	+
+	bne.s	.NotInLocation
 	move.b	#$12,TitleCard_Background-TitleCard_Bottom+routine(a0)
 	bra.s	BranchTo9_DeleteObject
 ; ---------------------------------------------------------------------------
-+
+ .NotInLocation:
 	add.w	d0,d0
 	move.w	#$80*$14/2,d1		; $14 half-cells down (for 2P mode)
 	tst.w	(Two_player_mode).w
 	sne	d6
-	bne.s	+
+	bne.s	.FlagSet
 	add.w	d1,d1				; double distance down for 1P mode
-+
+ .FlagSet:
 	move.w	#VRAM_Plane_A_Name_Table,d2
 	add.w	d0,d2
 	add.w	d1,d2
 	move.w	d2,titlecard_vram_dest(a0)
 	tst.b	d6
-	beq.s	+
+	beq.s	.Not2pMode
 	addi.w	#VRAM_Plane_A_Name_Table_2P,d1
 	add.w	d0,d1
 	move.w	d1,titlecard_vram_dest_2P(a0)
-+
+ .Not2pMode:
 	addq.w	#4,titlecard_location(a0)
 
 loc_13EC4:
+        lea     RAM_Start.l,a2
+        move.w  prioritylist(a0),d5
+        beq.s   .TargetAnywayYellow
+        adda.w  d5,a2
+ .TargetAnywayYellow:
+
 	moveq	#$20,d0
 	move.w	x_pixel(a0),d1
 	cmp.w	titlecard_x_source(a0),d1
-	beq.s	++	; rts
-	bhi.s	+
+	beq.s	.DisableDisplay	; rts
+	bhi.s	.MoveSprite	
 	neg.w	d0
-+
+ .MoveSprite:
 	sub.w	d0,x_pixel(a0)
 	cmpi.w	#$200,x_pixel(a0)
-	bhi.s	+	; rts
-	bra.w	DisplaySprite
+	bhi.s	.return		; rts
+	tst.w   prioritylist(a0) ; im checking to disable data editing because this code isnt ready
+        beq.s   .return
+	move.b  #'N',SpriteBit(a2) ; set as displaying
+	rts
 ; ---------------------------------------------------------------------------
-+	rts
+ .DisableDisplay:
+         tst.w   prioritylist(a0) ; im checking to disable data editing because this code isnt ready 
+         beq.s   .return
+         clr.b   SpriteBit(a2)
+    .return:
+  	rts
+
+
+
 ; ===========================================================================
 ; loc_13EE6:
 Obj34_BackgroundOutInit:	; the background, going out
@@ -25619,22 +25672,22 @@ Obj34_BackgroundOut:
 ; loc_13F18:
 Obj34_WaitAndGoAway:
 	tst.w	anim_frame_duration(a0)
-	beq.s	+
+	beq.s	.NoDelay
 	subq.w	#1,anim_frame_duration(a0)
-	bra.s	+++	; DisplaySprite
+	bra.s	.Display	; DisplaySprite
 ; ---------------------------------------------------------------------------
-+
+ .NoDelay:
 	moveq	#$20,d0
 	move.w	x_pixel(a0),d1
 	cmp.w	titlecard_x_source(a0),d1
 	beq.s	Obj34_LoadStandardWaterAndAnimalArt
-	bhi.s	+
+	bhi.s	.Postive
 	neg.w	d0
-+
+ .Postive:
 	sub.w	d0,x_pixel(a0)
 	cmpi.w	#$200,x_pixel(a0)
 	bhi.s	Obj34_LoadStandardWaterAndAnimalArt
-+
+ .Display:
 	bra.w	DisplaySprite
 ; ===========================================================================
 ; loc_13F44:
@@ -29089,9 +29142,13 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
           cmpi.w  #Sprite_Lister_Table-RAM_Start,d0
           blo.s   .NodeNotInDebugThis
      ; a2 points to the node to be removed
-       move.l   SpritePrevOb(a2),a5 ; get the previous node
-      move.l   SpriteNextOb(a2),a4 ; get the next node
-
+          move.l   SpritePrevOb(a2),a5 ; get the previous node
+          move.l   SpriteNextOb(a2),a4 ; get the next node
+          move.l   LinkListHead.w,d0
+          cmp.l    d0,a2
+          bne.s    .SkipHeadUpdate
+          move.l   a4, LinkListHead.w
+ .SkipHeadUpdate:
 ; Update the next node's prev pointer, if next node exists
         move.l    a4,d1
         beq.s    .SkipNextUpdate
@@ -29105,17 +29162,13 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
  .SkipPrevUpdate:
 
 ; If a2 was the head, update the head pointer
-          move.l   LinkListHead.w,d0
-          cmp.l    d0,a2
-          bne.s    .SkipHeadUpdate
-          move.l   a4, LinkListHead.w
- .SkipHeadUpdate:
+
 
          clr.w    SpriteInUse(a2)
          clr.w    SpriteObAddr(a2)
          clr.l    SpriteNextOb(a2)
          clr.l    SpritePrevOb(a2)
-         bsr.w    UpdateHeadList
+       ;  bsr.w    UpdateHeadList
 
 
       .NodeNotFound:
@@ -29153,6 +29206,8 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 
 
                  lea   Sprite_Lister_Table.l,a4
+                 ;tst.w    SpriteInUse(a4)
+                 ;beq.s    .InitFirstSprite
 
                  move.l    LinkListHead.w,a5 ; slot unused addr
 
@@ -29181,11 +29236,12 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
                  rts
-   ;.InitFirstSprite:
-    ;             move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
-     ;            move.w    a0,SpriteObAddr(a4)   ; connect object ram
-      ;            move.l     a4,LinkListHead.w  ; update this for next objects
-       ;          move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+   .InitFirstSprite:
+                 move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
+                 move.w    a0,SpriteObAddr(a4)   ; connect object ram
+                 move.l     a4,LinkListHead.w  ; update this for next objects
+                 move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+
                                  rts
 
 
@@ -29218,6 +29274,8 @@ BuildSprites_LevelLoop:
 ; loc_16630:
 BuildSprites_ObjLoop:
 ;	movea.w	(a4,d6.w),a0 ; a0=object
+        tst.b   SpriteBit(a4)
+        beq.w   BuildSprites_NextObj
 	andi.b	#$7F,render_flags(a0)	; clear on-screen flag
 	move.b	render_flags(a0),d0
 	move.b	d0,d4
@@ -29301,6 +29359,10 @@ BuildSprites_NextObj:
 BuildSprites_NextLevel:
        ; lea     LinkListHead.w,a1
         move.l   a4,LinkListHead.w  ; memeorize this so we dont have to loop  ( head) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
+
+
+
+
 ;	lea	$80(a4),a4	; load next priority level
 ;	dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
@@ -29311,6 +29373,9 @@ BuildSprites_NextLevel:
 +
 	move.b	#0,-5(a2)	; set link field to 0
 	rts
+
+
+
 ; ===========================================================================
 ; loc_1671C:
 BuildSprites_MultiDraw:
