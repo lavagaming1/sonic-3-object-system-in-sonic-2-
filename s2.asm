@@ -5955,51 +5955,24 @@ LoadZoneTiles:
 	move.w	d0,d1
 	add.w	d0,d0
 	add.w	d1,d0
-	lea	(LevelArtPointers).l,a2
-	lea	(a2,d0.w),a2
-	move.l	(a2)+,d0
+	lea	(LevelArtPointers).l,a4
+	lea	(a4,d0.w),a4
+	move.l	(a4)+,d0
 	andi.l	#$FFFFFF,d0	; 8x8 tile pointer
-	movea.l	d0,a0
-	lea	(Chunk_Table).l,a1
-	bsr.w	KosDec
-	move.w	a1,d3
-	cmpi.b	#hill_top_zone,(Current_Zone).w
-	bne.s	+
-	lea	(ArtKos_HTZ).l,a0
-	lea	(Chunk_Table+tiles_to_bytes(ArtTile_ArtKos_NumTiles_HTZ_Main)).l,a1
-	bsr.w	KosDec	; patch for HTZ
-	move.w	#tiles_to_bytes(ArtTile_ArtKos_NumTiles_HTZ),d3
-+
-	cmpi.b	#wing_fortress_zone,(Current_Zone).w
-	bne.s	+
-	lea	(ArtKos_WFZ).l,a0
-	lea	(Chunk_Table+tiles_to_bytes(ArtTile_ArtKos_NumTiles_WFZ_Main)).l,a1
-	bsr.w	KosDec	; patch for WFZ
-	move.w	#tiles_to_bytes(ArtTile_ArtKos_NumTiles_WFZ),d3
-+
-	cmpi.b	#death_egg_zone,(Current_Zone).w
-	bne.s	+
-	move.w	#tiles_to_bytes(ArtTile_ArtKos_NumTiles_DEZ),d3
-+
-	move.w	d3,d7
-	andi.w	#$FFF,d3
-	lsr.w	#1,d3
-	rol.w	#4,d7
-	andi.w	#$F,d7
-
--	move.w	d7,d2
-	lsl.w	#7,d2
-	lsl.w	#5,d2
-	move.l	#$FFFFFF,d1
-	move.w	d2,d1
-	jsr	(QueueDMATransfer).l
-	move.w	d7,-(sp)
+       	move.l	d0,d7
+	movea.l	d0,a1
+	move.w	(a1),d4
+	move.w	#0,d2
+	jsr	(Queue_Kos_Module).l
+	
+   .ZoneTileVint:
 	move.b	#VintID_TitleCard,(Vint_routine).w
-	bsr.w	WaitForVint
-	bsr.w	RunPLC_RAM
-	move.w	(sp)+,d7
-	move.w	#$800,d3
-	dbf	d7,-
+	jsr	(Process_Kos_Queue).l
+       	bsr.w	WaitForVint
+       	bsr.w	RunPLC_RAM
+	jsr	(Process_Kos_Module_Queue).l
+	tst.b	(Kos_modules_left).w
+	bne.s	.ZoneTileVint
 
 	rts
 ; End of function LoadZoneTiles
@@ -90166,7 +90139,7 @@ BM16_EHZ:	BINCLUDE	"mappings/16x16/EHZ.unc"
 ;-----------------------------------------------------------------------------------
 ; EHZ/HTZ main level patterns (Kosinski compression)
 ; ArtKoz_95C24:
-ArtKos_EHZ:	BINCLUDE	"art/kosinski/EHZ_HTZ.bin"
+ArtKos_EHZ:	BINCLUDE	"art/kosinski/EHZ_HTZ.kosm"
         even
 ;-----------------------------------------------------------------------------------
 ; HTZ 16x16 block mappings (Kosinski compression)
@@ -90179,7 +90152,7 @@ BM16_HTZ: ;BINCLUDE	"mappings/16x16/EHZ.unc", 0, $980
 ;-----------------------------------------------------------------------------------
 ; HTZ pattern suppliment to EHZ level patterns (Kosinski compression)
 ; ArtKoz_98AB4:
-ArtKos_HTZ:	BINCLUDE	"art/kosinski/HTZ_Supp.bin"
+ArtKos_HTZ:	BINCLUDE	"art/kosinski/HTZ_Supp.kosm"
       even
 ;-----------------------------------------------------------------------------------
 ; EHZ/HTZ 128x128 block mappings (Kosinski compression)
@@ -90192,7 +90165,7 @@ BM16_MTZ:	BINCLUDE	"mappings/16x16/MTZ.unc"
 ;-----------------------------------------------------------------------------------
 ; MTZ main level patterns (Kosinski compression)
 ; ArtKoz_9DB64:
-ArtKos_MTZ:	BINCLUDE	"art/kosinski/MTZ.bin"
+ArtKos_MTZ:	BINCLUDE	"art/kosinski/MTZ.kosm"
          even
 ;-----------------------------------------------------------------------------------
 ; MTZ 128x128 block mappings (Kosinski compression)
@@ -90214,7 +90187,7 @@ BM16_OOZ:	BINCLUDE	"mappings/16x16/OOZ.unc"
 ;-----------------------------------------------------------------------------------
 ; OOZ main level patterns (Kosinski compression)
 ; ArtKoz_A4204:
-ArtKos_OOZ:	BINCLUDE	"art/kosinski/OOZ.bin"
+ArtKos_OOZ:	BINCLUDE	"art/kosinski/OOZ.kosm"
       even
 ;-----------------------------------------------------------------------------------
 ; OOZ 128x128 block mappings (Kosinski compression)
@@ -90227,7 +90200,7 @@ BM16_MCZ:	BINCLUDE	"mappings/16x16/MCZ.unc"
 ;-----------------------------------------------------------------------------------
 ; MCZ main level patterns (Kosinski compression)
 ; ArtKoz_A9D74:
-ArtKos_MCZ:	BINCLUDE	"art/kosinski/MCZ.bin"
+ArtKos_MCZ:	BINCLUDE	"art/kosinski/MCZ.kosm"
       even
 ;-----------------------------------------------------------------------------------
 ; MCZ 128x128 block mappings (Kosinski compression)
@@ -90250,7 +90223,7 @@ BM16_CNZ: BINCLUDE    "mappings/16x16/CNZ.unc",0,$1760
 ;-----------------------------------------------------------------------------------
 ; CNZ main level patterns (Kosinski compression)
 ; ArtKoz_B0894:
-ArtKos_CNZ:	BINCLUDE	"art/kosinski/CNZ.bin"
+ArtKos_CNZ:	BINCLUDE	"art/kosinski/CNZ.kosm"
       even
 ;-----------------------------------------------------------------------------------
 ; CNZ 128x128 block mappings (Kosinski compression)
@@ -90263,7 +90236,7 @@ BM16_CPZ:	BINCLUDE	"mappings/16x16/CPZ_DEZ.unc"
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ main level patterns (Kosinski compression)
 ; ArtKoz_B6174:
-ArtKos_CPZ:	BINCLUDE	"art/kosinski/CPZ_DEZ.bin"
+ArtKos_CPZ:	BINCLUDE	"art/kosinski/CPZ_DEZ.kosm"
          even
 ;-----------------------------------------------------------------------------------
 ; CPZ/DEZ 128x128 block mappings (Kosinski compression)
@@ -90276,7 +90249,7 @@ BM16_ARZ:	BINCLUDE	"mappings/16x16/ARZ.unc"
 ;-----------------------------------------------------------------------------------
 ; ARZ main level patterns (Kosinski compression)
 ; ArtKoz_BCC24:
-ArtKos_ARZ:	BINCLUDE	"art/kosinski/ARZ.bin"
+ArtKos_ARZ:	BINCLUDE	"art/kosinski/ARZ.kosm"
         even
 ;-----------------------------------------------------------------------------------
 ; ARZ 128x128 block mappings (Kosinski compression)
@@ -90289,12 +90262,12 @@ BM16_WFZ:	BINCLUDE	"mappings/16x16/WFZ_SCZ.unc"
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ main level patterns (Kosinski compression)
 ; ArtKoz_C5004:
-ArtKos_SCZ:	BINCLUDE	"art/kosinski/WFZ_SCZ.bin"
+ArtKos_SCZ:	BINCLUDE	"art/kosinski/WFZ_SCZ.kosm"
          even
 ;-----------------------------------------------------------------------------------
 ; WFZ pattern suppliment to SCZ tiles (Kosinski compression)
 ; ArtKoz_C7EC4:
-ArtKos_WFZ:	BINCLUDE	"art/kosinski/WFZ_Supp.bin"
+ArtKos_WFZ:	BINCLUDE	"art/kosinski/WFZ_Supp.kosm"
          even
 ;-----------------------------------------------------------------------------------
 ; WFZ/SCZ 128x128 block mappings (Kosinski compression)
