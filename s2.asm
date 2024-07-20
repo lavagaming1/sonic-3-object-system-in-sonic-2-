@@ -29137,10 +29137,10 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
           move.w  prioritylist(a0),d0
           adda.w  d0,a2
-          andi.w  #1,d0        ; Mask all but the least significant bit
-          beq.s   .ChkValues         ; If the result is 0, the number is even
-          bra.s   .NodeNotInDebugThis
-   .ChkValues:
+     ;     andi.w  #1,d0        ; Mask all but the least significant bit
+     ;     beq.s   .ChkValues         ; If the result is 0, the number is even
+      ;    bra.s   .NodeNotInDebugThis
+   ;.ChkValues:
           cmpi.w  #Sprite_Lister_Table_End-RAM_Start,d0
           bhs.s   .NodeNotInDebugThis
           cmpi.w  #Sprite_Lister_Table-RAM_Start,d0
