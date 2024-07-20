@@ -29137,6 +29137,8 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
           move.w  prioritylist(a0),d0
           adda.w  d0,a2
+          andi.w  #1,d0        ; Mask all but the least significant bit
+          bne.s   .NodeNotInDebugThis         ; If the result is 0, the number is even
           cmpi.w  #Sprite_Lister_Table_End-RAM_Start,d0
           bhs.s   .NodeNotInDebugThis
           cmpi.w  #Sprite_Lister_Table-RAM_Start,d0
@@ -29144,29 +29146,21 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
      ; a2 points to the node to be removed
           move.l   SpritePrevOb(a2),a5 ; get the previous node
           move.l   SpriteNextOb(a2),a4 ; get the next node
-          move.l   LinkListHead.w,d0
-          cmp.l    d0,a2
-          bne.s    .SkipHeadUpdate
-          move.l   a4, LinkListHead.w
- .SkipHeadUpdate:
-; Update the next node's prev pointer, if next node exists
-        move.l    a4,d1
-        beq.s    .SkipNextUpdate
-        move.l   a5, SpritePrevOb(a4)
-        .SkipNextUpdate:
-
-        ; Update the previous node's next pointer, if previous node exists
-        move.l    a5,d1
-        beq.s    .SkipPrevUpdate
-        move.l   a4, SpriteNextOb(a5)
- .SkipPrevUpdate:
-
-; If a2 was the head, update the head pointer
-
-
+          tst.l    SpritePrevOb(a2)     ; do we have a previous slot ? (impossible unless its the first slot)
+          bne.s    .ThereIsApre
+          move.l   SpriteNextOb(a4),SpriteNextOb(a2) ; copy next into previous slot
+          bra.s    .DeleteFirstNode
+  .ThereIsApre:
+       ;   tst.l    SpriteNextOb(a2)
+       ;   bne.s    .ThisMiddleSlot
+       ;   move.l   a5,LinkListHead.w ; update list
+  ;.ThisMiddleSlot:
+          move.l	SpriteNextOb(a2),SpriteNextOb(a5)
+          move.l	SpritePrevOb(a2),SpritePrevOb(a4)
+          clr.l    SpriteNextOb(a2)
+  .DeleteFirstNode:       
          clr.w    SpriteInUse(a2)
          clr.w    SpriteObAddr(a2)
-         clr.l    SpriteNextOb(a2)
          clr.l    SpritePrevOb(a2)
        ;  bsr.w    UpdateHeadList
 
