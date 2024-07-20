@@ -1161,9 +1161,11 @@ Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
                                 ds.b    $20
-LinkListTail:                    ; the end of list 
+LinkedListHead:      ;  a pointer that points to start of list                                 
+                                ds.l    $1
+LinkListTail:                    ; the end of list
                                 ds.l    1
-                                ds.b    $20
+                                ds.b    $1C
 ChunkAddr:
                                 ds.l    1
 SpriteEnableFlag:                                 
