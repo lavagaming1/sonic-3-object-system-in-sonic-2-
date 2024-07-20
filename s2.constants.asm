@@ -1160,9 +1160,10 @@ Tails_InvincibilityStars:
 Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
-                                ds.b    $40
-LinkListHead:
+                                ds.b    $20
+LinkListTail:                    ; the end of list 
                                 ds.l    1
+                                ds.b    $20
 ChunkAddr:
                                 ds.l    1
 SpriteEnableFlag:                                 

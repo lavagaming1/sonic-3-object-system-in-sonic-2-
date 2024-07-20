@@ -25366,17 +25366,17 @@ Obj34_Init:
 	move.w	(a2)+,titlecard_x_target(a1)
 	move.w	(a2)+,y_pixel(a1)
 	move.b	#0,render_flags(a1)
-;	movem.l d1-d0/a0-a2,-(sp)
-;	move.l  a1,a0
-;	clr.w   prioritylist(a0)
-;;	InsertSpriteMacro 1
-     ;   lea     RAM_Start.l,a3
-    ;    move.w  prioritylist(a0),d5
-   ;     beq.s   .Countinue
-  ;      adda.w  d5,a3
- ;       clr.b   SpriteBit(a3)
-; .Countinue:
-      ;  movem.l  (sp)+,d1-d0/a0-a2
+	movem.l d1-d0/a0-a2,-(sp)
+	move.l  a1,a0
+	clr.w   prioritylist(a0)
+	InsertSpriteMacro 1
+        lea     RAM_Start.l,a3
+        move.w  prioritylist(a0),d5
+        beq.s   .Countinue
+        adda.w  d5,a3
+        clr.b   SpriteBit(a3)
+ .Countinue:
+        movem.l  (sp)+,d1-d0/a0-a2
 
 
 
@@ -29119,7 +29119,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
 
              lea       Sprite_Lister_Table.l,a4
-             move.l    a4,LinkListHead.w
+             move.l    a4,LinkListTail.w
              clr.w     SpriteEnableFlag.w
 
              rts
@@ -29137,10 +29137,6 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
 
           move.w  prioritylist(a0),d0
           adda.w  d0,a2
-     ;     andi.w  #1,d0        ; Mask all but the least significant bit
-     ;     beq.s   .ChkValues         ; If the result is 0, the number is even
-      ;    bra.s   .NodeNotInDebugThis
-   ;.ChkValues:
           cmpi.w  #Sprite_Lister_Table_End-RAM_Start,d0
           bhs.s   .NodeNotInDebugThis
           cmpi.w  #Sprite_Lister_Table-RAM_Start,d0
@@ -29148,21 +29144,28 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
      ; a2 points to the node to be removed
           move.l   SpritePrevOb(a2),a5 ; get the previous node
           move.l   SpriteNextOb(a2),a4 ; get the next node
-          tst.l    SpritePrevOb(a2)     ; do we have a previous slot ? (impossible unless its the first slot)
-          bne.s    .ThereIsApre
-          move.l   SpriteNextOb(a4),SpriteNextOb(a2) ; copy next into previous slot
-          bra.s    .DeleteFirstNode
-  .ThereIsApre:
-       ;   tst.l    SpriteNextOb(a2)
-       ;   bne.s    .ThisMiddleSlot
-       ;   move.l   a5,LinkListHead.w ; update list
-  ;.ThisMiddleSlot:
-          move.l	SpriteNextOb(a2),SpriteNextOb(a5)
-          move.l	SpritePrevOb(a2),SpritePrevOb(a4)
-          clr.l    SpriteNextOb(a2)
-  .DeleteFirstNode:       
+
+
+ .ThereisPrev:
+; Update the next node's prev pointer, if next node exists
+
+
+        ; Update the previous node's next pointer, if previous node exists
+        move.l    a5,d1
+        beq.s    .SkipPrevUpdate
+        move.l   a4, SpriteNextOb(a5)
+ .SkipPrevUpdate:
+         move.l    a4,d1
+        beq.s    .SkipNextUpdate
+        move.l   a5, SpritePrevOb(a4)
+        .SkipNextUpdate:
+    .NodeClear:    
+; If a2 was the head, update the head pointer
+
+
          clr.w    SpriteInUse(a2)
          clr.w    SpriteObAddr(a2)
+         clr.l    SpriteNextOb(a2)
          clr.l    SpritePrevOb(a2)
        ;  bsr.w    UpdateHeadList
 
@@ -29186,7 +29189,7 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
          movea.l  d1,a6  ; update to next ; update to next node
          bra.s    .FindSpritesLoop
     .FoundSlotEnd:
-          move.l   a6,LinkListHead.w
+          move.l   a6,LinkListTail.w
      .fail:
           rts
 InitDrawingSprites: ; routine that inserts object in SpritesListTable which contains sprites for next and previous routine and the object ram addr
@@ -29205,7 +29208,7 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  ;tst.w    SpriteInUse(a4)
                  ;beq.s    .InitFirstSprite
 
-                 move.l    LinkListHead.w,a5 ; slot unused addr
+                 move.l    LinkListTail.w,a5 ; slot unused addr
 
                  moveq     #$4F,d0
 .loopFindGap:
@@ -29228,14 +29231,14 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  move.l  a4,SpriteNextOb(a5) ; link new slot to old slot
                  move.l  a5,SpritePrevOb(a4) ; link a1 to new slot
 
-                 move.l     a4,LinkListHead.w  ; update this for next objects
+                 move.l     a4,LinkListTail.w  ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
                  rts
    .InitFirstSprite:
                  move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
                  move.w    a0,SpriteObAddr(a4)   ; connect object ram
-                 move.l     a4,LinkListHead.w  ; update this for next objects
+                 move.l     a4,LinkListTail.w  ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
 
                                  rts
@@ -29353,8 +29356,8 @@ BuildSprites_NextObj:
 	;bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
 ; loc_166FA:
 BuildSprites_NextLevel:
-       ; lea     LinkListHead.w,a1
-        move.l   a4,LinkListHead.w  ; memeorize this so we dont have to loop  ( head) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
+       ; lea     LinkListTail.w,a1
+        move.l   a4,LinkListTail.w  ; memeorize this so we dont have to loop  ( head) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
 
 
 
@@ -34179,7 +34182,7 @@ Obj01_Init:
 ;	lea      Sprite_Lister_Table.l,a4
 ;        move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
  ;       move.w    a0,SpriteObAddr(a4)   ; connect object ram
-  ;      move.l     a4,LinkListHead.w  ; update this for next objects
+  ;      move.l     a4,LinkListTail.w  ; update this for next objects
    ;     move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
 	InsertSpriteMacro $1
 	;move.b	#2,priority(a0)
@@ -36857,7 +36860,7 @@ Obj02_Init:
         ;move.l    #Sprite_Lister_Table,SpritePrevOb(a4)
         ;move.l    a4,SpriteNextOb(a5)
         ;move.w    a0,SpriteObAddr(a4)   ; connect object ram
-       ; move.l     a4,LinkListHead.w  ; update this for next objects
+       ; move.l     a4,LinkListTail.w  ; update this for next objects
         ;move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
         ;st        SpriteEnableFlag.w
 
