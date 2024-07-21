@@ -29276,13 +29276,12 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 
 
 
+                 lea       HeadAndTailListIndex(pc,d1.w),a6
+                 move.l   (a6),a4 ; load SpriteList location
 
-                 lea       Sprite_Lister_Table.l,a4 ; load head
-               ;  tst.w     SpriteInUse(a4)   ; is the first slot not used ?
-                ; beq.s     .InitFirstSprite
 
-                 move.l    LinkListTail.w,a5 ; slot unused addr
-
+                 move.l    $8(a6),a5 ; use tail
+                 move.l    (a5),a5
                  moveq     #$4F,d0
 .loopFindGap:
                  tst.w     SpriteInUse(a4)  ; Check if the slot is in use
@@ -29296,25 +29295,31 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 .Found:
 
 
-                           ; inserts priority level id
-                 move.b    d1,SpriteInUse(a4) ; same with SpriteBit set as used
+                           ; inserts priority level id          
+                 move.b    #1,SpriteInUse(a4) ; same with SpriteBit set as used
                  move.b    #'N',SpriteBit(a4)
                  move.w    a0,SpriteObAddr(a4)   ; connect object ram
 
                  move.l  a4,SpriteNextOb(a5) ; link new slot to old slot
                  move.l  a5,SpritePrevOb(a4) ; link a1 to new slot
-
-                 move.l     a4,LinkListTail.w  ; update this for next objects
+                 move.l     $8(a6),a6
+                 move.l     a4,LinkListTail ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
                  rts
-   .InitFirstSprite:
-                 move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
-                 move.w    a0,SpriteObAddr(a4)   ; connect object ram
-                 move.l     a4,LinkListTail.w  ; update this for next objects
-                 move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
-              ;   move.l    a4,LinkedListHead.w
-                                 rts
+
+HeadAndTailListIndex: dc.l Sprite_Lister_Table
+                      dc.l LinkedListHead
+                      dc.l LinkListTail
+                      
+                      dc.l Sprite_Lister_Table
+                      dc.l LinkedListHead
+                      dc.l LinkListTail
+
+                      dc.l Sprite_Lister_Table+SpriteQeueSize
+                      dc.l LinkedListHead2
+                      dc.l LinkListTail2
+
 
 
 

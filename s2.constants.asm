@@ -1095,18 +1095,22 @@ CompressionBuffer_End
 TempArray_LayerDef:		ds.b	$200	; used by some layer deformation routines
 Decomp_Buffer:			ds.b	$200
 
-Sprite_Table_Input:		ds.b	$1E0	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
+Sprite_Table_Input:		ds.b	$1D0	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
 Sprite_Table_Input_End:
 HexLettersRam:         ; this for dubug for bizwak
                                 ds.l    1
 LinkedListHead:      ;  a pointer that points to start of list
                                 ds.l    $1
+LinkedListHead2:
+                                ds.l    $1
 LinkListTail:                    ; the end of list
                                 ds.l    1
+LinkListTail2:
+                                ds.l    $1
 
 ChunkAddr:
                                 ds.l    1
-                                ds.b    $10 ; unused 
+                                ds.b    $18 ; unused
 
 Object_RAM:
 Player_1:
@@ -1172,10 +1176,11 @@ LevelOnly_Object_RAM_End:
 
 
 
-Object_RAM_End:      
+Object_RAM_End:
                                 ds.b    $20
                                 ds.b    $1C
                                 ds.b    $C
+                                ds.b    $4
 SpriteEnableFlag:                                 
                                 ds.w    1
 Kos_decomp_buffer:              ds.b    $1000 ; unused data from collsion stuff
