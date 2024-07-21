@@ -43058,7 +43058,10 @@ Obj79_MakeSpecialStars:
 	subi.w	#$30,d0
 	move.w	d0,y_pos(a1)
 	move.w	d0,objoff_36(a1)
-	move.b	priority(a0),priority(a1)
+	movem.l d1-d0/a0-a1,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 1
+        movem.l  (sp)+,d1-d0/a0-a1
 	move.b	#8,width_pixels(a1)
 	move.b	#1,mapping_frame(a1)
 	move.w	#-$400,x_vel(a1)
