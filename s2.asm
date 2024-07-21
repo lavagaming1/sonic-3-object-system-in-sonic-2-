@@ -20172,7 +20172,7 @@ Obj11_Init:
 	move.l	#Obj11_MapUnc_FC28,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_HPZ_Bridge,3,0),art_tile(a0)
 +
-	bsr.w	Adjust2PArtPointer
+	
 	move.b	#4,render_flags(a0)
 	move.b	#$80,width_pixels(a0)
 	move.w	y_pos(a0),d2
@@ -21240,7 +21240,7 @@ Obj17_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Obj17_MapUnc_10452,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_GHZ_Spiked_Log,2,0),art_tile(a0)
-	bsr.w	Adjust2PArtPointer
+	jsr	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	InsertSpriteMacro $1
 ;	move.b	#3,priority(a0)
@@ -21279,7 +21279,7 @@ Obj17_MakeHelix:
 	move.w	d3,x_pos(a1)
 	move.l	mappings(a0),mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_GHZ_Spiked_Log,2,0),art_tile(a1)
-	bsr.w	Adjust2PArtPointer2
+
 	move.b	#4,render_flags(a1)
 	move.b	#3,priority(a1)
 	move.b	#8,width_pixels(a1)
@@ -21410,7 +21410,7 @@ Obj18_Init:
 	move.l	#Obj18_MapUnc_1084E,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,2,0),art_tile(a0)
 +
-	bsr.w	Adjust2PArtPointer
+	
 	move.b	#4,render_flags(a0)
 	InsertSpriteMacro $1
 	;move.b	#4,priority(a0)
@@ -21798,7 +21798,7 @@ Obj1A_Init:
 	addq.b	#2,routine(a0)
 	move.l	#Obj1A_MapUnc_10C6C,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,2,0),art_tile(a0)
-	bsr.w	Adjust2PArtPointer
+	
 	ori.b	#4,render_flags(a0)
 	InsertSpriteMacro $1
 ;	move.b	#4,priority(a0)
@@ -21809,7 +21809,7 @@ Obj1A_Init:
 	bne.s	+
 	move.l	#Obj1A_MapUnc_1101C,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_HPZPlatform,2,0),art_tile(a0)
-	bsr.w	Adjust2PArtPointer
+	
 	move.b	#$30,width_pixels(a0)
 	move.l	#Obj1A_HPZ_SlopeData,collapsing_platform_slope_pointer(a0)
 	move.l	#Obj1A_HPZ_DelayData,collapsing_platform_delay_pointer(a0)
@@ -21820,7 +21820,7 @@ Obj1A_Init:
 	bne.s	+
 	move.l	#Obj1F_MapUnc_110C6,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_OOZPlatform,3,0),art_tile(a0)
-	bsr.w	Adjust2PArtPointer
+	
 	move.b	#$40,width_pixels(a0)
 	move.l	#Obj1A_OOZ_SlopeData,collapsing_platform_slope_pointer(a0)
 	bra.s	Obj1A_Main
@@ -21927,7 +21927,7 @@ Obj1F_Init:
 	bne.s	+
 	move.l	#Obj1F_MapUnc_110C6,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_OOZPlatform,3,0),art_tile(a0)
-	bsr.w	Adjust2PArtPointer
+
 	move.b	#$40,width_pixels(a0)
 	move.l	#Obj1F_OOZ_DelayData,collapsing_platform_delay_pointer(a0)
 +
@@ -29206,7 +29206,7 @@ PLevelsDeleteIndex:    dc.l 0 ;( sprite in use with detirmine this )
 
 
 ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
-                
+
           tst.w     prioritylist(a0) ; does object contain displa flag ?
           beq.s     .NodeNotFound
 
@@ -29225,7 +29225,9 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
      ; a2 points to the node to be removed
           cmp.l    (a6),a2
           bne.s    .NotFirstNode
+
           move.l   SpriteNextOb(a2),(a6)
+   
           movea.l  SpriteNextOb(a2),a4
           clr.l    SpritePrevOb(a4)
           bra.s    .NodeClear
@@ -29302,7 +29304,9 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 
                  lea       HeadAndTailListIndex(pc,d1.w),a6
                  move.l    (a6),a4 ; load SpriteList location
-
+                 move.l    $4(a6),a5
+                 tst.b     SpriteInUse(a5)
+                 beq.s     .SpriteStartsLevel
 
                  move.l    $8(a6),a5 ; use tail
                  move.l    a5,a6
@@ -29331,6 +29335,19 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  move.l     a4,(a6) ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
+                 rts
+ .SpriteStartsLevel:
+                 move.l    a6,-(sp)
+                 move.l    $8(a6),a5 ; use tail
+                 move.l    a5,a6
+                 move.b    d1,SpriteInUse(a4) ; same with SpriteBit set as used   (d1 is later used to delete from the right head and tail)
+                 move.b    #'N',SpriteBit(a4)
+                 move.w    a0,SpriteObAddr(a4)   ; connect object ram
+                 move.l     a4,(a6) ; update this for next objects
+                 move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+                 move.l    (sp)+,a6
+                 move.l    $4(a6),a6
+                 move.l    a4,(a6) ; set up this priority level in head *
                  rts
 
 HeadAndTailListIndex: dc.l 0      ; blank because if these are set the object will never count as used
@@ -36958,7 +36975,7 @@ Obj02_Init:
 	move.b	#$F,y_radius(a0) ; this sets Tails' collision height (2*pixels) to less than Sonic's height
 	move.b	#9,x_radius(a0)
 	move.l	#MapUnc_Tails,mappings(a0)
-	InsertSpriteMacro $0
+	InsertSpriteMacro $1
 	;move.b	#2,priority(a0)
 
 	;lea      Sprite_Lister_Table+$C.l,a4
