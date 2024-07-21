@@ -1054,7 +1054,7 @@ SpriteObAddr =  $2
 SpriteNextOb =  $4
 SpritePrevOb =  $8
 ;----------------------------------------------------------------------------
-SpriteListHeadAddr = -$10 ; used to memorize the last addr ( the end) the buffer we use -10 is a varable
+SpritesLevelHead = -$4 ; the head of a list 
 
 ; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
@@ -1161,11 +1161,12 @@ Wave_Splash:               	ds.b    object_size
 LevelOnly_Object_RAM_End:
 
                                 ds.b    $20
-LinkedListHead:      ;  a pointer that points to start of list                                 
+                                ds.b    $1C
+LinkedListHead:      ;  a pointer that points to start of list
                                 ds.l    $1
 LinkListTail:                    ; the end of list
                                 ds.l    1
-                                ds.b    $1C
+
 ChunkAddr:
                                 ds.l    1
 SpriteEnableFlag:                                 

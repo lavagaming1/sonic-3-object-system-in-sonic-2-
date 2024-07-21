@@ -4504,10 +4504,12 @@ Level_PlayBgm:
 ;	move.b	#VintID_TitleCard,(Vint_routine).w
 ;	jsr	(Process_Kos_Queue).l
 ;	bsr.w	WaitForVint
-;	jsr	(RunObjects).l
-;	jsr	(BuildSprites).l  ; give me a frame to spawn sonic and tail
 ;
+;	jsr	(BuildSprites).l  ; give me a frame to spawn sonic and tail
+        move.l  #ObjTestInitDraw,Reserved_object_3.w
+
 	move.l	#Obj34,(TitleCard).w ; load Obj34 (level title card) at $FFFFB080
+        jsr	(RunObjects).l
 ; loc_40DA:
 Level_TtlCard:
 	move.b	#VintID_TitleCard,(Vint_routine).w
@@ -25375,7 +25377,7 @@ Obj34_Init:
         beq.s   .Countinue
         adda.w  d5,a3
         clr.b   SpriteBit(a3)
- .Countinue:
+  .Countinue:
         movem.l  (sp)+,d1-d0/a0-a2
 
 
@@ -27551,7 +27553,63 @@ Obj36_MapUnc_15B68:	BINCLUDE "mappings/sprite/obj36.bin"
 
                   even
 
+ObjTestInitDraw:
+       lea       Sprite_Lister_Table.l,a4
+        move.l    a4,LinkListTail.w
+        move.l    a4,LinkedListHead.w
+       	move.l	#Obj3B_MapUnc_15D2E,mappings(a0)
+	move.w	#make_art_tile(ArtTile_ArtNem_GHZ_Purple_Rock,3,0),art_tile(a0)
+	InsertSpriteMacro $1
+	move.l  #.return,(a0)
+	move.w  #$100,x_pos(a0)
+        move.w  #$100,y_pos(a0)
+        move.w  #$7f,objoff_30(a0)
 
+ .return:
+        subq.w  #$1,objoff_30(a0)
+        bpl.s   .Delay     
+        jsr    RemoveObjListAndUpdateHead ; remove this object from sprite list first then delete it
+       ; movea.l	a0,a1
+;	moveq	#0,d1
+;        jsr     ObjClrRamSlot
+         move.l  #.Delay,(a0)
+ .Delay:
+        rts
+RemoveObjListAndUpdateHead:        
+         tst.w     prioritylist(a0) ; does object contain displa flag ?
+          beq.s     .NodeNotFound
+
+          lea     RAM_Start.l,a2
+
+          move.w  prioritylist(a0),d0
+          adda.w  d0,a2
+
+
+
+                move.l	SpritePrevOb(a2),a4
+		move.l	SpriteNextOb(a2),SpriteNextOb(a4)
+		move.l	SpriteNextOb(a2),a4
+
+		move.l	SpritePrevOb(a2),SpritePrevOb(a4)
+		cmp.l   LinkedListHead.w,a2
+		bne.s   .NodeClear
+	        move.l  a4,LinkedListHead.w ; get the next node
+
+
+ .SkipPrevUpdate:
+    .NodeClear:
+; If a2 was the head, update the head pointer
+
+        ;
+         clr.w    SpriteInUse(a2)
+         clr.w    SpriteObAddr(a2)
+         clr.l    SpriteNextOb(a2)
+         clr.l    SpritePrevOb(a2)
+        ; bsr.w    UpdateHeadList
+
+
+      .NodeNotFound:
+         rts
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object 3B - Purple rock (leftover from S1)
@@ -28242,7 +28300,7 @@ DeleteObject:
         jsr    ObjRemoveFromList ; remove this object from sprite list first then delete it
 	movea.l	a0,a1
 	moveq	#0,d1
-
+ObjClrRamSlot:
 	moveq	#bytesToLcnt(next_object),d0 ; we want to clear up to the next object
 	; delete the object by setting all of its bytes to 0
 -	move.l	d1,(a1)+
@@ -29119,7 +29177,8 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
 
              lea       Sprite_Lister_Table.l,a4
-             move.l    a4,LinkListTail.w
+             move.l    #0,LinkListTail.w
+             move.l    a4,LinkedListHead.w
              clr.w     SpriteEnableFlag.w
 
              rts
@@ -29142,11 +29201,14 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
           cmpi.w  #Sprite_Lister_Table-RAM_Start,d0
           blo.s   .NodeNotInDebugThis
      ; a2 points to the node to be removed
+          cmp.l    LinkedListHead.w,a2
+          bne.s    .NotFirstNode
+          move.l   SpriteNextOb(a2),LinkedListHead.w
+          ;bra.s    .NodeClear
+  .NotFirstNode:
           move.l   SpritePrevOb(a2),a5 ; get the previous node
           move.l   SpriteNextOb(a2),a4 ; get the next node
 
-
- .ThereisPrev:
 ; Update the next node's prev pointer, if next node exists
 
 
@@ -29158,8 +29220,18 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
          move.l    a4,d1
         beq.s    .SkipNextUpdate
         move.l   a5, SpritePrevOb(a4)
+
         .SkipNextUpdate:
-    .NodeClear:    
+       	cmp.l   LinkedListHead.w,a2
+	bne.s   .ChkTail
+        move.l  a4,LinkedListHead.w ; get the next node
+        clr.l   SpritePrevOb(a4)
+        bra.s   .NodeClear ; if its first node i dont think it needs to check ...
+     .ChkTail:
+        cmp.l    LinkListTail.w,a2
+        bne.s    .NodeClear
+        move.l   SpritePrevOb(a2),LinkListTail.w
+    .NodeClear:
 ; If a2 was the head, update the head pointer
 
 
@@ -29177,7 +29249,7 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
            rts
   UpdateHeadList:
 
-          lea    Sprite_Lister_Table.l,a6
+          movea.l  LinkedListHead.w,a6
           tst.w  SpriteInUse(a6)
           beq.s  .fail
 
@@ -29204,9 +29276,9 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 
 
 
-                 lea   Sprite_Lister_Table.l,a4
-                 ;tst.w    SpriteInUse(a4)
-                 ;beq.s    .InitFirstSprite
+                 lea       Sprite_Lister_Table.l,a4 ; load head
+               ;  tst.w     SpriteInUse(a4)   ; is the first slot not used ?
+                ; beq.s     .InitFirstSprite
 
                  move.l    LinkListTail.w,a5 ; slot unused addr
 
@@ -29240,7 +29312,7 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  move.w    a0,SpriteObAddr(a4)   ; connect object ram
                  move.l     a4,LinkListTail.w  ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
-
+              ;   move.l    a4,LinkedListHead.w
                                  rts
 
 
@@ -29258,7 +29330,8 @@ BuildSprites:
 	jsrto	(BuildHUD).l, JmpTo_BuildHUD
 	bsr.w	BuildRings
 +
-	lea	(Sprite_Lister_Table).l,a4
+	;lea	(Sprite_Lister_Table).l,a4
+	move.l  LinkedListHead.w,a4
 	move.l   a4,d6	;move
 	;moveq    #0,d7
 ;q;#1,d6	;72 7rio8ity levels
@@ -29270,6 +29343,8 @@ BuildSprites_LevelLoop:
         tst.b    SpriteInUse(a4) ; is first slot on this loading ?
         beq.w    BuildSprites_NextLevel ; if not ingore it
         movea.w  SpriteObAddr(a4),a0 ; load first entry
+      ;  move.l   a4,LinkedListHead.w
+      ;  clr.l    SpritePrevOb(a4)
 ; loc_16630:
 BuildSprites_ObjLoop:
 ;	movea.w	(a4,d6.w),a0 ; a0=object
@@ -34179,11 +34254,7 @@ Obj01_Init:
 	move.b	#$13,default_y_radius(a0)
 	move.b	#9,default_x_radius(a0)
 	move.l	#Mapunc_Sonic,mappings(a0)
-;	lea      Sprite_Lister_Table.l,a4
-;        move.w    #'No',SpriteInUse(a4) ; same with SpriteBit set as used
- ;       move.w    a0,SpriteObAddr(a4)   ; connect object ram
-  ;      move.l     a4,LinkListTail.w  ; update this for next objects
-   ;     move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
+
 	InsertSpriteMacro $1
 	;move.b	#2,priority(a0)
 	move.b	#$18,width_pixels(a0)
