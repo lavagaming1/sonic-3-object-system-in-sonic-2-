@@ -29204,10 +29204,14 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
           cmp.l    LinkedListHead.w,a2
           bne.s    .NotFirstNode
           move.l   SpriteNextOb(a2),LinkedListHead.w
-          ;bra.s    .NodeClear
+          movea.l  SpriteNextOb(a2),a4
+          clr.l    SpritePrevOb(a4)
+          bra.s    .NodeClear
   .NotFirstNode:
-          move.l   SpritePrevOb(a2),a5 ; get the previous node
-          move.l   SpriteNextOb(a2),a4 ; get the next node
+
+
+            move.l   SpritePrevOb(a2),a5 ; get the previous node
+            move.l   SpriteNextOb(a2),a4 ; get the next node
 
 ; Update the next node's prev pointer, if next node exists
 
@@ -29222,16 +29226,12 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
         move.l   a5, SpritePrevOb(a4)
 
         .SkipNextUpdate:
-       	cmp.l   LinkedListHead.w,a2
-	bne.s   .ChkTail
-        move.l  a4,LinkedListHead.w ; get the next node
-        clr.l   SpritePrevOb(a4)
-        bra.s   .NodeClear ; if its first node i dont think it needs to check ...
-     .ChkTail:
-        cmp.l    LinkListTail.w,a2
-        bne.s    .NodeClear
-        move.l   SpritePrevOb(a2),LinkListTail.w
-    .NodeClear:
+         cmp.l    LinkListTail.w,a2
+         bne.s    .NodeClear
+         move.l   SpritePrevOb(a2),LinkListTail.w
+
+
+        .NodeClear:
 ; If a2 was the head, update the head pointer
 
 
