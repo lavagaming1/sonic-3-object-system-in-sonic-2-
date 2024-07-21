@@ -29179,6 +29179,10 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
              lea       Sprite_Lister_Table.l,a4
              move.l    a4,LinkListTail.w
              move.l    a4,LinkedListHead.w
+
+             adda.l    #SpriteQeueSize,a4
+             move.l    a4,LinkListTail2.w
+             move.l    a4,LinkedListHead2.w
              clr.w     SpriteEnableFlag.w
 
              rts
@@ -29187,6 +29191,19 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
+PLevelsDeleteIndex:    dc.l 0 ;( sprite in use with detirmine this )
+                       dc.l 0
+                       dc.l 0
+
+                       dc.l Sprite_Lister_Table ;( sprite in use with detirmine this )
+                       dc.l LinkedListHead
+                       dc.l LinkListTail
+
+                       dc.l Sprite_Lister_Table+SpriteQeueSize
+                       dc.l LinkedListHead2
+                       dc.l LinkListTail2
+                       
+
 ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
 
           tst.w     prioritylist(a0) ; does object contain displa flag ?
@@ -29200,10 +29217,14 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
           bhs.s   .NodeNotInDebugThis
           cmpi.w  #Sprite_Lister_Table-RAM_Start,d0
           blo.s   .NodeNotInDebugThis
+          moveq    #0,d0
+          move.b   SpriteInUse(a2),d0
+          lea      PLevelsDeleteIndex(pc,d0.w),a3 ; get head and tail)
+          move.l   $4(a3),a6  ; get head
      ; a2 points to the node to be removed
-          cmp.l    LinkedListHead.w,a2
+          cmp.l    (a6),a2
           bne.s    .NotFirstNode
-          move.l   SpriteNextOb(a2),LinkedListHead.w
+          move.l   SpriteNextOb(a2),(a6)
           movea.l  SpriteNextOb(a2),a4
           clr.l    SpritePrevOb(a4)
           bra.s    .NodeClear
@@ -29226,9 +29247,10 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
         move.l   a5, SpritePrevOb(a4)
 
         .SkipNextUpdate:
-         cmp.l    LinkListTail.w,a2
+         move.l   $8(a3),a6  ; get tail
+         cmp.l    (a6),a2
          bne.s    .NodeClear
-         move.l   SpritePrevOb(a2),LinkListTail.w
+         move.l   SpritePrevOb(a2),(a6)
 
 
         .NodeClear:
@@ -29247,6 +29269,8 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
   .NodeNotInDebugThis:
            KDebug.WriteLine "Terrible Value Found: %<.l a0 sym> (ptr=%<.l (a0) sym>)"
            rts
+
+
   UpdateHeadList:
 
           movea.l  LinkedListHead.w,a6
@@ -29276,7 +29300,7 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 
 
                  lea       HeadAndTailListIndex(pc,d1.w),a6
-                 move.l   (a6),a4 ; load SpriteList location
+                 move.l    (a6),a4 ; load SpriteList location
 
 
                  move.l    $8(a6),a5 ; use tail
@@ -29294,23 +29318,23 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 .Found:
 
 
-                           ; inserts priority level id          
-                 move.b    #1,SpriteInUse(a4) ; same with SpriteBit set as used
+                           ; inserts priority level id
+                 move.b    d1,SpriteInUse(a4) ; same with SpriteBit set as used   (d1 is later used to delete from the right head and tail)
                  move.b    #'N',SpriteBit(a4)
                  move.w    a0,SpriteObAddr(a4)   ; connect object ram
 
                  move.l  a4,SpriteNextOb(a5) ; link new slot to old slot
                  move.l  a5,SpritePrevOb(a4) ; link a1 to new slot
                  move.l     $8(a6),a6
-                 move.l     a4,LinkListTail ; update this for next objects
+                 move.l     a4,(a6) ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
                  rts
 
-HeadAndTailListIndex: dc.l Sprite_Lister_Table
-                      dc.l LinkedListHead
-                      dc.l LinkListTail
-                      
+HeadAndTailListIndex: dc.l 0      ; blank because if these are set the object will never count as used
+                      dc.l 0
+                      dc.l 0
+
                       dc.l Sprite_Lister_Table
                       dc.l LinkedListHead
                       dc.l LinkListTail
@@ -29318,11 +29342,15 @@ HeadAndTailListIndex: dc.l Sprite_Lister_Table
                       dc.l Sprite_Lister_Table+SpriteQeueSize
                       dc.l LinkedListHead2
                       dc.l LinkListTail2
+                      
 
 
 
 
 
+BuildSpriteHeads: dc.l  LinkedListHead
+                  dc.l  LinkedListHead2
+                  dc.l  LinkedListHead2
 ; sub_16604:
 BuildSprites:
 ;	tst.w	(Two_player_mode).w
@@ -29335,24 +29363,27 @@ BuildSprites:
 	jsrto	(BuildHUD).l, JmpTo_BuildHUD
 	bsr.w	BuildRings
 +
-	;lea	(Sprite_Lister_Table).l,a4
-	move.l  LinkedListHead.w,a4
-	move.l   a4,d6	;move
-	;moveq    #0,d7
-;q;#1,d6	;72 7rio8ity levels
-; loc_16628:
+
+
+        moveq   #0,d7 ; amount of priortiy levels is just 1
+        moveq   #$4,d6 ; list ids
+
 BuildSprites_LevelLoop:
-;	tst.w	(a4)	; does this level have any objects?
-;	beq.w	BuildSprites_NextLevel	; if not, check the next one
-;	moveq	#2,d6
+        lea      BuildSpriteHeads(pc,d6.w),a1
+        move.l   (a1),a1
+        move.l   (a1),a4
+
+
+
+
         tst.b    SpriteInUse(a4) ; is first slot on this loading ?
         beq.w    BuildSprites_NextLevel ; if not ingore it
         movea.w  SpriteObAddr(a4),a0 ; load first entry
-      ;  move.l   a4,LinkedListHead.w
-      ;  clr.l    SpritePrevOb(a4)
+
 ; loc_16630:
 BuildSprites_ObjLoop:
-;	movea.w	(a4,d6.w),a0 ; a0=object
+
+
         tst.b   SpriteBit(a4)
         beq.w   BuildSprites_NextObj
 	andi.b	#$7F,render_flags(a0)	; clear on-screen flag
@@ -29431,19 +29462,14 @@ BuildSprites_NextObj:
 
         movea.w  SpriteObAddr(a4),a0 ; load object ram
         bra.w    BuildSprites_ObjLoop   ; go to routine responsible for function after that routine is done it comes back to Render_Sprites_NextObj after the function is done
-	;addq.w	#2,d6	; load next object
-	;subq.w	#2,(a4)	; decrement object count
-	;bne.w	BuildSprites_ObjLoop	; if there are objects left, repeat
+
 ; loc_166FA:
 BuildSprites_NextLevel:
-       ; lea     LinkListTail.w,a1
-        move.l   a4,LinkListTail.w  ; memeorize this so we dont have to loop  ( head) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
-
-
-
-
-;	lea	$80(a4),a4	; load next priority level
-;	dbf	d7,BuildSprites_LevelLoop	; loop
+         lea      BuildSpriteTailIndex(pc,d6.w),a1
+         move.l   (a1),a1
+         move.l   a4,(a1)  ; memeorize this so we dont have to loop  ( tail) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
+        ; addq.w   #$4,d6 ; davance head and list
+	; dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
 	cmpi.b	#80,d5	; was the sprite limit reached?
 	beq.s	+	; if it was, branch
@@ -29452,7 +29478,10 @@ BuildSprites_NextLevel:
 +
 	move.b	#0,-5(a2)	; set link field to 0
 	rts
-
+ BuildSpriteTailIndex:
+        dc.l   LinkListTail
+        dc.l   LinkListTail2
+        dc.l   LinkListTail2
 
 
 ; ===========================================================================
@@ -40621,7 +40650,7 @@ Obj38:
 	move.b	#4,render_flags(a0)
 ;	move.b	#1,priority(a0)
 
-	InsertSpriteMacro 1
+	InsertSpriteMacro 0
 
 	move.b	#$18,width_pixels(a0)
 	move.w	#make_art_tile(ArtTile_ArtUnc_Shield,0,0),art_tile(a0)
@@ -40699,7 +40728,7 @@ loc_1D9A4:
 	move.w	#make_art_tile(ArtTile_ArtUnc_Invincible_stars,0,0),art_tile(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 0
         movem.l  (sp)+,d1-d0/a0-a1
 	bsr.w	Adjust2PArtPointer2
 	move.b	#4,render_flags(a1)
