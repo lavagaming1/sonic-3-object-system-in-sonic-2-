@@ -25373,7 +25373,7 @@ Obj34_Init:
 	movem.l d1-d0/a0-a2,-(sp)
 	move.l  a1,a0
 	clr.w   prioritylist(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 0
         lea     RAM_Start.l,a3
         move.w  prioritylist(a0),d5
         beq.s   .Countinue
@@ -29180,7 +29180,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
              move.l    a4,LinkListTail.w
              move.l    a4,LinkedListHead.w
 
-             lea       Sprite_Lister_Table+SpriteQeueSize+$C.l,a4
+             lea       Sprite_Lister_Table+SpriteQeueSize.l,a4
 
              move.l    a4,LinkListTail2.w
              move.l    a4,LinkedListHead2.w
@@ -29367,7 +29367,7 @@ BuildSprites:
 +
 
 
-        moveq   #0,d7 ; amount of priortiy levels is just 1
+        moveq   #1,d7 ; amount of priortiy levels is just 1
         moveq   #$0,d6 ; list ids
 
 BuildSprites_LevelLoop:
@@ -29470,8 +29470,8 @@ BuildSprites_NextLevel:
          lea      BuildSpriteTailIndex(pc,d6.w),a1
          move.l   (a1),a1
          move.l   a4,(a1)  ; memeorize this so we dont have to loop  ( tail) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
-        ; addq.w   #$4,d6 ; davance head and list
-	; dbf	d7,BuildSprites_LevelLoop	; loop
+         addq.w   #$4,d6 ; davance head and list
+	 dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
 	cmpi.b	#80,d5	; was the sprite limit reached?
 	beq.s	+	; if it was, branch
@@ -36958,7 +36958,7 @@ Obj02_Init:
 	move.b	#$F,y_radius(a0) ; this sets Tails' collision height (2*pixels) to less than Sonic's height
 	move.b	#9,x_radius(a0)
 	move.l	#MapUnc_Tails,mappings(a0)
-	InsertSpriteMacro $1
+	InsertSpriteMacro $0
 	;move.b	#2,priority(a0)
 
 	;lea      Sprite_Lister_Table+$C.l,a4
