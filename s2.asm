@@ -4511,7 +4511,7 @@ Level_PlayBgm:
         ;move.l  #ObjTestInitDraw,Reserved_object_3.w
 
 	move.l	#Obj34,(TitleCard).w ; load Obj34 (level title card) at $FFFFB080
-        jsr	(RunObjects).l
+
 ; loc_40DA:
 Level_TtlCard:
 	move.b	#VintID_TitleCard,(Vint_routine).w
@@ -29180,7 +29180,8 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
              move.l    a4,LinkListTail.w
              move.l    a4,LinkedListHead.w
 
-             adda.l    #SpriteQeueSize,a4
+             lea       Sprite_Lister_Table+SpriteQeueSize+$C.l,a4
+
              move.l    a4,LinkListTail2.w
              move.l    a4,LinkedListHead2.w
              clr.w     SpriteEnableFlag.w
@@ -29202,10 +29203,10 @@ PLevelsDeleteIndex:    dc.l 0 ;( sprite in use with detirmine this )
                        dc.l Sprite_Lister_Table+SpriteQeueSize
                        dc.l LinkedListHead2
                        dc.l LinkListTail2
-                       
+
 
 ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
-
+                
           tst.w     prioritylist(a0) ; does object contain displa flag ?
           beq.s     .NodeNotFound
 
@@ -29304,7 +29305,9 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 
 
                  move.l    $8(a6),a5 ; use tail
+                 move.l    a5,a6
                  move.l    (a5),a5
+
                  moveq     #$4F,d0
 .loopFindGap:
                  tst.w     SpriteInUse(a4)  ; Check if the slot is in use
@@ -29325,7 +29328,6 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
 
                  move.l  a4,SpriteNextOb(a5) ; link new slot to old slot
                  move.l  a5,SpritePrevOb(a4) ; link a1 to new slot
-                 move.l     $8(a6),a6
                  move.l     a4,(a6) ; update this for next objects
                  move.w    a4,prioritylist(a0)   ; an addr that contains the used entry which you can re use from objects code
    .fail:
@@ -29342,7 +29344,7 @@ HeadAndTailListIndex: dc.l 0      ; blank because if these are set the object wi
                       dc.l Sprite_Lister_Table+SpriteQeueSize
                       dc.l LinkedListHead2
                       dc.l LinkListTail2
-                      
+
 
 
 
@@ -29350,7 +29352,7 @@ HeadAndTailListIndex: dc.l 0      ; blank because if these are set the object wi
 
 BuildSpriteHeads: dc.l  LinkedListHead
                   dc.l  LinkedListHead2
-                  dc.l  LinkedListHead2
+                  ;dc.l  LinkedListHead
 ; sub_16604:
 BuildSprites:
 ;	tst.w	(Two_player_mode).w
@@ -29366,7 +29368,7 @@ BuildSprites:
 
 
         moveq   #0,d7 ; amount of priortiy levels is just 1
-        moveq   #$4,d6 ; list ids
+        moveq   #$0,d6 ; list ids
 
 BuildSprites_LevelLoop:
         lea      BuildSpriteHeads(pc,d6.w),a1
@@ -29481,7 +29483,7 @@ BuildSprites_NextLevel:
  BuildSpriteTailIndex:
         dc.l   LinkListTail
         dc.l   LinkListTail2
-        dc.l   LinkListTail2
+      ;  dc.l   LinkListTail
 
 
 ; ===========================================================================
