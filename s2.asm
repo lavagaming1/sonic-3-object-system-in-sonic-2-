@@ -137,6 +137,7 @@ ErrorTrap:
 ; loc_206:
 EntryPoint:
         lea     (System_Stack).w,sp
+        
 	tst.l	(HW_Port_1_Control-1).l	; test ports A and B control
 	bne.s	PortA_Ok	; If so, branch.
 	tst.w	(HW_Expansion_Control-1).l	; test port C control
@@ -29175,7 +29176,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
 
 
-
+             move.l   #'Team',HexLettersRam.w
              lea       Sprite_Lister_Table.l,a4
              move.l    #0,LinkListTail.w
              move.l    a4,LinkedListHead.w
