@@ -4399,7 +4399,7 @@ loc_5FD6:
 ; loc_3F48:
 Level_ClrRam:
 	;clearRAM Sprite_Table_Input,Sprite_Table_Input_End
-	jsr      InitSpriterManager
+
 	clearRAM Object_RAM,Object_RAM_End ; clear object RAM
 	clearRAM MiscLevelVariables,MiscLevelVariables_End
 	clearRAM Misc_Variables,Misc_Variables_End
@@ -4507,7 +4507,8 @@ Level_PlayBgm:
 ;	bsr.w	WaitForVint
 ;
 ;	jsr	(BuildSprites).l  ; give me a frame to spawn sonic and tail
-        move.l  #ObjTestInitDraw,Reserved_object_3.w
+        jsr      InitSpriterManager
+        ;move.l  #ObjTestInitDraw,Reserved_object_3.w
 
 	move.l	#Obj34,(TitleCard).w ; load Obj34 (level title card) at $FFFFB080
         jsr	(RunObjects).l
@@ -27555,9 +27556,7 @@ Obj36_MapUnc_15B68:	BINCLUDE "mappings/sprite/obj36.bin"
                   even
 
 ObjTestInitDraw:
-       lea       Sprite_Lister_Table.l,a4
-        move.l    a4,LinkListTail.w
-        move.l    a4,LinkedListHead.w
+      
        	move.l	#Obj3B_MapUnc_15D2E,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_GHZ_Purple_Rock,3,0),art_tile(a0)
 	InsertSpriteMacro $1
@@ -29178,7 +29177,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
              move.l   #'Team',HexLettersRam.w
              lea       Sprite_Lister_Table.l,a4
-             move.l    #0,LinkListTail.w
+             move.l    a4,LinkListTail.w
              move.l    a4,LinkedListHead.w
              clr.w     SpriteEnableFlag.w
 
