@@ -88,8 +88,10 @@ MacroChunksMoveto2 macro
 
     endm
 InsertSpriteMacro macro layer;,ListId
-       moveq     #(layer+1)*$C,d1 ; if we are at 0 then do this as $C if we are at 1 then its level 2 
-       ;moveq     #ListId,d0 ; to know where head and tail are
+       if layer<$FF
+       moveq     #(layer+1)*$C,d1 ; if we are at 0 then do this as $C if we are at 1 then its level 2
+       elseif layer>$FF
+       endif 
 
        jsr      InitDrawingSprites
        endm

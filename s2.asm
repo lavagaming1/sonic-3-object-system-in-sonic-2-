@@ -22746,7 +22746,7 @@ Obj28_Init:
 	bset	#0,render_flags(a0)
 	;move.b	#6,priority(a0)
 
-	InsertSpriteMacro 1
+	InsertSpriteMacro 6
 
 	move.b	#8,width_pixels(a0)
 	move.b	#7,anim_frame_duration(a0)
@@ -22778,7 +22778,7 @@ Obj28_InitRandom:
 	move.b	#$C,y_radius(a0)
 	move.b	#4,render_flags(a0)
 	bset	#0,render_flags(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 6
 	;move.b	#6,priority(a0)
 	move.b	#8,width_pixels(a0)
 	move.b	#7,anim_frame_duration(a0)
@@ -23163,7 +23163,7 @@ Obj25_Init:
 	bsr.w	Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	;move.b	#2,priority(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
 	move.b	#$47,collision_flags(a0)
 	move.b	#8,width_pixels(a0)
 ; Obj_25_sub_2:
@@ -23322,7 +23322,7 @@ Obj37_Init:
 ;	move.b	#3,priority(a1)
         movem.l d1/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
         movem.l  (sp)+,d1/a0-a1
 	move.b	#$47,collision_flags(a1)
 	move.b	#8,width_pixels(a1)
@@ -23694,7 +23694,7 @@ Obj26_Init:
 	move.b	#4,render_flags(a0)
 ;	move.b	#3,priority(a0)
 
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
 
 	move.b	#$F,width_pixels(a0)
 
@@ -23914,7 +23914,7 @@ Obj2E_Init:
 	move.b	#$24,render_flags(a0)
 	;move.b	#3,priority(a0)
 ;        clr.w  prioritylist(a0)
-;	InsertSpriteMacro 1
+
 
 	move.b	#8,width_pixels(a0)
 	move.w	#-$300,y_vel(a0)
@@ -23949,7 +23949,7 @@ loc_128C6:			; Determine correct mappings offset.
 	adda.w	(a1,d0.w),a1
 	addq.w	#2,a1
 	move.l	a1,mappings(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
 ; loc_128DE:
 Obj2E_Raise:
 	bsr.s	+
@@ -25127,7 +25127,7 @@ TitleScreen_SetFinalState:
 	;move.b	#2,priority(a1)
 	movem.l d1/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 2
+	InsertSpriteMacro 3
         movem.l  (sp)+,d1/a0-a1
 	move.b	#9,mapping_frame(a1)
 	move.b	#4,routine_secondary(a1)
@@ -25205,10 +25205,10 @@ TitleScreen_InitSprite:
 	move.l	#Obj0E_MapUnc_136A8,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_TitleSprites,0,0),art_tile(a1)
 	;move.b	#4,priority(a1)
-	movem.l d1/a0-a1,-(sp)
-	move.l  a1,a0
-	InsertSpriteMacro 4
-        movem.l  (sp)+,d1/a0-a1
+;	movem.l d1/a0-a1,-(sp)
+;	move.l  a1,a0
+;	InsertSpriteMacro 4
+ ;       movem.l  (sp)+,d1/a0-a1
 	rts
 ; End of function TitleScreen_InitSprite
 
@@ -25930,6 +25930,11 @@ loc_140CE:
 	move.b	(a2)+,mapping_frame(a1)
 	move.l	#Obj3A_MapUnc_14CBC,mappings(a1)
 	bsr.w	Adjust2PArtPointer2
+	movem.l d1-d0/a0-a2,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro $0
+	jsr     ObjDisableDisplay
+        movem.l  (sp)+,d1-d0/a0-a2
 	move.b	#0,render_flags(a1)
 	lea	next_object(a1),a1 ; a1=object
 	dbf	d1,loc_140BC
@@ -26009,11 +26014,11 @@ loc_1419C:
 	addq.b	#2,routine(a0)
 
 BranchTo18_DisplaySprite
-	bra.w	DisplaySprite
+	jmp     ObjEnableDisplay
 ; ===========================================================================
 
 loc_141AA:
-	bsr.w	DisplaySprite
+	jsr     ObjEnableDisplay
 	move.b	#1,(Update_Bonus_score).w
 	moveq	#0,d0
 	tst.w	(Bonus_Countdown_1).w
@@ -26084,6 +26089,11 @@ loc_14220:
 	move.b	#0,render_flags(a1)
 	move.w	#$3C,anim_frame_duration(a1)
 	addq.b	#1,(Continue_count).w
+	movem.l d1-d0/a0-a2,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro $0
+	jsr     ObjDisableDisplay
+        movem.l  (sp)+,d1-d0/a0-a2
 
 return_14254:
 
@@ -26150,8 +26160,10 @@ loc_142E2:
 	add.b	anim_frame(a0),d0
 	move.b	d0,mapping_frame(a0)
 	btst	#4,(Timer_frames+1).w
-	bne.w	DisplaySprite
-	rts
+	bne.w	+
+	jmp     ObjDisableDisplay
++
+	jmp   ObjEnableDisplay
 ; ===========================================================================
 ; -------------------------------------------------------------------------------
 ; Main game level order
@@ -34397,7 +34409,7 @@ Obj01_Init:
 	move.b	#9,default_x_radius(a0)
 	move.l	#Mapunc_Sonic,mappings(a0)
 
-	InsertSpriteMacro $1
+	InsertSpriteMacro $2
 	;move.b	#2,priority(a0)
 	move.b	#$18,width_pixels(a0)
 	move.b	#4,render_flags(a0)
@@ -37064,7 +37076,7 @@ Obj02_Init:
 	move.b	#$F,y_radius(a0) ; this sets Tails' collision height (2*pixels) to less than Sonic's height
 	move.b	#9,x_radius(a0)
 	move.l	#MapUnc_Tails,mappings(a0)
-	InsertSpriteMacro $1
+	InsertSpriteMacro $2
 	;move.b	#2,priority(a0)
 
 	;lea      Sprite_Lister_Table+$C.l,a4
@@ -40168,7 +40180,7 @@ Obj05_Init:
 	bsr.w	Adjust2PArtPointer
 ;	move.b	#2,priority(a0)
 
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
 
 	move.b	#$18,width_pixels(a0)
 	move.b	#4,render_flags(a0)
@@ -40758,7 +40770,7 @@ Obj38:
 	move.b	#4,render_flags(a0)
 ;	move.b	#1,priority(a0)
 
-	InsertSpriteMacro 6
+	InsertSpriteMacro 1
 
 	move.b	#$18,width_pixels(a0)
 	move.w	#make_art_tile(ArtTile_ArtUnc_Shield,0,0),art_tile(a0)
@@ -60392,7 +60404,7 @@ Obj58_Init:
 	move.l	#Obj58_MapUnc_2D50A,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_FieryExplosion,0,1),art_tile(a0)
 	move.b	#4,render_flags(a0)
-	move.b	#0,priority(a0)
+	InsertSpriteMacro 0
 	move.b	#0,collision_flags(a0)
 	move.b	#$C,width_pixels(a0)
 	move.b	#7,anim_frame_duration(a0)
@@ -63340,7 +63352,8 @@ locret_8506E:
 		rts
 ; End of function Perform_DPLC
 
-S2BossRoutine = $12 ; 1 byte
+S2BossRoutine = $48 ; 1 byte
+BossAlignFlag = $49
 Wheels_Ypos = $46  ; 2 bytes
 EHzBossCountDown = $44     ; 2 bytes
 EhzBossStatus = $13                ; 1 bytes
@@ -63387,8 +63400,9 @@ Obj56_Init:
 	move.l	#Obj56_MapUnc_2FAF8,mappings(a0)	; main object
 	move.w	#make_art_tile(ArtTile_ArtNem_Eggpod_1,1,0),art_tile(a0) ; vehicle with ability to fly, bottom part
 
-	InsertSpriteMacro 1
+	InsertSpriteMacro 4
 
+        move.b  #$4,BossAlignFlag(a0)
 	ori.b	#4,render_flags(a0)
 	move.b	#$81,subtype(a0)
 	move.w	#$29D0,x_pos(a0)
@@ -63399,8 +63413,9 @@ Obj56_Init:
 	move.b	#$F,collision_flags(a0)
 	move.b	#8,collision_property(a0)	; hitcount
 	addq.b	#2,routine(a0)
-	move.w	x_pos(a0),objoff_34-$4(a0)
-	move.w	y_pos(a0),objoff_3C-$4(a0)
+	clr.b   routine_secondary(a0)
+	move.w	x_pos(a0),objoff_30(a0)
+	move.w	y_pos(a0),objoff_38(a0)
 
 	jsr	(SingleObjLoad2).l	; vehicle with ability to fly, top part
 	bne.w	+
@@ -63414,8 +63429,9 @@ Obj56_Init:
 	move.b	#$20,width_pixels(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 4
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$4,BossAlignFlag(a1)
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.b	#$E,routine(a1)
@@ -63435,14 +63451,15 @@ Obj56_Init:
 	move.b	#$10,y_radius(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$3,BossAlignFlag(a1)
 	move.w	#$2AF0,x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.b	#6,routine(a1)
 +
 	bsr.w	loc_2F098
-	subi.w	#8,objoff_3C-$4(a0)
+	subi.w	#8,objoff_38(a0)
 	move.w	#$2AF0,x_pos(a0)
 	move.w	#$2F8,y_pos(a0)
 	jsr	(SingleObjLoad2).l	; propeller normal
@@ -63456,8 +63473,9 @@ Obj56_Init:
 	move.b	#$40,width_pixels(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$3,BossAlignFlag(a1)
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	move.w	#$1E,EHzBossCountDown(a1)
@@ -63479,8 +63497,9 @@ loc_2F098:
 	move.b	#$10,width_pixels(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$2,BossAlignFlag(a1)
 	move.b	#$10,y_radius(a1)
 	move.b	#$10,x_radius(a1)
 	move.w	#$2AF0,x_pos(a1)
@@ -63505,8 +63524,10 @@ loc_2F098:
 	move.b	#$10,width_pixels(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
+
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$2,BossAlignFlag(a1)
 	move.b	#$10,y_radius(a1)
 	move.b	#$10,x_radius(a1)
 	move.w	#$2AF0,x_pos(a1)
@@ -63531,8 +63552,9 @@ loc_2F098:
 	move.b	#$10,width_pixels(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$3,BossAlignFlag(a1)
 	move.b	#$10,y_radius(a1)
 	move.b	#$10,x_radius(a1)
 	move.w	#$2AF0,x_pos(a1)
@@ -63557,8 +63579,9 @@ loc_2F098:
 	move.b	#$20,width_pixels(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$2,BossAlignFlag(a1)
 	move.w	#$2AF0,x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	addi.w	#-$36,x_pos(a1)
@@ -63708,8 +63731,9 @@ loc_2F3A2:	; Obj56_VehicleMain_SubA_0:
 	move.b	#$20,width_pixels(a1)
 	movem.l d1-d0/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
         movem.l  (sp)+,d1-d0/a0-a1
+        move.b  #$3,BossAlignFlag(a1)
 	move.l	x_pos(a0),x_pos(a1)
 	move.l	y_pos(a0),y_pos(a1)
 	addi.w	#$C,y_pos(a1)
@@ -63786,15 +63810,16 @@ return_2F4A4:
 ; ===========================================================================
 
 loc_2F4A6:	; routine to handle hits
+
 	cmpi.b	#6,routine_secondary(a0)	; is only called when value is 4?
 	bhs.s	return_2F4EC	; thus unnecessary? (return if greater or equal than 6)
 	tst.b	status(a0)
 	bmi.s	loc_2F4EE	; sonic has just defeated the boss (i.e. bit 7 set)
 	tst.b	collision_flags(a0)	; set to 0 when boss was hit by Touch_Enemy_Part2
 	bne.s	return_2F4EC	; not 0, i.e. boss not hit
-	tst.b	objoff_42-$4(a0)
+	tst.b	objoff_3E(a0)
 	bne.s	loc_2F4D0	; boss already invincibile
-	move.b	#$20,objoff_42-$4(a0)	; boss invincibility timer
+	move.b	#$20,objoff_3E(a0)	; boss invincibility timer
 	move.w	#SndID_BossHit,d0
 	jsr	(PlaySound).l	; play boss hit sound
 
@@ -63807,7 +63832,7 @@ loc_2F4D0:
 
 loc_2F4DE:
 	move.w	d0,(a1)	; set respective color
-	subq.b	#1,objoff_42-$4(a0)	; decrease boss invincibility timer
+	subq.b	#1,objoff_3E(a0)	; decrease boss invincibility timer
 	bne.s	return_2F4EC
 	move.b	#$F,collision_flags(a0)	; if invincibility ended, allow collision again
 
@@ -63890,7 +63915,9 @@ loc_2F5C6:	; Obj56_Propeller_Sub2
 	bpl.s	loc_2F5E8
 	cmpi.w	#-$10,EHzBossCountDown(a0)
 	ble.w	JmpTo52_DeleteObject
-	InsertSpriteMacro 1
+;	clr.w   prioritylist(a0)
+;	InsertSpriteMacro 4
+        move.b  #$4,BossAlignFlag(a0)
 	addi.w	#1,y_pos(a0)	; move down
 	bra.w	JmpTo35_DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -64014,8 +64041,8 @@ loc_2F714:	; Obj56_Wheel_Sub2:
 	btst	#1,EhzBossStatus(a1)
 	beq.w	JmpTo35_DisplaySprite	; boss not moving yet (inactive)
 	addq.b	#2,routine_secondary(a0)
-;	cmpi.b	#2,priority(a0)
-;	bne.s	BranchTo_JmpTo35_DisplaySprite
+	cmpi.b	#2,BossAlignFlag(a0)
+	bne.s	BranchTo_JmpTo35_DisplaySprite
 	move.w	y_pos(a0),d0
 	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	add.w	d0,Wheels_Ypos(a1)
@@ -64044,8 +64071,8 @@ loc_2F768:
 
 loc_2F77E:
 	move.w	#$100,y_vel(a0)
-;	cmpi.b	#2,priority(a0)
-;	bne.s	loc_2F798
+	cmpi.b	#2,BossAlignFlag(a0)
+	bne.s	loc_2F798
 	move.w	y_pos(a0),d0
 	movea.l	EhzBossParent(a0),a1 ; parent address (vehicle)
 	add.w	d0,Wheels_Ypos(a1)
@@ -64062,8 +64089,8 @@ loc_2F7A6:	; Obj56_Wheel_Sub6:
 	addq.b	#2,routine_secondary(a0)	; Sub8
 	move.w	#$A,EHzBossCountDown(a0)
 	move.w	#-$300,y_vel(a0)	; first bounce higher
-;	cmpi.b	#2,priority(a0)
-;	beq.w	JmpTo35_DisplaySprite
+	cmpi.b	#2,BossAlignFlag(a0)
+	beq.w	JmpTo35_DisplaySprite
 	neg.w	x_vel(a0)	; into other direction
 	bra.w	JmpTo35_DisplaySprite
 ; ---------------------------------------------------------------------------
@@ -64172,7 +64199,7 @@ loc_2F8DA:	; Obj56_VehicleTop:
 	move.l	y_pos(a1),y_pos(a0)
 	move.b	status(a1),status(a0)	; update position and status
 	move.b	render_flags(a1),render_flags(a0)
-	move.b	objoff_42-$4(a1),d0	; boss invincibility timer
+	move.b	objoff_3E(a1),d0	; boss invincibility timer
 	cmpi.b	#$1F,d0	; boss just got hit?
 	bne.s	loc_2F906
 	move.b	#2,anim(a0)	; robotnik animation when hit
@@ -84456,19 +84483,19 @@ Obj3E_ObjLoadData:
         ; addr,childdy,width,prio,frame
         dc.l   loc_3F278
 	dc.b   0        ;child dy
-        dc.b   $20,  4,  0 ;0
+        dc.b   $20,  $4*$C,  0 ;0
 
         dc.l   ObjCapsuleButton
         dc.b   $28
-        dc.b   $10,  5,  4 ; 1
+        dc.b   $10,  $5*$C,  4 ; 1
 
         dc.l   Obj_CapsuleFlyingPartical
         dc.b   $18
-        dc.b    8,  3,  5 ;2
+        dc.b    8,  $3*$C,  5 ;2
 
         dc.l   loc_3F3A8
         dc.b   0
-        dc.b   $20,  4,  0 ; 3
+        dc.b   $20,  $4*$C,  0 ; 3
 Obj3E_ObjLoadData_End:
 Obj3E:
 ;	moveq	#0,d0
@@ -84497,16 +84524,16 @@ loc_3F212:
 	movea.l	a0,a1
 	lea	objoff_2C(a0),a3 ; then objoff_44 is a parent and parent 3 is a child and then parent 2 is a child then you hit $4A then death
 	lea	Obj3E_ObjLoadData(pc),a2
-	moveq	#(Obj3E_ObjLoadData_End-Obj3E_ObjLoadData)/$8-1,d1
+	moveq	#(Obj3E_ObjLoadData_End-Obj3E_ObjLoadData)/$8-1,d6
 	bra.s	loc_3F228
 ; ===========================================================================
 
 loc_3F220:
 	jsr	(SingleObjLoad).l
 	bne.s	loc_3F272
-	move.w	a1,(a3)+
+        move.w	a1,(a3)+
 
-loc_3F228:
+loc_3F228:   
         move.l	(a2)+,(a1)
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
@@ -84520,15 +84547,23 @@ loc_3F228:
 	move.w	y_pos(a1),objoff_46(a1)
 	move.b	(a2)+,width_pixels(a1)
 	;move.b	(a2)+,priority(a1)
-	addq.w   #1,a2
-	movem.l d1-d0/a0-a1,-(sp)
+
+	movem.l d1-d0/a0-a3,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
-        movem.l  (sp)+,d1-d0/a0-a1
+	moveq   #0,d1
+	move.b  (a2)+,d1
+	InsertSpriteMacro $FF
+        movem.l  (sp)+,d1-d0/a0-a3
+
+        addq.w   #1,a2
 	move.b	(a2)+,mapping_frame(a1)
 
 loc_3F272:
-	dbf	d1,loc_3F220
+	dbf	d6,loc_3F220
+	move.l  a0,-(sp)
+	movea.l a1,a0
+	jsr     ObjDisableDisplay
+	move.l  (sp)+,a0
 	rts
 ; ===========================================================================
 
@@ -84569,6 +84604,7 @@ loc_3F2B4:
 	addq.b	#2,routine_secondary(a2) ; go to return_3F352
 	move.w	#$1D,ObjCapsuleTimer(a0)
 	addq.b	#2,routine_secondary(a0) ; go to loc_3F2FC
+
 +
 	rts
 ; ===========================================================================
