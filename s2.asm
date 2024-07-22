@@ -24443,8 +24443,9 @@ Obj0E_Init:
 	addq.b	#2,routine(a0)	; useless, because it's overwritten with the subtype below
 	move.l	#Obj0E_MapUnc_136A8,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_TitleSprites,0,0),art_tile(a0)
-	;move.b	#4,priority(a0)
-	InsertSpriteMacro 1
+
+
+        clr.w   prioritylist(a0)
 	move.b	subtype(a0),routine(a0)
 	bra.s	Obj0E
 ; ===========================================================================
@@ -24478,6 +24479,9 @@ Obj0E_Sonic_Init:
 	move.b	#5,mapping_frame(a0)
 	move.w	#$110,x_pixel(a0)
 	move.w	#$E0,y_pixel(a0)
+        InsertSpriteMacro 4
+        jsr     ObjDisableDisplay
+
 	lea	(IntroLargeStar).w,a1
 	move.l	#Obj0E,(a1) ; load obj0E (flashing intro stars) at $FFFFB0C0
 	move.b	#8,subtype(a1)				; large star
@@ -24549,13 +24553,13 @@ loc_12F20:
 	swap	d0
 	move.w	d0,x_pixel(a0)
 +
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_12F52:
 	lea	(Ani_obj0E).l,a1
 	bsr.w	AnimateSprite
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 Obj0E_Sonic_LastFrame:
@@ -24564,7 +24568,7 @@ Obj0E_Sonic_LastFrame:
 	lea	(IntroSonicHand).w,a1
 	move.l	#Obj0E,(a1) ; load obj0E (flashing intro star) at $FFFFB1C0
 	move.b	#$A,subtype(a1)				; Sonic's hand
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_12F7C:
@@ -24575,7 +24579,7 @@ loc_12F7C:
 	move.l	#Obj0E,(a1) ; load obj0E (flashing intro star) at $FFFFB080
 	move.b	#4,subtype(a1)				; Tails
 +
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_12F9A:
@@ -24596,7 +24600,7 @@ loc_12F9A:
 	move.b	#2,subtype(a1)
 	move.l	#Obj0F,(TitleScreenMenu).w ; load Obj0F (title screen menu) at $FFFFB400
 +
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_12FD6:
@@ -24604,12 +24608,12 @@ loc_12FD6:
 	beq.s	+
 	cmpi.w	#$190,objoff_38(a0)
 	beq.s	++
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 +
 	cmpi.w	#$1D0,objoff_38(a0)
 	beq.s	+
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 +
 	lea	(IntroSmallStar2).w,a1
@@ -24618,7 +24622,7 @@ loc_12FD6:
 	addq.b	#2,routine_secondary(a0)
 	lea	(IntroSmallStar1).w,a1
 	bsr.w	DeleteObject2 ; delete object at $FFFFB180
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_13014:
@@ -24634,7 +24638,7 @@ loc_13014:
 	move.w	d0,objoff_30(a0)
 	move.w	CyclingPal_TitleStar(pc,d0.w),(Normal_palette_line3+$A).w
 +
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 ; word_1303A:
 CyclingPal_TitleStar:
@@ -24673,7 +24677,8 @@ Obj0E_Tails_Init:
 	move.w	#$D8,x_pixel(a0)
 	move.w	#$D8,y_pixel(a0)
 	move.b	#1,anim(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 4
+	jsr      ObjDisableDisplay
 	rts
 ; ===========================================================================
 
@@ -24690,7 +24695,7 @@ loc_130A2:
 	move.b	#$10,subtype(a1)			; Tails' hand
 
 BranchTo10_DisplaySprite
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 word_130B8:
 	dc.w   $D7,$C8
@@ -24721,7 +24726,8 @@ Obj0E_LogoTop_Init:
 	move.b	#$A,mapping_frame(a0)
 +
 	;move.b	#2,priority(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
+	jsr     ObjDisableDisplay
 	move.w	#$120,x_pixel(a0)
 	move.w	#$E8,y_pixel(a0)
 
@@ -24729,7 +24735,7 @@ loc_1310A:
 	addq.b	#2,routine_secondary(a0)
 
 BranchTo11_DisplaySprite
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 Obj0E_SkyPiece:
@@ -24748,12 +24754,13 @@ Obj0E_SkyPiece_Init:
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,0,0),art_tile(a0)
 	move.b	#$11,mapping_frame(a0)
 	;move.b	#2,priority(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
+	jsr     ObjDisableDisplay
 	move.w	#$100,x_pixel(a0)
 	move.w	#$F0,y_pixel(a0)
 
 BranchTo12_DisplaySprite
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 Obj0E_LargeStar:
@@ -24775,7 +24782,8 @@ Obj0E_LargeStar_Init:
 	ori.w	#high_priority,art_tile(a0)
 	move.b	#2,anim(a0)
 ;	move.b	#1,priority(a0)
-        InsertSpriteMacro 1
+        InsertSpriteMacro 2
+        jsr     ObjDisableDisplay
 	move.w	#$100,x_pixel(a0)
 	move.w	#$A8,y_pixel(a0)
 	move.w	#4,objoff_2E(a0)
@@ -24839,12 +24847,13 @@ Obj0E_SonicHand_Init:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#9,mapping_frame(a0)
 	;move.b	#3,priority(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
+	jsr     ObjDisableDisplay
 	move.w	#$145,x_pixel(a0)
 	move.w	#$BF,y_pixel(a0)
 
 BranchTo13_DisplaySprite
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_13234:
@@ -24875,12 +24884,13 @@ Obj0E_TailsHand_Init:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#$13,mapping_frame(a0)
 ;	move.b	#3,priority(a0)
-        InsertSpriteMacro 1
+        InsertSpriteMacro 3
+        jsr     ObjDisableDisplay
 	move.w	#$10F,x_pixel(a0)
 	move.w	#$D5,y_pixel(a0)
 
 BranchTo14_DisplaySprite
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_13280:
@@ -24909,12 +24919,13 @@ Obj0E_SmallStar_Init:
 	addq.b	#2,routine_secondary(a0)
 	move.b	#$C,mapping_frame(a0)
 	;move.b	#5,priority(a0)
-	InsertSpriteMacro 1
+	InsertSpriteMacro 5
+	jsr     ObjDisableDisplay
 	move.w	#$170,x_pixel(a0)
 	move.w	#$80,y_pixel(a0)
 	move.b	#3,anim(a0)
 	move.w	#$8C,objoff_2E(a0)
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 
 loc_132D2:
@@ -24924,7 +24935,7 @@ loc_132D2:
 	addq.w	#1,y_pixel(a0)
 	lea	(Ani_obj0E).l,a1
 	bsr.w	AnimateSprite
-	bra.w	DisplaySprite
+	jmp   	ObjEnableDisplay
 ; ===========================================================================
 ; ----------------------------------------------------------------------------
 ; Object C9 - "Palette changing handler" from title screen
@@ -25116,7 +25127,7 @@ TitleScreen_SetFinalState:
 	;move.b	#2,priority(a1)
 	movem.l d1/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
         movem.l  (sp)+,d1/a0-a1
 	move.b	#9,mapping_frame(a1)
 	move.b	#4,routine_secondary(a1)
@@ -25131,7 +25142,7 @@ TitleScreen_SetFinalState:
 	;move.b	#3,priority(a1)
 	movem.l d1/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 3
         movem.l  (sp)+,d1/a0-a1
 	move.w	#$C8,x_pixel(a1)
 	move.w	#$A0,y_pixel(a1)
@@ -25142,7 +25153,7 @@ TitleScreen_SetFinalState:
 	;move.b	#2,priority(a1)
 	movem.l d1/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 2
         movem.l  (sp)+,d1/a0-a1
 	move.b	#$13,mapping_frame(a1)
 	move.b	#4,routine_secondary(a1)
@@ -25196,7 +25207,7 @@ TitleScreen_InitSprite:
 	;move.b	#4,priority(a1)
 	movem.l d1/a0-a1,-(sp)
 	move.l  a1,a0
-	InsertSpriteMacro 1
+	InsertSpriteMacro 4
         movem.l  (sp)+,d1/a0-a1
 	rts
 ; End of function TitleScreen_InitSprite
@@ -29180,10 +29191,37 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
              move.l    a4,LinkListTail.w
              move.l    a4,LinkedListHead.w
 
-             lea       Sprite_Lister_Table+SpriteQeueSize.l,a4
-
+             adda.l   #SpriteQeueSize,a4
              move.l    a4,LinkListTail2.w
              move.l    a4,LinkedListHead2.w
+
+             adda.l   #SpriteQeueSize,a4
+
+             move.l    a4,LinkListTail3.w
+             move.l    a4,LinkedListHead3.w
+
+             adda.l   #SpriteQeueSize,a4
+
+             move.l    a4,LinkListTail4.w
+             move.l    a4,LinkedListHead4.w
+                adda.l   #SpriteQeueSize,a4
+
+             move.l    a4,LinkListTail5.w
+             move.l    a4,LinkedListHead5.w
+             adda.l   #SpriteQeueSize,a4
+
+             move.l    a4,LinkListTail6.w
+             move.l    a4,LinkedListHead6.w
+             
+             adda.l   #SpriteQeueSize,a4
+
+             move.l    a4,LinkListTail7.w
+             move.l    a4,LinkedListHead7.w
+             
+             adda.l   #SpriteQeueSize,a4
+
+             move.l    a4,LinkListTail8.w
+             move.l    a4,LinkedListHead8.w
              clr.w     SpriteEnableFlag.w
 
              rts
@@ -29192,17 +29230,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 ; ---------------------------------------------------------------------------
 
 ; ||||||||||||||| S U B R O U T I N E |||||||||||||||||||||||||||||||||||||||
-PLevelsDeleteIndex:    dc.l 0 ;( sprite in use with detirmine this )
-                       dc.l 0
-                       dc.l 0
 
-                       dc.l Sprite_Lister_Table ;( sprite in use with detirmine this )
-                       dc.l LinkedListHead
-                       dc.l LinkListTail
-
-                       dc.l Sprite_Lister_Table+SpriteQeueSize
-                       dc.l LinkedListHead2
-                       dc.l LinkListTail2
 
 
 ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
@@ -29220,14 +29248,16 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
           blo.s   .NodeNotInDebugThis
           moveq    #0,d0
           move.b   SpriteInUse(a2),d0
-          lea      PLevelsDeleteIndex(pc,d0.w),a3 ; get head and tail)
+          lea      (HeadAndTailListIndex).l,a3
+          lea      (a3,d0.w),a3 ; get head and tail)
           move.l   $4(a3),a6  ; get head
      ; a2 points to the node to be removed
           cmp.l    (a6),a2
           bne.s    .NotFirstNode
-
+       ;   tst.l    SpriteNextOb(a2)
+       ;   beq.s    .DontUpdateHead
           move.l   SpriteNextOb(a2),(a6)
-   
+   .DontUpdateHead:
           movea.l  SpriteNextOb(a2),a4
           clr.l    SpritePrevOb(a4)
           bra.s    .NodeClear
@@ -29253,6 +29283,8 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
          move.l   $8(a3),a6  ; get tail
          cmp.l    (a6),a2
          bne.s    .NodeClear
+      ;   tst.l     SpritePrevOb(a2)
+      ;   beq.s     .NodeClear
          move.l   SpritePrevOb(a2),(a6)
 
 
@@ -29305,7 +29337,8 @@ InitDrawingSprites: ; routine that inserts object in SpritesListTable which cont
                  lea       HeadAndTailListIndex(pc,d1.w),a6
                  move.l    (a6),a4 ; load SpriteList location
                  move.l    $4(a6),a5
-                 tst.b     SpriteInUse(a5)
+                 move.l    (a5),a5
+                 tst.b     (a5)  ; this doesnt test only for the level it tests if the head contains anything too
                  beq.s     .SpriteStartsLevel
 
                  move.l    $8(a6),a5 ; use tail
@@ -29358,17 +29391,67 @@ HeadAndTailListIndex: dc.l 0      ; blank because if these are set the object wi
                       dc.l LinkedListHead
                       dc.l LinkListTail
 
-                      dc.l Sprite_Lister_Table+SpriteQeueSize
+                      dc.l Sprite_Lister_Table2
                       dc.l LinkedListHead2
                       dc.l LinkListTail2
 
+                      dc.l Sprite_Lister_Table3
+                      dc.l LinkedListHead3
+                      dc.l LinkListTail3
+
+
+                      dc.l Sprite_Lister_Table4
+                      dc.l LinkedListHead4
+                      dc.l LinkListTail4
+
+
+                      dc.l Sprite_Lister_Table5
+                      dc.l LinkedListHead5
+                      dc.l LinkListTail5
+
+
+                      dc.l Sprite_Lister_Table6
+                      dc.l LinkedListHead6
+                      dc.l LinkListTail6
+
+
+                      dc.l Sprite_Lister_Table7
+                      dc.l LinkedListHead7
+                      dc.l LinkListTail7
+
+
+                      dc.l Sprite_Lister_Table8
+                      dc.l LinkedListHead8
+                      dc.l LinkListTail8
 
 
 
+ObjDisableDisplay:
+          lea     RAM_Start.l,a3
+          move.w  prioritylist(a0),d5
+          beq.s   .return
+          adda.w  d5,a3
+          clr.b   SpriteBit(a3)
+  .return:
+         rts
+ObjEnableDisplay:
+          lea     RAM_Start.l,a3
+          move.w  prioritylist(a0),d5
+          beq.s   .return
+          adda.w  d5,a3
+          move.b  #'N',SpriteBit(a3)
+ .return:
+          rts
 
 
 BuildSpriteHeads: dc.l  LinkedListHead
                   dc.l  LinkedListHead2
+                  dc.l  LinkedListHead3
+                  dc.l  LinkedListHead4
+                  dc.l  LinkedListHead5
+                  dc.l  LinkedListHead6
+                  dc.l  LinkedListHead7
+                  dc.l  LinkedListHead8
                   ;dc.l  LinkedListHead
 ; sub_16604:
 BuildSprites:
@@ -29384,7 +29467,7 @@ BuildSprites:
 +
 
 
-        moveq   #1,d7 ; amount of priortiy levels is just 1
+        moveq   #7,d7 ; amount of priortiy levels is just 1
         moveq   #$0,d6 ; list ids
 
 BuildSprites_LevelLoop:
@@ -29500,6 +29583,12 @@ BuildSprites_NextLevel:
  BuildSpriteTailIndex:
         dc.l   LinkListTail
         dc.l   LinkListTail2
+        dc.l   LinkListTail3
+        dc.l   LinkListTail4
+        dc.l   LinkListTail5
+        dc.l   LinkListTail6
+        dc.l   LinkListTail7
+        dc.l   LinkListTail8
       ;  dc.l   LinkListTail
 
 
@@ -40669,7 +40758,7 @@ Obj38:
 	move.b	#4,render_flags(a0)
 ;	move.b	#1,priority(a0)
 
-	InsertSpriteMacro 0
+	InsertSpriteMacro 6
 
 	move.b	#$18,width_pixels(a0)
 	move.w	#make_art_tile(ArtTile_ArtUnc_Shield,0,0),art_tile(a0)

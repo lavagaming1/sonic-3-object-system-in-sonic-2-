@@ -1054,7 +1054,7 @@ SpriteObAddr =  $2
 SpriteNextOb =  $4
 SpritePrevOb =  $8
 ;----------------------------------------------------------------------------
-SpritesLevelHead = -$4 ; the head of a list 
+SpritesLevelHead = -$4 ; the head of a list
 
 ; ---------------------------------------------------------------------------
 ; ---------------------------------------------------------------------------
@@ -1074,13 +1074,32 @@ RAM_Start:
 
 Chunk_Table:			ds.b	$1000	; was "Metablock_Table"
 Sprite_Lister_Table:
-                                ds.b    $1000
+                                ds.b    SpriteQeueSize ; level 0
+Sprite_Lister_Table2:
+                                ds.b    SpriteQeueSize ; level 1
+Sprite_Lister_Table3:
+                                ds.b    SpriteQeueSize ; level 2
+Sprite_Lister_Table4:
+                                ds.b    SpriteQeueSize ; level 3
+Sprite_Lister_Table5:
+                                ds.b    SpriteQeueSize  ;4
+Sprite_Lister_Table6:
+                                ds.b    SpriteQeueSize  ;5
+Sprite_Lister_Table7:
+                                ds.b    SpriteQeueSize  ;6
+Sprite_Lister_Table8:
+                                
+                                ds.b    SpriteQeueSize  ;7
+
+                                ;ds.b    $1000
 Sprite_Lister_Table_End:
-                                ds.b    $1000 ; will use this later 
+                                ;ds.b    $1000 ; will use this later
 
 SpriteEntriesUnused:
                                 ds.b    $1000
                                 ds.b    $4000
+                                ds.b    $25C
+                                ds.l    1
 Chunk_Table_End:
 
 Level_Layout:			ds.b	$1000
@@ -1095,7 +1114,7 @@ CompressionBuffer_End
 TempArray_LayerDef:		ds.b	$200	; used by some layer deformation routines
 Decomp_Buffer:			ds.b	$200
 
-Sprite_Table_Input:		ds.b	$1D0	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
+Sprite_Table_Input:		ds.b	$1B0	; in custom format before being converted and stored in Sprite_Table/Sprite_Table_2
 Sprite_Table_Input_End:
 HexLettersRam:         ; this for dubug for bizwak
                                 ds.l    1
@@ -1103,15 +1122,40 @@ LinkedListHead:      ;  a pointer that points to start of list
                                 ds.l    $1
 LinkedListHead2:
                                 ds.l    $1
+LinkedListHead3:
+                                ds.l    $1
+LinkedListHead4:
+                                ds.l    $1
+LinkedListHead5:
+                                ds.l    $1
+LinkedListHead6:
+                                ds.l    $1
+LinkedListHead7:
+                                ds.l   $1
+LinkedListHead8:
+                                ds.l   $1
 LinkListTail:                    ; the end of list
                                 ds.l    1
 LinkListTail2:
                                 ds.l    $1
+LinkListTail3:
+                                ds.l    $1
+LinkListTail4:
+                                ds.l    $1
+LinkListTail5:
+                                ds.l    $1
+LinkListTail6:
+                                ds.l    $1
+LinkListTail7:
+                                ds.l    $1
+LinkListTail8:
+                                ds.l    $1
+
 
 
 ChunkAddr:
                                 ds.l    1
-                                ds.b    $18 ; unused
+                                ds.b    $8 ; unused
 
 Object_RAM:
 Player_1:
