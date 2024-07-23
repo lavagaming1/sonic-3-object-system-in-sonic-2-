@@ -20172,7 +20172,7 @@ Obj11_Init:
 	move.l	#Obj11_MapUnc_FC28,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_HPZ_Bridge,3,0),art_tile(a0)
 +
-	
+
 	move.b	#4,render_flags(a0)
 	move.b	#$80,width_pixels(a0)
 	move.w	y_pos(a0),d2
@@ -29266,8 +29266,8 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
      ; a2 points to the node to be removed
           cmp.l    (a6),a2
           bne.s    .NotFirstNode
-       ;   tst.l    SpriteNextOb(a2)
-       ;   beq.s    .DontUpdateHead
+          tst.l    SpriteNextOb(a2)
+          beq.s    .DontUpdateHead
           move.l   SpriteNextOb(a2),(a6)
    .DontUpdateHead:
           movea.l  SpriteNextOb(a2),a4

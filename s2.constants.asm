@@ -1155,7 +1155,11 @@ LinkListTail8:
 
 ChunkAddr:
                                 ds.l    1
-                                ds.b    $8 ; unused
+                                ds.b    $4 ; unused
+SpriteCounterLevels:                                
+                                ds.w    1
+SpritePriorityAmount:                                
+                                ds.w    1
 
 Object_RAM:
 Player_1:
