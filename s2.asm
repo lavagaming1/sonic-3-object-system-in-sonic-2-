@@ -20690,7 +20690,7 @@ Obj15_Init:
 	move.l	#Obj15_MapUnc_101E8,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_OOZSwingPlat,2,0),art_tile(a0)
 	move.b	#4,render_flags(a0) ; set normal sprites
-	InsertSpriteMacro $1
+	InsertSpriteMacro $3
 	;move.b	#3,priority(a0)
 	move.b	#$20,width_pixels(a0)
 	move.b	#$10,y_radius(a0)
@@ -21412,7 +21412,7 @@ Obj18_Init:
 +
 	
 	move.b	#4,render_flags(a0)
-	InsertSpriteMacro $1
+	InsertSpriteMacro $4
 	;move.b	#4,priority(a0)
 	move.w	y_pos(a0),objoff_30(a0)
 	move.w	y_pos(a0),objoff_38(a0)
@@ -29267,8 +29267,7 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
      ; a2 points to the node to be removed
           cmp.l    (a6),a2
           bne.s    .NotFirstNode
-         ; tst.l    SpriteNextOb(a2)
-         ; beq.s    .DontUpdateHead
+
           move.l   SpriteNextOb(a2),(a6)
    .DontUpdateHead:
           movea.l  SpriteNextOb(a2),a4
@@ -51244,7 +51243,11 @@ loc_2674C:
 	move.w	#make_art_tile(ArtTile_ArtNem_MtzSteam,1,0),art_tile(a1)
 	ori.b	#4,render_flags(a1)
 	move.b	#$18,width_pixels(a1)
-	move.b	#4,priority(a1)
+	;move.b	#4,priority(a1)
+	move.l a0,-(sp)
+	movea.l a1,a0
+	InsertSpriteMacro $4
+	move.l (sp)+,a0
 +
 	rts
 ; ===========================================================================
@@ -51390,7 +51393,8 @@ Obj64_Init:
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,1,0),art_tile(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo28_Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	InsertSpriteMacro $4
 	move.w	x_pos(a0),objoff_38(a0)
 	move.w	y_pos(a0),objoff_34(a0)
 	moveq	#0,d0
@@ -51537,7 +51541,8 @@ Obj65_Init:
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,3,0),art_tile(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo29_Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	InsertSpriteMacro $4
 	moveq	#0,d0
 	move.b	subtype(a0),d0
 	lsr.w	#2,d0
@@ -51592,9 +51597,12 @@ loc_26B6E:
 	move.w	#make_art_tile(ArtTile_ArtNem_MtzCog,3,0),art_tile(a1)
 	ori.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
-	move.b	#4,priority(a1)
+;	move.b	#4,priority(a1)
 	move.l	a0,objoff_40(a1)
-
+	move.l a0,-(sp)
+	movea.l a0,a1
+        InsertSpriteMacro $4
+        move.l  (sp)+,a0
 loc_26C04:
 	lea	(Object_Respawn_Table).w,a2
 	moveq	#0,d0
@@ -51950,7 +51958,7 @@ Obj66_Init:
 	jsrto	(Adjust2PArtPointer).l, JmpTo30_Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
 	move.b	#8,width_pixels(a0)
-	move.b	#4,priority(a0)
+;	move.b	#4,priority(a0)
 	move.b	#$40,y_radius(a0)
 	move.b	subtype(a0),d0
 	lsr.b	#4,d0
@@ -52142,7 +52150,8 @@ Obj67_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_MtzSpinTubeFlash,3,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
 	move.b	#$10,width_pixels(a0)
-	move.b	#5,priority(a0)
+;	move.b	#5,priority(a0)
+	;InsertSpriteMacro $5
 ; loc_271AC:
 Obj67_Main:
 	lea	(MainCharacter).w,a1 ; a1=character
@@ -72227,6 +72236,7 @@ LoadSubObject_Part3:
 	jsr	(Adjust2PArtPointer).l
 	move.b	(a1)+,d0
 	or.b	d0,render_flags(a0)
+	moveq    #0,d1
 	move.b	(a1)+,d1 ;priority(a0)
 	bne.s   .NotZero
 	moveq    #$C,d1
@@ -75359,7 +75369,7 @@ loc_38296:
 	move.l	#ObjA0,(a1) ; load objA0
 	move.b	#$26,subtype(a1) ; <== ObjA0_SubObjData
 	move.b	#5,mapping_frame(a1)
-	move.b	#4,priority(a1)
+	;move.b	#4,priority(a1)
 	move.w	a0,objoff_30(a1)
 	move.w	d1,objoff_32(a1)
 	move.w	x_pos(a0),x_pos(a1)
@@ -75376,6 +75386,10 @@ loc_382D8:
 	move.w	y_pos(a0),y_pos(a1)
 	subi.w	#8,y_pos(a1)
 	addq.w	#2,d1
+	movem.l d1-d0/a0-a3,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro $4
+        movem.l  (sp)+,d1-d0/a0-a3
 	dbf	d6,loc_38296
 
 return_382EE:
