@@ -23176,7 +23176,8 @@ Obj25_Animate:
 Obj25_Collect:
 	addq.b	#2,routine(a0)
 	move.b	#0,collision_flags(a0)
-
+        jsr     ObjRemoveFromList
+        InsertSpriteMacro 1
 	bsr.s	CollectRing
 ; Obj_25_sub_6:
 Obj25_Sparkle:
@@ -23404,8 +23405,8 @@ Obj37_Collect:
 	addq.b	#2,routine(a0)
 	move.b	#0,collision_flags(a0)
 	;move.b	#1,priority(a0)
-
-;	InsertSpriteMacro 1
+        jsr     ObjRemoveFromList
+	InsertSpriteMacro 1
 
 	bsr.w	CollectRing
 ; Obj_37_sub_6:
@@ -29266,8 +29267,8 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
      ; a2 points to the node to be removed
           cmp.l    (a6),a2
           bne.s    .NotFirstNode
-          tst.l    SpriteNextOb(a2)
-          beq.s    .DontUpdateHead
+         ; tst.l    SpriteNextOb(a2)
+         ; beq.s    .DontUpdateHead
           move.l   SpriteNextOb(a2),(a6)
    .DontUpdateHead:
           movea.l  SpriteNextOb(a2),a4
@@ -29486,7 +29487,7 @@ BuildSprites_LevelLoop:
         lea      BuildSpriteHeads(pc,d6.w),a1
         move.l   (a1),a1
         move.l   (a1),a4
-
+        
 
 
 
@@ -49481,7 +49482,8 @@ Obj47_Init:
 	jsrto	(Adjust2PArtPointer).l, JmpTo21_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	InsertSpriteMacro $4
 	addq.w	#4,y_pos(a0)
 ; loc_24D32:
 Obj47_Main:
@@ -51148,7 +51150,8 @@ Obj42_Init:
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,3,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
 	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $4
+	;move.b	#4,priority(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo27_Adjust2PArtPointer
 	move.b	#7,mapping_frame(a0)
 	move.w	y_pos(a0),objoff_38(a0)
@@ -72224,10 +72227,24 @@ LoadSubObject_Part3:
 	jsr	(Adjust2PArtPointer).l
 	move.b	(a1)+,d0
 	or.b	d0,render_flags(a0)
-	move.b	(a1)+,priority(a0)
+	move.b	(a1)+,d1 ;priority(a0)
+	bne.s   .NotZero
+	moveq    #$C,d1
+	bra.s   .InsertSprite
+	.NotZero:
+	addq.w  #1,d1
+	move.w   d1,d2
+	add.w    d2,d2
+	add.w    d2,d2
+	asl.w    #$3,d1
+	add.w    d2,d1
+
+	.InsertSprite:
+
 	move.b	(a1)+,width_pixels(a0)
 	move.b	(a1),collision_flags(a0)
 	addq.b	#2,routine(a0)
+	InsertSpriteMacro $7FFF
 	rts
 
 ; ===========================================================================
