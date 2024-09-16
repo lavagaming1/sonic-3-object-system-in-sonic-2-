@@ -3823,12 +3823,14 @@ SegaScreen:
 	moveq	#$27,d1		; 40 cells wide
 	moveq	#$1B,d2		; 28 cells tall
 	bsr.w	PlaneMapToVRAM_H80_Sega
-	tst.b	(Graphics_Flags).w ; are we on a Japanese Mega Drive?
-	bmi.s	SegaScreen_Contin ; if not, branch
+	jsr       InitSpriterManager
+;	tst.b	(Graphics_Flags).w ; are we on a Japanese Mega Drive?
+;	bmi.s	SegaScreen_Contin ; if not, branch
 	; load an extra sprite to hide the TM (trademark) symbol on the SEGA screen
-	lea	(SegaHideTM).w,a1
-	move.l	#ObjB1,(a1)	; load objB1 at $FFFFB080
-	move.b	#$4E,subtype(a1) ; <== ObjB1_SubObjData
+
+;	lea	(SegaHideTM).w,a1
+;	move.l	#ObjB1,(a1)	; load objB1 at $FFFFB080
+;	move.b	#$4E,subtype(a1) ; <== ObjB1_SubObjData
 ; loc_38CE:
 SegaScreen_Contin:
 	moveq	#PalID_SEGA,d0
@@ -3837,9 +3839,11 @@ SegaScreen_Contin:
 	move.w	#0,(PalCycle_Timer).w
 	move.w	#0,(SegaScr_VInt_Subrout).w
 	move.w	#0,(SegaScr_PalDone_Flag).w
-	lea	(SegaScreenObject).w,a1
-	move.l	#ObjB0,(a1) ; load objB0 (sega screen?) at $FFFFB040
-	move.b	#$4C,subtype(a1) ; <== ObjB0_SubObjData
+
+;	lea	(SegaScreenObject).w,a1
+;	move.l	#ObjB0,(a1) ; load objB0 (sega screen?) at $FFFFB040
+;	move.b	#$4C,subtype(a1) ; <== ObjB0_SubObjData
+;	clr.w   prioritylist(a1)
 	move.w	#4*60,(Demo_Time_left).w	; 4 seconds
 	move.w	(VDP_Reg1_val).w,d0
 	ori.b	#$40,d0
@@ -3850,8 +3854,8 @@ Sega_WaitPalette:
 	bsr.w	WaitForVint
 	jsrto	(RunObjects).l, JmpTo_RunObjects
 	jsr	(BuildSprites).l
-	tst.b	(SegaScr_PalDone_Flag).w
-	beq.s	Sega_WaitPalette
+;	tst.b	(SegaScr_PalDone_Flag).w
+;	beq.s	Sega_WaitPalette
 	move.b	#SndID_SegaSound,d0
 	bsr.w	PlaySound	; play "SEGA" sound
 	move.b	#VintID_SEGA,(Vint_routine).w
@@ -3861,8 +3865,8 @@ Sega_WaitPalette:
 Sega_WaitEnd:
 	move.b	#VintID_PCM,(Vint_routine).w
 	bsr.w	WaitForVint
-	tst.w	(Demo_Time_left).w
-	beq.s	Sega_GotoTitle
+;	tst.w	(Demo_Time_left).w
+;	beq.s	Sega_GotoTitle
 	move.b	(Ctrl_1_Press).w,d0	; is Start button pressed?
 	or.b	(Ctrl_2_Press).w,d0	; (either player)
 	andi.b	#button_start_mask,d0
@@ -22291,8 +22295,17 @@ Obj71_Init:
 	move.w	(a1)+,art_tile(a0)
 	bsr.w	Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
-	move.b	(a1)+,width_pixels(a0)
-	move.b	(a1)+,priority(a0)
+	move.b	(a1)+,width_pixels(a0)   
+
+	moveq   #0,d1
+	move.b	(a1)+,d1
+        addq.w   #1,d1  ;priority(a0)
+       	move.w   d1,d2
+	add.w    d2,d2
+	add.w    d2,d2
+	asl.w    #$3,d1
+	add.w    d2,d1
+	InsertSpriteMacro $7FFF
 	move.b	subtype(a0),d0
 	andi.w	#$F0,d0
 	lsr.b	#4,d0
@@ -22471,7 +22484,8 @@ Obj2D_Init:
 +
 
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $4
+	;move.b	#4,priority(a0)
 	move.w	y_pos(a0),objoff_36(a0)
 	move.b	subtype(a0),mapping_frame(a0)
 	move.w	x_pos(a0),d2
@@ -23405,6 +23419,7 @@ Obj37_Collect:
 	addq.b	#2,routine(a0)
 	move.b	#0,collision_flags(a0)
 	;move.b	#1,priority(a0)
+	move.b	#$84,render_flags(a0)
         jsr     ObjRemoveFromList
 	InsertSpriteMacro 1
 
@@ -29248,7 +29263,7 @@ InitSpriterManager:       ; routine that clears this part of chunk table ram
 
 ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the currently used sprite and then deletes it and re orginizes list
 
-          tst.w     prioritylist(a0) ; does object contain displa flag ?
+         tst.w     prioritylist(a0) ; does object contain displa flag ?
           beq.s     .NodeNotFound
 
           lea     RAM_Start.l,a2
@@ -29261,13 +29276,14 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
           blo.s   .NodeNotInDebugThis
           moveq    #0,d0
           move.b   SpriteInUse(a2),d0
+          beq.w    .NodeNotInDebugThis
           lea      (HeadAndTailListIndex).l,a3
           lea      (a3,d0.w),a3 ; get head and tail)
           move.l   $4(a3),a6  ; get head
      ; a2 points to the node to be removed
           cmp.l    (a6),a2
           bne.s    .NotFirstNode
-
+     
           move.l   SpriteNextOb(a2),(a6)
    .DontUpdateHead:
           movea.l  SpriteNextOb(a2),a4
@@ -29295,8 +29311,7 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
          move.l   $8(a3),a6  ; get tail
          cmp.l    (a6),a2
          bne.s    .NodeClear
-      ;   tst.l     SpritePrevOb(a2)
-      ;   beq.s     .NodeClear
+
          move.l   SpritePrevOb(a2),(a6)
 
 
@@ -29308,7 +29323,7 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
          clr.w    SpriteObAddr(a2)
          clr.l    SpriteNextOb(a2)
          clr.l    SpritePrevOb(a2)
-       ;  bsr.w    UpdateHeadList
+         clr.w    prioritylist(a0) ; clears priorty iding 
 
 
       .NodeNotFound:
@@ -29318,7 +29333,7 @@ ObjRemoveFromList: ; routine that uses prioritylist to catch the addr of the cur
            rts
 
 
-  UpdateHeadList:
+  ;UpdateHeadList:
 
           movea.l  LinkedListHead.w,a6
           tst.w  SpriteInUse(a6)
@@ -29479,11 +29494,11 @@ BuildSprites:
 +
 
 
-        moveq   #7,d7 ; amount of priortiy levels is just 1
-        moveq   #$0,d6 ; list ids
+        moveq   #$0,d7 ; amount of priortiy levels is just 1
+        ;moveq   #$0,d6 ; list ids
 
 BuildSprites_LevelLoop:
-        lea      BuildSpriteHeads(pc,d6.w),a1
+        lea      BuildSpriteHeads(pc,d7.w),a1
         move.l   (a1),a1
         move.l   (a1),a4
         
@@ -29579,11 +29594,13 @@ BuildSprites_NextObj:
 
 ; loc_166FA:
 BuildSprites_NextLevel:
-         lea      BuildSpriteTailIndex(pc,d6.w),a1
+         lea      BuildSpriteTailIndex(pc,d7.w),a1
          move.l   (a1),a1
          move.l   a4,(a1)  ; memeorize this so we dont have to loop  ( tail) ( the node that doesnt have a next node) (a4 is theram varable that stores it)
-         addq.w   #$4,d6 ; davance head and list
-	 dbf	d7,BuildSprites_LevelLoop	; loop
+         addq.w   #$4,d7 ; davance head and list
+         cmpi.w   #$7*$4,d7
+         blo.w    BuildSprites_LevelLoop
+	 ;dbf	d7,BuildSprites_LevelLoop	; loop
 	move.b	d5,(Sprite_count).w
 	cmpi.b	#80,d5	; was the sprite limit reached?
 	beq.s	+	; if it was, branch
@@ -33212,7 +33229,7 @@ loc_19398:
 	moveq	#0,d0
 	move.b	obj0D_sparkleframe(a0),d0
 	addq.b	#2,obj0D_sparkleframe(a0)
-	andi.b	#$E,obj0D_sparkleframe(a0)
+	andi.b	#$E,obj0D_sparkleframe(a0) 
 	lea	Obj0D_RingSparklePositions(pc,d0.w),a2
 	bsr.w	SingleObjLoad
 	bne.s	return_19406
@@ -44961,7 +44978,7 @@ Obj31_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Powerups,0,1),art_tile(a0)
 	move.b	#$84,render_flags(a0)
 	move.b	#$80,width_pixels(a0)
-	move.b	#4,priority(a0)
+;	move.b	#4,priority(a0)
 	move.b	subtype(a0),mapping_frame(a0)
 
 ; loc_20E46:
@@ -52445,7 +52462,8 @@ Obj68_Init:
 	jsrto	(Adjust2PArtPointer).l, JmpTo31_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
 	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	InsertSpriteMacro $4
 	jsrto	(SingleObjLoad2).l, JmpTo12_SingleObjLoad2
 	bne.s	+
 	move.l	(a0),(a1) ; load obj68
@@ -52458,7 +52476,7 @@ Obj68_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_MtzSpike,1,0),art_tile(a1)
 	ori.b	#4,render_flags(a1)
 	move.b	#$10,width_pixels(a1)
-	move.b	#4,priority(a1)
+	;move.b	#4,priority(a1)
 	move.w	(Timer_frames).w,d0
 	lsr.w	#6,d0
 	move.w	d0,d1
@@ -52471,6 +52489,10 @@ Obj68_Init:
 	move.b	d1,mapping_frame(a1)
 	lea	(Obj68_CollisionFlags).l,a2
 	move.b	(a2,d1.w),collision_flags(a1)
+	move.l   a0,-(sp)
+	movea.l  a1,a0
+	InsertSpriteMacro $4
+	move.l  (sp)+,a0
 +
 	move.b	#4,mapping_frame(a0)
 ; loc_2764A:
@@ -52619,7 +52641,8 @@ Obj6D_Init:
 	jsrto	(Adjust2PArtPointer).l, JmpTo31_Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
 	move.b	#4,width_pixels(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $4
+;	move.b	#4,priority(a0)
 	move.w	x_pos(a0),floorspike_initial_x_pos(a0)
 	move.w	y_pos(a0),floorspike_initial_y_pos(a0)
 	move.b	#$84,collision_flags(a0)
@@ -52718,7 +52741,8 @@ Obj69_Init:
 	move.b	#4,render_flags(a0)
 	move.b	#$20,width_pixels(a0)
 	move.b	#$B,y_radius(a0)
-	move.b	#4,priority(a0)
+	;move.b	#4,priority(a0)
+	InsertSpriteMacro $4
 	move.w	y_pos(a0),objoff_36(a0)
 	move.b	subtype(a0),d0
 	andi.w	#$7F,d0
@@ -52912,7 +52936,8 @@ Obj6A_Init:
 	move.l	#Obj65_Obj6A_Obj6B_MapUnc_26EC8,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,3,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $4
+	;move.b	#4,priority(a0)
 	move.b	#$20,width_pixels(a0)
 	move.b	#$C,y_radius(a0)
 	move.l	#byte_27CDC,objoff_30(a0)
@@ -53147,11 +53172,12 @@ Obj6B_Init:
 +
 	jsrto	(Adjust2PArtPointer).l, JmpTo34_Adjust2PArtPointer
 	move.b	#4,render_flags(a0)
-	move.b	#3,priority(a0)
+	;move.b	#3,priority(a0)
+	InsertSpriteMacro $3
 	moveq	#0,d0
 	move.b	subtype(a0),d0
 	lsr.w	#2,d0
-	andi.w	#$1C,d0
+	andi.w	#$1C,d0  
 	lea	byte_27D7E(pc,d0.w),a2
 	move.b	(a2)+,width_pixels(a0)
 	move.b	(a2)+,y_radius(a0)
@@ -53468,7 +53494,8 @@ Obj6C_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_LavaCup,3,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
 	move.b	#$10,width_pixels(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $4
+	;move.b	#4,priority(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo35_Adjust2PArtPointer
 	move.b	#0,mapping_frame(a0)
 	moveq	#0,d0
@@ -53751,7 +53778,8 @@ Obj6E_Init:
 	move.w	#make_art_tile(ArtTile_ArtKos_LevelArt,3,0),art_tile(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo36_Adjust2PArtPointer
 	ori.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+	InsertSpriteMacro $4
+	;move.b	#4,priority(a0)
 	moveq	#0,d0
 	move.b	subtype(a0),d0
 	lsr.w	#3,d0
@@ -53768,7 +53796,13 @@ Obj6E_Init:
 	addq.b	#2,routine(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_MtzWheelIndent,3,0),art_tile(a0)
 	jsrto	(Adjust2PArtPointer).l, JmpTo36_Adjust2PArtPointer
-	move.b	#5,priority(a0)
+	tst.w   prioritylist(a0)
+	bne.s   .NoOverWrite
+                       ; removes from list
+	jsr     ObjRemoveFromList
+ .NoOverWrite:
+	InsertSpriteMacro $5
+	;move.b	#5,priority(a0)
 	bra.w	loc_284BC
 ; ===========================================================================
 
@@ -53919,7 +53953,11 @@ Obj70_LoadSubObject:
 	move.w	#make_art_tile(ArtTile_ArtNem_MtzWheel,3,0),art_tile(a1)
 	jsrto	(Adjust2PArtPointer2).l, JmpTo4_Adjust2PArtPointer2
 	move.b	#4,render_flags(a1)
-	move.b	#4,priority(a1)
+	movem.l d1-d4/a0-a2,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro 1
+        movem.l  (sp)+,d1-d4/a0-a2
+	;move.b	#4,priority(a1)
 	move.b	#$10,width_pixels(a1)
 	move.w	d2,objoff_36(a1)
 	move.w	d3,objoff_34(a1)
@@ -54182,7 +54220,7 @@ Obj73_Init:
 	move.w	#make_art_tile(ArtTile_ArtNem_Ring,1,0),art_tile(a0)
 
 	move.b	#4,render_flags(a0)
-	move.b	#4,priority(a0)
+ move.b	#4,priority(a0)
 	move.b	#8,width_pixels(a0)
 	move.w	x_pos(a0),objoff_3E(a0)
 	move.w	y_pos(a0),objoff_3C(a0)
@@ -67211,7 +67249,8 @@ Obj54_Init:
 	move.l	#Obj54_MapUnc_32DC6,mappings(a0)
 	move.w	#make_art_tile(ArtTile_ArtNem_MTZBoss,0,0),art_tile(a0)
 	ori.b	#4,render_flags(a0)
-	move.b	#3,priority(a0)
+	InsertSpriteMacro $3
+	;move.b	#3,priority(a0)
 	move.w	#$2B50,x_pos(a0)
 	move.w	#$380,y_pos(a0)
 	move.b	#2,mainspr_mapframe(a0)
@@ -67245,7 +67284,11 @@ Obj54_Init:
 	move.l	#Obj54_MapUnc_32DC6,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_MTZBoss,0,0),art_tile(a1)
 	ori.b	#4,render_flags(a1)
-	move.b	#6,priority(a1)
+	move.l  a0,-(sp)
+	movea.l a1,a0
+	InsertSpriteMacro $6
+	move.l  (sp)+,a0
+	;move.b	#6,priority(a1)
 	move.w	x_pos(a0),x_pos(a1)
 	move.w	y_pos(a0),y_pos(a1)
 	move.l	a0,objoff_38(a1)
@@ -67774,7 +67817,11 @@ Obj53_Init:
 	move.l	#Obj54_MapUnc_32DC6,mappings(a1)
 	move.w	#make_art_tile(ArtTile_ArtNem_MTZBoss,0,0),art_tile(a1)
 	ori.b	#4,render_flags(a1)
-	move.b	#3,priority(a1)
+	movem.l d1-d3/a0-a3,-(sp)
+	move.l  a1,a0
+	InsertSpriteMacro $3
+        movem.l  (sp)+,d1-d3/a0-a3
+	;move.b	#3,priority(a1)
 	addq.b	#2,routine(a1)		; => Obj53_Main
 	move.b	#5,mapping_frame(a1)
 	move.b	byte_329CC(pc,d2.w),objoff_2C(a1)
@@ -67924,24 +67971,32 @@ Obj53_SetAnimPriority:
 	cmpi.w	#$C,d0
 	blt.s	+
 	move.b	#3,mapping_frame(a0)
-	move.b	#1,priority(a0)
+	jsr     ObjRemoveFromList
+	InsertSpriteMacro $1
+
 	rts
 ; ===========================================================================
 +
 	move.b	#4,mapping_frame(a0)
-	move.b	#2,priority(a0)
+
+	jsr     ObjRemoveFromList
+	InsertSpriteMacro $2
 	rts
 ; ===========================================================================
 +
 	cmpi.w	#-$C,d0
 	blt.s	+
 	move.b	#4,mapping_frame(a0)
-	move.b	#6,priority(a0)
+	jsr     ObjRemoveFromList
+	InsertSpriteMacro $5
+
 	rts
 ; ===========================================================================
 +
 	move.b	#5,mapping_frame(a0)
-	move.b	#7,priority(a0)
+	jsr     ObjRemoveFromList
+	InsertSpriteMacro $6
+
 	rts
 ; ===========================================================================
 ;loc_32B64
@@ -72238,11 +72293,11 @@ LoadSubObject_Part3:
 	or.b	d0,render_flags(a0)
 	moveq    #0,d1
 	move.b	(a1)+,d1 ;priority(a0)
-	bne.s   .NotZero
-	moveq    #$C,d1
-	bra.s   .InsertSprite
-	.NotZero:
-	addq.w  #1,d1
+;	bne.s   .NotZero
+;	moveq    #$C,d1
+;	bra.s   .InsertSprite
+;	.NotZero:
+	;addq.w  #1,d1
 	move.w   d1,d2
 	add.w    d2,d2
 	add.w    d2,d2
@@ -72255,6 +72310,7 @@ LoadSubObject_Part3:
 	move.b	(a1),collision_flags(a0)
 	addq.b	#2,routine(a0)
 	InsertSpriteMacro $7FFF
+        ; KDebug.WriteLine "Terrible Value Found: %<.l a0 sym> (ptr=%<.l (a0) sym>)"
 	rts
 
 ; ===========================================================================
@@ -74191,8 +74247,7 @@ Obj98_Index:	offsetTable
 ; loc_376FA:
 Obj98_Init: ;;
 	bsr.w	LoadSubObject
-	clr.w   prioritylist(a0)
-	InsertSpriteMacro 1
+
         rts
 ; ===========================================================================
 ; loc_376FE:
@@ -74538,7 +74593,7 @@ return_37A80:
 Flicker_Set = status+1
 Obj9C:
 	bsr.w	LoadSubObject
-	InsertSpriteMacro 1
+
 	move.l  #Obj9C_Main,(a0)
 ; ===========================================================================
 ; loc_37A98:
@@ -74648,8 +74703,6 @@ Obj9D_Index:	offsetTable
 Obj9D_Init:
 	bsr.w	LoadSubObject
 	move.b	#$10,Obj9D_timer(a0)
-        clr.w   prioritylist(a0)
-	InsertSpriteMacro 1
 
 	rts
 ; ===========================================================================
@@ -75601,7 +75654,7 @@ loc_38546:
 	move.b	#$2A,subtype(a1) ; <== ObjA2_SubObjData
 	move.b	render_flags(a0),render_flags(a1)
 	move.b	#5,mapping_frame(a1)
-	move.b	#4,priority(a1)
+	;move.b	#4,priority(a1)
 	move.w	#$78,objoff_2E(a1)
 	move.w	a0,objoff_30(a1)
 	move.w	a1,(a2)+
@@ -77852,14 +77905,16 @@ ObjB0_Index:	offsetTable
 ; ===========================================================================
 
 ObjB0_Init:
+
 	bsr.w	LoadSubObject
+
 	move.w	#$1E8,x_pixel(a0)
 	move.w	#$F0,y_pixel(a0)
 	move.w	#$B,objoff_2E(a0)
 	move.w	#2,(SegaScr_VInt_Subrout).w
 	bset	#0,render_flags(a0)
 	bset	#0,status(a0)
-	InsertSpriteMacro $1
+	
 
 	; Initialize streak horizontal offsets for Sonic going left.
 	; 9 full lines (8 pixels) + 6 pixels, 2-byte interleaved entries for PNT A and PNT B
@@ -78185,11 +78240,11 @@ word_3A514:
                    even
 ; off_3A58A:
 ObjB0_SubObjData:
-	subObjData ObjB1_MapUnc_3A5A6,make_art_tile(ArtTile_ArtUnc_Giant_Sonic,2,1),0,1,$10,0
+	subObjData ObjB1_MapUnc_3A5A6,make_art_tile(ArtTile_ArtUnc_Giant_Sonic,2,1),0,$1,$10,0
 
 ; off_3A594:
 ObjB1_SubObjData:
-	subObjData ObjB1_MapUnc_3A5A6,make_art_tile(ArtTile_ArtNem_Sega_Logo+2,0,0),0,2,8,0
+	subObjData ObjB1_MapUnc_3A5A6,make_art_tile(ArtTile_ArtNem_Sega_Logo+2,0,0),0,$2,8,0
 
 ; animation script
 ; off_3A59E:

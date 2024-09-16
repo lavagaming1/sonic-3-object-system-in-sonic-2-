@@ -94,6 +94,7 @@ InsertSpriteMacro macro layer;,ListId
        endif 
 
        jsr      InitDrawingSprites
+       
        endm
 ; tells the Z80 to stop, and waits for it to finish stopping (acquire bus)
 stopZ80 macro
