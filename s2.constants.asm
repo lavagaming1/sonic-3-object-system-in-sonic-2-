@@ -1096,6 +1096,7 @@ Sprite_Lister_Table_End:
                                 ;ds.b    $1000 ; will use this later
 
 SpriteEntriesUnused:
+GiantSonicBuffer:
                                 ds.b    $1000
                                 ds.b    $4000
                                 ds.b    $25C

@@ -3815,7 +3815,7 @@ SegaScreen:
 	lea	(ArtNem_SilverSonic).l,a0 ; ?? seems unused here
 	bsr.w	NemDec
 	lea	(Chunk_Table).l,a1
-	lea	(MapEng_SEGA).l,a0
+        lea	(MapEng_SEGA).l,a0
 	move.w	#make_art_tile(ArtTile_VRAM_Start,0,0),d0
 	bsr.w	EniDec
 	lea	(Chunk_Table).l,a1
@@ -3823,14 +3823,15 @@ SegaScreen:
 	moveq	#$27,d1		; 40 cells wide
 	moveq	#$1B,d2		; 28 cells tall
 	bsr.w	PlaneMapToVRAM_H80_Sega
-	jsr       InitSpriterManager
-;	tst.b	(Graphics_Flags).w ; are we on a Japanese Mega Drive?
-;	bmi.s	SegaScreen_Contin ; if not, branch
-	; load an extra sprite to hide the TM (trademark) symbol on the SEGA screen
+        clearRAM Sprite_Lister_Table,Sprite_Lister_Table_End ; CLEARS OUT CHUNK GARBAGE TO MAKE SPACE FOR BIG SONIC
+        jsr      InitSpriterManager
 
-;	lea	(SegaHideTM).w,a1
-;	move.l	#ObjB1,(a1)	; load objB1 at $FFFFB080
-;	move.b	#$4E,subtype(a1) ; <== ObjB1_SubObjData
+	tst.b	(Graphics_Flags).w ; are we on a Japanese Mega Drive?
+	bmi.s	SegaScreen_Contin ; if not, branch
+	; load an extra sprite to hide the TM (trademark) symbol on the SEGA screen
+	lea	(SegaHideTM).w,a1
+	move.l	#ObjB1,(a1)	; load objB1 at $FFFFB080
+	move.b	#$4E,subtype(a1) ; <== ObjB1_SubObjData
 ; loc_38CE:
 SegaScreen_Contin:
 	moveq	#PalID_SEGA,d0
@@ -3840,22 +3841,23 @@ SegaScreen_Contin:
 	move.w	#0,(SegaScr_VInt_Subrout).w
 	move.w	#0,(SegaScr_PalDone_Flag).w
 
-;	lea	(SegaScreenObject).w,a1
-;	move.l	#ObjB0,(a1) ; load objB0 (sega screen?) at $FFFFB040
-;	move.b	#$4C,subtype(a1) ; <== ObjB0_SubObjData
-;	clr.w   prioritylist(a1)
+	lea	(SegaScreenObject).w,a1
+	move.l	#ObjB0,(a1) ; load objB0 (sega screen?) at $FFFFB040
+	move.b	#$4C,subtype(a1) ; <== ObjB0_SubObjData
+
 	move.w	#4*60,(Demo_Time_left).w	; 4 seconds
 	move.w	(VDP_Reg1_val).w,d0
 	ori.b	#$40,d0
 	move.w	d0,(VDP_control_port).l
+
 ; loc_390E:
 Sega_WaitPalette:
 	move.b	#VintID_SEGA,(Vint_routine).w
 	bsr.w	WaitForVint
 	jsrto	(RunObjects).l, JmpTo_RunObjects
 	jsr	(BuildSprites).l
-;	tst.b	(SegaScr_PalDone_Flag).w
-;	beq.s	Sega_WaitPalette
+	tst.b	(SegaScr_PalDone_Flag).w
+	beq.s	Sega_WaitPalette
 	move.b	#SndID_SegaSound,d0
 	bsr.w	PlaySound	; play "SEGA" sound
 	move.b	#VintID_SEGA,(Vint_routine).w
@@ -3865,8 +3867,8 @@ Sega_WaitPalette:
 Sega_WaitEnd:
 	move.b	#VintID_PCM,(Vint_routine).w
 	bsr.w	WaitForVint
-;	tst.w	(Demo_Time_left).w
-;	beq.s	Sega_GotoTitle
+	tst.w	(Demo_Time_left).w
+	beq.s	Sega_GotoTitle
 	move.b	(Ctrl_1_Press).w,d0	; is Start button pressed?
 	or.b	(Ctrl_2_Press).w,d0	; (either player)
 	andi.b	#button_start_mask,d0
@@ -77907,6 +77909,8 @@ ObjB0_Index:	offsetTable
 ObjB0_Init:
 
 	bsr.w	LoadSubObject
+        jsr     ObjDisableDisplay
+
 
 	move.w	#$1E8,x_pixel(a0)
 	move.w	#$F0,y_pixel(a0)
@@ -77929,7 +77933,7 @@ ObjB0_Init:
 
 	lea	off_3A294(pc),a1 ; pointers to mapping DPLC data
 	lea	(ArtUnc_Sonic).l,a3
-	lea	(Chunk_Table).l,a5
+	lea	(GiantSonicBuffer).l,a5
 	moveq	#4-1,d5 ; there are 4 mapping frames to loop over
 
 	; this copies the tiles that we want to scale up from ROM to RAM
@@ -78000,8 +78004,8 @@ copydst := copydst + tiles_to_bytes(width * height) * 2 * 2
     endm
 ;word_3A2A4:
 SonicRunningSpriteScaleData:
-copysrc := Chunk_Table
-copydst := Chunk_Table + $B00
+copysrc := GiantSonicBuffer
+copydst := GiantSonicBuffer + $B00
 SegaScreenScaledSpriteDataStart = copydst
 	rept 4 ; repeat 4 times since there are 4 frames to scale up
 	; piece 1 of each frame (the smaller top piece):
@@ -78017,12 +78021,13 @@ SegaScreenScaledSpriteDataEnd = copydst
 
 ObjB0_RunLeft:
 	subi.w	#$20,x_pos(a0)
+
 	subq.w	#1,objoff_2E(a0)
 	bmi.s	loc_3A312
 	bsr.w	ObjB0_Move_Streaks_Left
 	lea	(Ani_objB0).l,a1
 	jsrto	(AnimateSprite).l, JmpTo25_AnimateSprite
-	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+	jmp     ObjEnableDisplay
 ; ===========================================================================
 
 loc_3A312:
@@ -78030,10 +78035,11 @@ loc_3A312:
 	move.w	#$C,objoff_2E(a0)
 	move.b	#1,objoff_30(a0)
 	move.b	#-1,objoff_31(a0)
-	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+	jmp	(ObjDisableDisplay).l
 ; ===========================================================================
 
 ObjB0_MidWipe:
+
 	tst.w	objoff_2E(a0)
 	beq.s	loc_3A33A
 	subq.w	#1,objoff_2E(a0)
@@ -78054,6 +78060,7 @@ loc_3A346:
 	subi.w	#$28,x_pos(a0)
 	bchg	#0,render_flags(a0)
 	bchg	#0,status(a0)
+	jsr     ObjDisableDisplay
 
 	; This clears a lot more than the horizontal scroll buffer, which is $400 bytes.
 	; This is because the loop counter is erroneously set to $400, instead of ($400/4)-1.
@@ -78075,13 +78082,14 @@ loc_3A38A:
 ; ===========================================================================
 
 ObjB0_RunRight:
+
 	subq.w	#1,objoff_2E(a0)
 	bmi.s	loc_3A3B4
 	addi.w	#$20,x_pos(a0)
 	bsr.w	ObjB0_Move_Streaks_Right
 	lea	(Ani_objB0).l,a1
 	jsrto	(AnimateSprite).l, JmpTo25_AnimateSprite
-	jmpto	(DisplaySprite).l, JmpTo45_DisplaySprite
+	jmp	(ObjEnableDisplay).l
 ; ===========================================================================
 
 loc_3A3B4:
@@ -78089,10 +78097,12 @@ loc_3A3B4:
 	move.w	#$C,objoff_2E(a0)
 	move.b	#1,objoff_30(a0)
 	move.b	#-1,objoff_31(a0)
+	jsr     ObjDisableDisplay
 	rts
 ; ===========================================================================
 
 ObjB0_EndWipe:
+        jsr     ObjDisableDisplay
 	tst.w	objoff_2E(a0)
 	beq.s	loc_3A3DA
 	subq.w	#1,objoff_2E(a0)
@@ -78110,7 +78120,7 @@ loc_3A3E6:
 	st	(SegaScr_PalDone_Flag).w
 	move.b	#SndID_SegaSound,d0
 	jsrto	(PlaySound).l, JmpTo12_PlaySound
-
+        jsr     ObjDisableDisplay
 return_3A3F6:
 	rts
 ; ===========================================================================
